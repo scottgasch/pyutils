@@ -1,6 +1,6 @@
 [project]
 name = "pyutils"
-version = "0.0.1a1"
+version = "0.0.1b"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
