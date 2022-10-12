@@ -89,35 +89,37 @@ class FileBasedPersistent(Persistent):
 
 class PicklingFileBasedPersistent(FileBasedPersistent):
     """
-    Example usage:
+    A class that stores its state in a file as pickled python objects.
 
-    import persistent
+    Example usage::
 
-    @persistent.persistent_autoloaded_singleton()
-    class MyClass(persistent.PicklingFileBasedPersistent):
-        def __init__(self, data: Whatever):
-            #initialize youself from data
+        import persistent
 
-        @staticmethod
-        @overrides
-        def get_filename() -> str:
-            return "/path/to/where/you/want/to/save/data.bin"
+        @persistent.persistent_autoloaded_singleton()
+        class MyClass(persistent.PicklingFileBasedPersistent):
+            def __init__(self, data: Whatever):
+                #initialize youself from data
 
-        @staticmethod
-        @overrides
-        def should_we_save_data(filename: str) -> bool:
-            return true_if_we_should_save_the_data_this_time()
+            @staticmethod
+            @overrides
+            def get_filename() -> str:
+                return "/path/to/where/you/want/to/save/data.bin"
 
-        @staticmethod
-        @overrides
-        def should_we_load_data(filename: str) -> bool:
-            return persistent.was_file_written_within_n_seconds(whatever)
+            @staticmethod
+            @overrides
+            def should_we_save_data(filename: str) -> bool:
+                return true_if_we_should_save_the_data_this_time()
 
-    # Persistent will handle the plumbing to instantiate your class from its
-    # persisted state iff the should_we_load_data says it's ok to.  It will
-    # also persist the current in memory state to disk at program exit iff
-    # the should_we_save_data methods says to.
-    c = MyClass()
+            @staticmethod
+            @overrides
+            def should_we_load_data(filename: str) -> bool:
+                return persistent.was_file_written_within_n_seconds(whatever)
+
+        # Persistent will handle the plumbing to instantiate your class from its
+        # persisted state iff the should_we_load_data says it's ok to.  It will
+        # also persist the current in memory state to disk at program exit iff
+        # the should_we_save_data methods says to.
+        c = MyClass()
 
     """
 
@@ -158,35 +160,37 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
 class JsonFileBasedPersistent(FileBasedPersistent):
     """
-    Example usage:
+    A class that stores its state in a JSON format file.
 
-    import persistent
+    Example usage::
 
-    @persistent.persistent_autoloaded_singleton()
-    class MyClass(persistent.JsonFileBasedPersistent):
-        def __init__(self, data: Whatever):
-            #initialize youself from data
+        import persistent
 
-        @staticmethod
-        @overrides
-        def get_filename() -> str:
-            return "/path/to/where/you/want/to/save/data.json"
+        @persistent.persistent_autoloaded_singleton()
+        class MyClass(persistent.JsonFileBasedPersistent):
+            def __init__(self, data: Whatever):
+                #initialize youself from data
 
-        @staticmethod
-        @overrides
-        def should_we_save_data(filename: str) -> bool:
-            return true_if_we_should_save_the_data_this_time()
+            @staticmethod
+            @overrides
+            def get_filename() -> str:
+                return "/path/to/where/you/want/to/save/data.json"
 
-        @staticmethod
-        @overrides
-        def should_we_load_data(filename: str) -> bool:
-            return persistent.was_file_written_within_n_seconds(whatever)
+            @staticmethod
+            @overrides
+            def should_we_save_data(filename: str) -> bool:
+                return true_if_we_should_save_the_data_this_time()
 
-    # Persistent will handle the plumbing to instantiate your class from its
-    # persisted state iff the should_we_load_data says it's ok to.  It will
-    # also persist the current in memory state to disk at program exit iff
-    # the should_we_save_data methods says to.
-    c = MyClass()
+            @staticmethod
+            @overrides
+            def should_we_load_data(filename: str) -> bool:
+                return persistent.was_file_written_within_n_seconds(whatever)
+
+        # Persistent will handle the plumbing to instantiate your class from its
+        # persisted state iff the should_we_load_data says it's ok to.  It will
+        # also persist the current in memory state to disk at program exit iff
+        # the should_we_save_data methods says to.
+        c = MyClass()
 
     """
 
