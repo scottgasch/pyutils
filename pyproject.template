@@ -18,6 +18,7 @@ dependencies = [
     "bitstring",
     "cloudpickle",
     "holidays",
+    "kazoo",
     "overrides",
     "python-dateutil",
     "pytz",
