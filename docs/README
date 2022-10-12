@@ -1,0 +1,5 @@
+
+This is a directory containing the instructions to Sphinx (pip install sphinx)
+for generating HTML-based source code documentation for the pyutils library.
+
+I regenerate the docs as a .git/hook/post-push

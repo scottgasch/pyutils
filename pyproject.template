@@ -1,0 +1,52 @@
+[project]
+name = "pyutils"
+version = "##VERSION##"
+authors = [
+  { name="Scott Gasch", email="scott.gasch@gmail.com" },
+]
+description = "Python Utilities"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "bitstring",
+    "cloudpickle",
+    "holidays",
+    "numpy",
+    "overrides",
+    "python-dateutil",
+    "pytz",
+]
+
+[project.urls]
+"Homepage" = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
+## "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "coverage",
+    "flake8",
+    "pylint",
+    "sphinx"
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "pyutils", "pyutils.collectionz", "pyutils.compress",
+    "pyutils.datetimez", "pyutils.files", "pyutils.parallelize",
+    "pyutils.search", "pyutils.security", "pyutils.typez"
+]
+
+[tool.setuptools.package-dir]
+pyutils = "src/pyutils"

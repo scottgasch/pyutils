@@ -1,0 +1,75 @@
+This is Scott's pyutils module.  See README.md for details.
+
+Some code in this library came from other sources.  As required by
+clause 4 of the Apache 2.0 License and clause 3 of the PSF License,
+this NOTICE file describes changes Scott Gasch made to any preexisting
+code regardless its original License.  All such original code was used
+in a manner compliant with its original License and is enumerated in
+this file.  This file also contains URLs pointing at the orginal
+source of all forked code.
+
+  1. As noted in string_utils.py, that file is a fork of work by
+  Davide Zanotti.  Davide's original code is here:
+
+  https://github.com/daveoncode/python-string-utils/tree/master/string_utils
+
+  David's code was released under the MIT license and the original license
+  text is preserved in string_utils.py.
+
+  Scott's modifications include:
+    + Added these routines: strip_escape_sequences,
+      suffix_string_to_number, number_to_suffix_string, extract_ip_v4,
+      extract_ip_v6, extract_mac_address, extract_ip, to_bool,
+      to_date, valid_date, to_datetime, valid_datetime, squeeze,
+      indent, dedent, sprintf, strip_ansi_sequences, SprintfStdout,
+      capitalize_first_letter, it_they, is_are, pluralize,
+      make_contractions, thify, ngrams, ngrams_presplit, bigrams,
+      trigrams, shuffle_columns_into_list, shuffle_columns_into_dict,
+      interpolate_using_dict, to_ascii, to_base64, is_base64, from_base64,
+      chunk, to_bitstring, is_bitstring, from_bitstring, ip_v4_sort_key,
+      path_ancestors_before_descendants_sort_key, replace_all, and
+      replace_nth.
+    + Added type annotations everywhere,
+    + Wrote doctests everywhere,
+    + Added sphinx style pydocs,
+    + Wrote a supplimental unittest (tests/string_utils_test.py),
+    + Added logging.
+
+  2. As noted in shared_dict.py, that file is a fork of work by
+  LuizaLabs and available here:
+
+  https://github.com/luizalabs/shared-memory-dict/blob/main/shared_memory_dict/dict.py
+
+  The original work was released under the MIT license and the original license
+  text is preserved in shared_dict.py.
+
+  Scott's modifications include:
+    + Adding a unittest (tests/shared_dict_test.py),
+    + Added type hints,
+    + Changes to locking scope,
+    + Minor cleanup and style tweaks,
+    + Added sphinx style pydocs.
+
+  3. The timeout decortator in decorator_utils.py is based on original
+  work published in ActiveState code recipes and covered by the PSF
+  license.  It is from here:
+
+  https://code.activestate.com/recipes/307871-timing-out-function/
+
+  Scott's modifications include:
+    + Adding docs + comments including a doctest unittest,
+    + Minor cleanup and style tweaks,
+    + Added type hints.
+
+Thank you to everyone who makes their code available for reuse by
+others and contributes to the open source ecosystem.  Scott is
+especially grateful to the authors of the projects above.  Thank you.
+
+Any code not mentioned in this NOTICE file is work by Scott Gasch, is
+copyrighted by him, and is released under the Apache 2.0 license
+described in the LICENSE file.
+
+If you make modifications to such code, please comply with the Apache
+2.0 license by retaining the LICENSE and copyright in your work and by
+adding your own NOTICEs about the changes you make.  See
+https://www.apache.org/licenses/LICENSE-2.0 for details.
