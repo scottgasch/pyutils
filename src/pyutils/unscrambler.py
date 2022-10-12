@@ -130,6 +130,7 @@ class Unscrambler(object):
         if indexfile is None:
             if 'unscrambler_default_indexfile' in config.config:
                 indexfile = config.config['unscrambler_default_indexfile']
+                assert type(indexfile) == str
             else:
                 indexfile = "/usr/share/dict/sparse_index"
         else:

@@ -92,7 +92,9 @@ def cleanup_and_exit(
 @bootstrap.initialize
 def main() -> None:
     in_file = config.config['code_file']
+    assert in_file and type(in_file) == str
     out_file = config.config['result_file']
+    assert out_file and type(out_file) == str
 
     thread = None
     stop_thread = None
