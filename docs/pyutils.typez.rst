@@ -1,0 +1,53 @@
+pyutils.typez package
+=====================
+
+Submodules
+----------
+
+pyutils.typez.centcount module
+------------------------------
+
+.. automodule:: pyutils.typez.centcount
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyutils.typez.histogram module
+------------------------------
+
+.. automodule:: pyutils.typez.histogram
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyutils.typez.money module
+--------------------------
+
+.. automodule:: pyutils.typez.money
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyutils.typez.rate module
+-------------------------
+
+.. automodule:: pyutils.typez.rate
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pyutils.typez.type\_utils module
+--------------------------------
+
+.. automodule:: pyutils.typez.type_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: pyutils.typez
+   :members:
+   :undoc-members:
+   :show-inheritance:

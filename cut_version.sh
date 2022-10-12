@@ -58,7 +58,7 @@ echo
 echo "Ok, running scottutilz tests including test_some_dependencies.py..."
 cd ../scottutilz/tests
 ./run_tests.py --all --coverage
-cd ../../pyutilz
+cd ../../pyutils
 pause
 echo
 echo
