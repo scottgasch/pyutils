@@ -42,13 +42,13 @@ if [ $# -ne 1 ]; then
 fi
 
 VERSION=$1
-if ! ask_y_n "About to cut and upload $VERSION, ok?" "N"; then
+if ! ask_y_n "About to cut (build, test, package, give you the command to upload) $VERSION, ok?" "N"; then
     echo "Ok, exiting instead."
     exit 0
 fi
 echo
 
-echo "Ok, here's the commit message of changes since the last version..."
+echo "Ok, here are the commit message of changes since the last version..."
 LAST_TAG=$(git tag | tail -1)
 git log $LAST_TAG..HEAD
 pause
@@ -63,13 +63,17 @@ pause
 echo
 echo
 
+echo "Creating a git tag for version ${VERSION}"
 git tag -a "${VERSION}" -m "cut_version.sh ${VERSION}"
 CHANGES=$(git log --pretty="- %s" $VERSION...$LAST_TAG)
 printf "# 🎁 Release notes (\`$VERSION\`)\n\n## Changes\n$CHANGES\n\n## Metadata\n\`\`\`\nThis version -------- $VERSION\nPrevious version ---- $PREVIOUS_VERSION\nTotal commits ------- $(echo "$CHANGES" | wc -l)\n\`\`\`\n" >> release_notes.md
 
+echo "Updating pyproject.toml with this version number"
 cat ./pyproject.template | sed s/##VERSION##/$VERSION/g > ./pyproject.toml
 git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
 git push
 
+echo "Building..."
 python -m build
-echo "To upload, run: \"twine upload --verbose --repository testpypi dist/*\""
+
+echo "Done.  To upload, run: \"twine upload --verbose --repository testpypi dist/*\""
