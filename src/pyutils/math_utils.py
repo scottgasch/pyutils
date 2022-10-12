@@ -21,6 +21,8 @@ class NumericPopulation(object):
     >>> pop.add_number(1)
     >>> pop.add_number(10)
     >>> pop.add_number(3)
+    >>> len(pop)
+    3
     >>> pop.get_median()
     3
     >>> pop.add_number(7)
@@ -58,6 +60,15 @@ class NumericPopulation(object):
             self.maximum = number
         if not self.minimum or number < self.minimum:
             self.minimum = number
+
+    def __len__(self):
+        """Return the population size."""
+        n = 0
+        if self.highers:
+            n += len(self.highers)
+        if self.lowers:
+            n += len(self.lowers)
+        return n
 
     def _rebalance(self):
         if len(self.lowers) - len(self.highers) > 1:
