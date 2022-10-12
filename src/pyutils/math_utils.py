@@ -89,7 +89,7 @@ class NumericPopulation(object):
     def get_mean(self) -> float:
         """Returns the mean (arithmetic mean) so far in O(1) time."""
 
-        count = len(self.lowers) + len(self.highers)
+        count = len(self)
         return self.aggregate / count
 
     def get_mode(self) -> Tuple[float, int]:
@@ -133,7 +133,7 @@ class NumericPopulation(object):
         """
         if n == 50:
             return self.get_median()
-        count = len(self.lowers) + len(self.highers)
+        count = len(self)
         self._create_sorted_copy_if_needed(count)
         assert self.sorted_copy
         index = round(count * (n / 100.0))
