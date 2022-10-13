@@ -391,44 +391,54 @@ def n_timeunits_from_base(
     >>> base = string_to_datetime("2021/09/10 11:24:51AM-0700")[0]
 
     The next (1) Monday from the base datetime:
+
     >>> n_timeunits_from_base(+1, TimeUnit.MONDAYS, base)
     datetime.datetime(2021, 9, 13, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Ten (10) years after the base datetime:
+
     >>> n_timeunits_from_base(10, TimeUnit.YEARS, base)
     datetime.datetime(2031, 9, 10, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) working days (M..F, not counting holidays) after base datetime:
+
     >>> n_timeunits_from_base(50, TimeUnit.WORKDAYS, base)
     datetime.datetime(2021, 11, 23, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) days (including weekends and holidays) after base datetime:
+
     >>> n_timeunits_from_base(50, TimeUnit.DAYS, base)
     datetime.datetime(2021, 10, 30, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) months before (note negative count) base datetime:
+
     >>> n_timeunits_from_base(-50, TimeUnit.MONTHS, base)
     datetime.datetime(2017, 7, 10, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) hours after base datetime:
+
     >>> n_timeunits_from_base(50, TimeUnit.HOURS, base)
     datetime.datetime(2021, 9, 12, 13, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) minutes before base datetime:
+
     >>> n_timeunits_from_base(-50, TimeUnit.MINUTES, base)
     datetime.datetime(2021, 9, 10, 10, 34, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Fifty (50) seconds from base datetime:
+
     >>> n_timeunits_from_base(50, TimeUnit.SECONDS, base)
     datetime.datetime(2021, 9, 10, 11, 25, 41, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Next month corner case -- it will try to make Feb 31, 2022 then count
     backwards.
+
     >>> base = string_to_datetime("2022/01/31 11:24:51AM-0700")[0]
     >>> n_timeunits_from_base(1, TimeUnit.MONTHS, base)
     datetime.datetime(2022, 2, 28, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
 
     Last month with the same corner case
+
     >>> base = string_to_datetime("2022/03/31 11:24:51AM-0700")[0]
     >>> n_timeunits_from_base(-1, TimeUnit.MONTHS, base)
     datetime.datetime(2022, 2, 28, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))

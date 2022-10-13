@@ -1,0 +1,16 @@
+# This file is a record of remote workers that @parallelize(method=Method.REMOTE)
+# may send work to.  Each must have the same version of python installed and the
+# cloudpickle package available.  "username" (see below) must be able to ssh into
+# each machine non-interactively (e.g. with a public/private trusted key, see ssh
+# documentation).  "weight" should be used to indicate the speed of a CPU on the
+# target machine and "count" should be used to indicate how many parallel jobs
+# (max) to schedule on that machine.
+{
+    "remote_worker_records": [
+        {"username": "scott", "machine": "machine_one", "weight": 24, "count": 5},
+        {"username": "scott", "machine": "machine_two", "weight": 10, "count": 2},
+        {"username": "scott", "machine": "machine_three", "weight": 14, "count": 1},
+        {"username": "scott", "machine": "machine_four", "weight": 9, "count": 2},
+        {"username": "scott", "machine": "machine_five", "weight": 9, "count": 2},
+    ]
+}

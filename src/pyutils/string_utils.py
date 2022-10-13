@@ -4,6 +4,7 @@
 """The MIT License (MIT)
 
 Copyright (c) 2016-2020 Davide Zanotti
+
 Modifications Copyright (c) 2021-2022 Scott Gasch
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1680,7 +1681,7 @@ def sprintf(*args, **kwargs) -> str:
 
     Returns:
         An interpolated string capturing print output, like man(3)
-        :code:sprintf.
+        `sprintf`.
     """
     ret = ""
 
@@ -2033,7 +2034,11 @@ def ngrams_presplit(words: Sequence[str], n: int):
 
 
 def bigrams(txt: str):
-    """Generates the bigrams (n=2) of the given string."""
+    """Generates the bigrams (n=2) of the given string.
+
+    >>> [x for x in bigrams('this is a test')]
+    ['this is', 'is a', 'a test']
+    """
     return ngrams(txt, 2)
 
 

@@ -4,6 +4,7 @@
 The MIT License (MIT)
 
 Copyright (c) 2020 LuizaLabs
+
 Additions/Modifications Copyright (c) 2022 Scott Gasch
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
