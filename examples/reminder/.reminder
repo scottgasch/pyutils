@@ -1,0 +1,72 @@
+#
+# Anniversaries
+#
+type=anniversary
+Your Anniversary=aug 31 2003
+
+#
+# Birthdays
+#
+type=birthday
+Your birthday=apr 15 1974
+
+#
+# Holidays
+#
+type=event
+TGIF=this friday at 5:00p
+Christmas Eve=christmas eve
+Christmas=christmas
+Thomas Jefferson's Birthday=apr 13
+Advent Starts=christmas -4 sunday
+New Year's Day=new year's day
+New Year's Eve=new year's eve
+Martin Luther King Day=mlk day
+Presidents' Day=presidents' day
+Armed Forces Day=3rd sat in may
+Memorial Day=memorial day
+Flag Day=jun 14
+Cinco de Mayo=may 5
+Independence Day=independence day
+Labor Day=labor day
+Columbus Day=columbus day
+Veterans Day=veterans' day
+Thanksgiving Day=thanksgiving
+Tax Day=april 15
+Arbor Day=2 wed in apr
+Groundhog Day=2/2
+Valentine's Day=feb 14
+St. Patrick's Day=mar 17
+April Fools Day=apr 1
+Earth Day=apr 22
+Halloween=oct 31
+Daylight Saving Time Begins=2 sun in mar
+Daylight Saving Time Ends=1 sun in nov
+Mothers' Day=2 sun in may
+Fathers' Day=3 sun in june
+Easter=easter
+Start of Lent=easter -40 days
+Good Friday=easter -2 days
+Palm Sunday=easter -7 days
+Ash Wednesday=easter -46 days
+Shrove Tuesday / Mardi Gras=easter -47 days
+Ascension=easter +39 days
+Pentecost=easter +49 days
+Winter Solstice=dec 21
+Summer Solstice=jun 21
+Vernal Equinox=mar 20
+Autumnal Equinox=sept 22
+St. Andrew's Day=nov 30
+National Talk-Like-A-Pirate Day=sept 19
+May Day=may 1
+Pi Day=3/14
+Albert Einstein's Birthday=3/14
+International Cannabis Day=4/20
+No Pants Day=1st fri in may
+Ask A Stupid Question Day=sep 28
+October Fool's Day=oct 1
+National Catfish Day=june 25
+Parent's Day=4th sat in july
+National Aviation Day=aug 19
+International Women's Day=mar 8
+Election Day=1 tue of nov
