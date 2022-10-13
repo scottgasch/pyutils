@@ -488,6 +488,11 @@ def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used.
+
+    >>> @deprecated
+    ... def foo() -> None:
+    ...     pass
+    >>> foo()   # prints + logs "Call to deprecated function foo"
     """
 
     @functools.wraps(func)

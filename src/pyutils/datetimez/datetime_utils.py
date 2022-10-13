@@ -804,7 +804,7 @@ def minute_number_to_time_string(minute_num: MinuteOfDay) -> str:
     return f"{hour:2}:{minute:02}{ampm}"
 
 
-def parse_duration(duration: str) -> int:
+def parse_duration(duration: str, raise_on_error=False) -> int:
     """
     Parse a duration in string form into a delta seconds.
 
@@ -820,9 +820,25 @@ def parse_duration(duration: str) -> int:
     >>> parse_duration('3min 2sec')
     182
 
+    >>> parse_duration('recent')
+    0
+
+    >>> parse_duration('recent', raise_on_error=True)
+    Traceback (most recent call last):
+    ...
+    ValueError: recent is not a valid duration.
+
     """
     if duration.isdigit():
         return int(duration)
+
+    m = re.match(
+        r'(\d+ *d[ays]*)* *(\d+ *h[ours]*)* *(\d+ *m[inutes]*)* *(\d+ *[seconds]*)',
+        duration,
+    )
+    if not m and raise_on_error:
+        raise ValueError(f'{duration} is not a valid duration.')
+
     seconds = 0
     m = re.search(r'(\d+) *d[ays]*', duration)
     if m is not None:

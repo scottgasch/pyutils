@@ -74,7 +74,15 @@ class ActionNoYes(argparse.Action):
 
 def valid_bool(v: Any) -> bool:
     """
-    If the string is a valid bool, return its value.
+    If the string is a valid bool, return its value.  Sample usage::
+
+        args.add_argument(
+            '--auto',
+            type=argparse_utils.valid_bool,
+            default=None,
+            metavar='True|False',
+            help='Use your best judgement about --primary and --secondary',
+        )
 
     >>> valid_bool(True)
     True
@@ -110,7 +118,15 @@ def valid_bool(v: Any) -> bool:
 def valid_ip(ip: str) -> str:
     """
     If the string is a valid IPv4 address, return it.  Otherwise raise
-    an ArgumentTypeError.
+    an ArgumentTypeError.  Sample usage::
+
+        group.add_argument(
+            "-i",
+            "--ip_address",
+            metavar="TARGET_IP_ADDRESS",
+            help="Target IP Address",
+            type=argparse_utils.valid_ip,
+        )
 
     >>> valid_ip("1.2.3.4")
     '1.2.3.4'
@@ -134,7 +150,15 @@ def valid_ip(ip: str) -> str:
 def valid_mac(mac: str) -> str:
     """
     If the string is a valid MAC address, return it.  Otherwise raise
-    an ArgumentTypeError.
+    an ArgumentTypeError.  Sample usage::
+
+        group.add_argument(
+            "-m",
+            "--mac",
+            metavar="MAC_ADDRESS",
+            help="Target MAC Address",
+            type=argparse_utils.valid_mac,
+        )
 
     >>> valid_mac('12:23:3A:4F:55:66')
     '12:23:3A:4F:55:66'
@@ -160,8 +184,15 @@ def valid_mac(mac: str) -> str:
 
 def valid_percentage(num: str) -> float:
     """
-    If the string is a valid percentage, return it.  Otherwise raise
-    an ArgumentTypeError.
+    If the string is a valid (0 <= n <= 100) percentage, return it.
+    Otherwise raise an ArgumentTypeError.  Sample usage::
+
+        args.add_argument(
+            '--percent_change',
+            type=argparse_utils.valid_percentage,
+            default=0,
+            help='The percent change (0<=n<=100) of foobar',
+        )
 
     >>> valid_percentage("15%")
     15.0
@@ -187,7 +218,15 @@ def valid_percentage(num: str) -> float:
 def valid_filename(filename: str) -> str:
     """
     If the string is a valid filename, return it.  Otherwise raise
-    an ArgumentTypeError.
+    an ArgumentTypeError.  Sample usage::
+
+        args.add_argument(
+            '--network_mac_addresses_file',
+            default='/home/scott/bin/network_mac_addresses.txt',
+            metavar='FILENAME',
+            help='Location of the network_mac_addresses file (must exist!).',
+            type=argparse_utils.valid_filename,
+        )
 
     >>> valid_filename('/tmp')
     '/tmp'
@@ -208,14 +247,23 @@ def valid_filename(filename: str) -> str:
 
 def valid_date(txt: str) -> datetime.date:
     """If the string is a valid date, return it.  Otherwise raise
-    an ArgumentTypeError.
+    an ArgumentTypeError.  Sample usage::
+
+        cfg.add_argument(
+            "--date",
+            nargs=1,
+            type=argparse_utils.valid_date,
+            metavar="DATE STRING",
+            default=None
+        )
 
     >>> valid_date('6/5/2021')
     datetime.date(2021, 6, 5)
 
-    # Note: dates like 'next wednesday' work fine, they are just
-    # hard to test for without knowing when the testcase will be
-    # executed...
+    Note: dates like 'next wednesday' work fine, they are just
+    hard to test for without knowing when the testcase will be
+    executed...
+
     >>> valid_date('next wednesday') # doctest: +ELLIPSIS
     -ANYTHING-
     """
@@ -231,14 +279,26 @@ def valid_date(txt: str) -> datetime.date:
 
 def valid_datetime(txt: str) -> datetime.datetime:
     """If the string is a valid datetime, return it.  Otherwise raise
-    an ArgumentTypeError.
+    an ArgumentTypeError.  Sample usage::
+
+        cfg.add_argument(
+            "--override_timestamp",
+            nargs=1,
+            type=argparse_utils.valid_datetime,
+            help="Don't use the current datetime, override to argument.",
+            metavar="DATE/TIME STRING",
+            default=None,
+        )
 
     >>> valid_datetime('6/5/2021 3:01:02')
     datetime.datetime(2021, 6, 5, 3, 1, 2)
 
-    # Again, these types of expressions work fine but are
-    # difficult to test with doctests because the answer is
-    # relative to the time the doctest is executed.
+    Because this thing uses an English date-expression parsing grammar
+    internally, much more complex datetimes can be expressed in free form.
+    See: `tests/datetimez/dateparse_utils_test.py` for examples.  These
+    are not included in here because they are hard to write valid doctests
+    for!
+
     >>> valid_datetime('next christmas at 4:15am') # doctest: +ELLIPSIS
     -ANYTHING-
     """
@@ -254,21 +314,33 @@ def valid_datetime(txt: str) -> datetime.datetime:
 
 def valid_duration(txt: str) -> datetime.timedelta:
     """If the string is a valid time duration, return a
-    datetime.timedelta representing the period of time.  Otherwise
-    maybe raise an ArgumentTypeError or potentially just treat the
-    time window as zero in length.
+    datetime.timedelta representing the period of time.
+    Sample usage::
+
+        cfg.add_argument(
+            '--ip_cache_max_staleness',
+            type=argparse_utils.valid_duration,
+            default=datetime.timedelta(seconds=60 * 60 * 12),
+            metavar='DURATION',
+            help='Max acceptable age of the IP address cache'
+        )
 
     >>> valid_duration('3m')
     datetime.timedelta(seconds=180)
 
-    >>> valid_duration('your mom')
-    datetime.timedelta(0)
+    >>> valid_duration('3 days, 2 hours')
+    datetime.timedelta(days=3, seconds=7200)
+
+    >>> valid_duration('a little while')
+    Traceback (most recent call last):
+    ...
+    argparse.ArgumentTypeError: a little while is not a valid duration.
 
     """
     from pyutils.datetimez.datetime_utils import parse_duration
 
     try:
-        secs = parse_duration(txt)
+        secs = parse_duration(txt, raise_on_error=True)
         return datetime.timedelta(seconds=secs)
     except Exception as e:
         logger.exception(e)

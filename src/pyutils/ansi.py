@@ -4,7 +4,7 @@
 
 """A bunch of color names mapped into RGB tuples and some methods for
 setting the text color, background, etc... using ANSI escape
-sequences.
+sequences.  See: https://en.wikipedia.org/wiki/ANSI_escape_code.
 """
 
 import contextlib
@@ -21,8 +21,6 @@ from overrides import overrides
 from pyutils import logging_utils, string_utils
 
 logger = logging.getLogger(__name__)
-
-# https://en.wikipedia.org/wiki/ANSI_escape_code
 
 
 COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
@@ -1673,37 +1671,37 @@ COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
 
 def clear() -> str:
     """Clear screen ANSI escape sequence"""
-    return "[H[2J"
+    return "\x1B[H\x1B[2J"
 
 
 def clear_screen() -> str:
     """Clear screen ANSI escape sequence"""
-    return "[H[2J"
+    return "\x1B[H\x1B[2J"
 
 
 def clear_line() -> str:
     """Clear the current line ANSI escape sequence"""
-    return "[2K\r"
+    return "\x1B[2K\r"
 
 
 def reset() -> str:
     """Reset text attributes to 'normal'"""
-    return "[m"
+    return "\x1B[m"
 
 
 def normal() -> str:
     """Reset text attributes to 'normal'"""
-    return "[m"
+    return "\x1B[m"
 
 
 def bold() -> str:
     """Set text to bold"""
-    return "[1m"
+    return "\x1B[1m"
 
 
 def italic() -> str:
     """Set text to italic"""
-    return "[3m"
+    return "\x1B[3m"
 
 
 def italics() -> str:
@@ -1713,12 +1711,12 @@ def italics() -> str:
 
 def underline() -> str:
     """Set text to underline"""
-    return "[4m"
+    return "\x1B[4m"
 
 
 def strikethrough() -> str:
     """Set text to strikethrough"""
-    return "[9m"
+    return "\x1B[9m"
 
 
 def strike_through() -> str:
@@ -1756,7 +1754,7 @@ def fg_16color(red: int, green: int, blue: int) -> str:
         bright_count += 1
     if bright_count > 1:
         code += 60
-    return f"[{code}m"
+    return f"\x1B[{code}m"
 
 
 def bg_16color(red: int, green: int, blue: int) -> str:
@@ -1771,7 +1769,7 @@ def bg_16color(red: int, green: int, blue: int) -> str:
         bright_count += 1
     if bright_count > 1:
         code += 60
-    return f"[{code}m"
+    return f"\x1B[{code}m"
 
 
 def _pixel_to_216color(n: int) -> int:
@@ -1794,7 +1792,7 @@ def fg_216color(red: int, green: int, blue: int) -> str:
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
     code = 16 + r * 36 + g * 6 + b
-    return f"[38;5;{code}m"
+    return f"\x1B[38;5;{code}m"
 
 
 def bg_216color(red: int, green: int, blue: int) -> str:
@@ -1803,17 +1801,17 @@ def bg_216color(red: int, green: int, blue: int) -> str:
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
     code = 16 + r * 36 + g * 6 + b
-    return f"[48;5;{code}m"
+    return f"\x1B[48;5;{code}m"
 
 
 def fg_24bit(red: int, green: int, blue: int) -> str:
     """Set foreground using 24bit color mode"""
-    return f"[38;2;{red};{green};{blue}m"
+    return f"\x1B[38;2;{red};{green};{blue}m"
 
 
 def bg_24bit(red: int, green: int, blue: int) -> str:
     """Set background using 24bit color mode"""
-    return f"[48;2;{red};{green};{blue}m"
+    return f"\x1B[48;2;{red};{green};{blue}m"
 
 
 def _find_color_by_name(name: str) -> Tuple[int, int, int]:
@@ -1889,6 +1887,8 @@ def fg(
 
 
 def reset_fg():
+    """Returns: an ANSI escape code to reset just the foreground color while
+    preserving the background color and any other formatting (bold, italics, etc...)"""
     return '\033[39m'
 
 
@@ -1973,6 +1973,9 @@ def bg(
         blue: the color to set's blue component value
         force_16color: force bg to use 16 color mode
         force_216color: force bg to use 216 color mode
+
+    Returns:
+        A string containing the requested escape sequence
 
     >>> import string_utils as su
     >>> su.to_base64(bg("red"))    # b'\x1b[48;5;196m'
