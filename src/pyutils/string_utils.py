@@ -177,7 +177,7 @@ NUM_SUFFIXES = {
     "K": (1024**1),
 }
 
-units = [
+UNIT_WORDS = [
     "zero",
     "one",
     "two",
@@ -200,7 +200,7 @@ units = [
     "nineteen",
 ]
 
-tens = [
+TENS_WORDS = [
     "",
     "",
     "twenty",
@@ -213,16 +213,19 @@ tens = [
     "ninety",
 ]
 
-scales = ["hundred", "thousand", "million", "billion", "trillion"]
+scales = ["hundred", "thousand", "million", "billion", "trillion", "quadrillion"]
 
 NUM_WORDS = {}
 NUM_WORDS["and"] = (1, 0)
-for i, word in enumerate(units):
+for i, word in enumerate(UNIT_WORDS):
     NUM_WORDS[word] = (1, i)
-for i, word in enumerate(tens):
+for i, word in enumerate(TENS_WORDS):
     NUM_WORDS[word] = (1, i * 10)
 for i, word in enumerate(scales):
-    NUM_WORDS[word] = (10 ** (i * 3 or 2), 0)
+    if i == 0:
+        NUM_WORDS[word] = (100, 0)
+    else:
+        NUM_WORDS[word] = (10 ** (i * 3), 0)
 NUM_WORDS['score'] = (20, 0)
 
 
@@ -522,6 +525,52 @@ def number_string_to_integer(in_str: str) -> int:
             result += current
             current = 0
     return result + current
+
+
+def integer_to_number_string(num: int) -> str:
+    """
+    Opposite of number_string_to_integer; convert a number to a written out
+    longhand format.
+
+    >>> integer_to_number_string(9)
+    'nine'
+
+    >>> integer_to_number_string(42)
+    'forty two'
+
+    >>> integer_to_number_string(123219982)
+    'one hundred twenty three million two hundred nineteen thousand nine hundred eighty two'
+
+    """
+
+    if num < 20:
+        return UNIT_WORDS[num]
+    if num < 100:
+        ret = TENS_WORDS[num // 10]
+        leftover = num % 10
+        if leftover != 0:
+            ret += ' ' + UNIT_WORDS[leftover]
+        return ret
+
+    # If num > 100 go find the highest chunk and convert that, then recursively
+    # convert the rest.  NUM_WORDS contains items like 'thousand' -> (1000, 0).
+    # The second item in the tuple is an increment that can be ignored; the first
+    # is the numeric "scale" of the entry.  So find the greatest entry in NUM_WORDS
+    # still less than num.  For 123,456 it would be thousand.  Then pull out the
+    # 123, convert it, and append "thousand".  Then do the rest.
+    scales = {}
+    for name, val in NUM_WORDS.items():
+        if val[0] <= num:
+            scales[name] = val[0]
+    scale = max(scales.items(), key=lambda _: _[1])
+
+    # scale[1] = numeric magnitude (e.g. 1000)
+    # scale[0] = name (e.g. "thousand")
+    ret = integer_to_number_string(num // scale[1]) + ' ' + scale[0]
+    leftover = num % scale[1]
+    if leftover != 0:
+        ret += ' ' + integer_to_number_string(leftover)
+    return ret
 
 
 def is_decimal_number(in_str: str) -> bool:
