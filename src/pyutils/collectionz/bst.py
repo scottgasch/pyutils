@@ -9,9 +9,9 @@ from typing import Any, Generator, List, Optional
 
 class Node(object):
     def __init__(self, value: Any) -> None:
-        """
-        Note: value can be anything as long as it is comparable.
-        Check out @functools.total_ordering.
+        """Note that value can be anything as long as it is
+        comparable.  Check out @functools.total_ordering.
+
         """
         self.left: Optional[Node] = None
         self.right: Optional[Node] = None
@@ -25,6 +25,8 @@ class BinarySearchTree(object):
         self.traverse = None
 
     def get_root(self) -> Optional[Node]:
+        """:returns the root of the BST."""
+
         return self.root
 
     def insert(self, value: Any):
@@ -313,7 +315,6 @@ class BinarySearchTree(object):
     def __contains__(self, value: Any) -> bool:
         """
         Returns True if the item is in the tree; False otherwise.
-
         """
         return self.__getitem__(value) is not None
 
@@ -544,7 +545,7 @@ class BinarySearchTree(object):
             depth_right = self._depth(node.right, sofar + 1)
         return max(depth_left, depth_right)
 
-    def depth(self):
+    def depth(self) -> int:
         """
         Returns the max height (depth) of the tree in plies (edge distance
         from root).
@@ -575,7 +576,8 @@ class BinarySearchTree(object):
             return 0
         return self._depth(self.root, 0)
 
-    def height(self):
+    def height(self) -> int:
+        """Returns the height (i.e. max depth) of the tree"""
         return self.depth()
 
     def repr_traverse(

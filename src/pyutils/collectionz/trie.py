@@ -73,12 +73,12 @@ class Trie(object):
         be a full item.
 
         >>> t = Trie()
-        >>> t.insert('testicle')
-        >>> t.contains_prefix('test')
+        >>> t.insert('tricycle')
+        >>> t.contains_prefix('tri')
         True
-        >>> t.contains_prefix('testicle')
+        >>> t.contains_prefix('tricycle')
         True
-        >>> t.contains_prefix('tessel')
+        >>> t.contains_prefix('triad')
         False
 
         """
@@ -255,13 +255,16 @@ class Trie(object):
             return None
         return [x for x in node if x != self.end]
 
-    def repr_fancy(
+    def _repr_fancy(
         self,
         padding: str,
         pointer: str,
         node: Any,
         has_sibling: bool,
-    ):
+    ) -> str:
+        """
+        Helper that return a fancy representation of the Trie:
+        """
         if node is None:
             return ''
         if node is not self.root:
@@ -288,7 +291,7 @@ class Trie(object):
                     has_sibling = False
                 pointer += f'{child}'
                 child_count -= 1
-                ret += self.repr_fancy(padding, pointer, node[child], has_sibling)
+                ret += self._repr_fancy(padding, pointer, node[child], has_sibling)
         return ret
 
     def repr_brief(self, node, delimiter):
@@ -323,7 +326,7 @@ class Trie(object):
     def __repr__(self):
         """
         A friendly string representation of the contents of the Trie.  Under
-        the covers uses repr_fancy.
+        the covers uses _repr_fancy.
 
         >>> t = Trie()
         >>> t.insert([10, 0, 0, 1])
@@ -343,4 +346,4 @@ class Trie(object):
                  └──2
 
         """
-        return self.repr_fancy('', '*', self.root, False)
+        return self._repr_fancy('', '*', self.root, False)

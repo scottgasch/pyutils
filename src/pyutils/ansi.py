@@ -537,7 +537,7 @@ COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
     "electric lime": (0xCC, 0xFF, 0x00),
     "electric violet": (0x8B, 0x00, 0xFF),
     "elephant": (0x12, 0x34, 0x47),
-    "elf green": (0x08, 0x83, 0x70),
+    "elf green": (0x1B, 0x8A, 0x6B),
     "elm": (0x1C, 0x7C, 0x7D),
     "emerald": (0x50, 0xC8, 0x78),
     "eminence": (0x6C, 0x30, 0x82),
@@ -1340,6 +1340,8 @@ COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
     "scorpion": (0x69, 0x5F, 0x62),
     "scotch mist": (0xFF, 0xFB, 0xDC),
     "screamin' green": (0x66, 0xFF, 0x66),
+    "screamin green": (0x66, 0xFF, 0x66),
+    "screaming green": (0x66, 0xFF, 0x66),
     "sea buckthorn": (0xFB, 0xA1, 0x29),
     "sea green": (0x2E, 0x8B, 0x57),
     "sea mist": (0xC5, 0xDB, 0xCA),
@@ -2013,6 +2015,11 @@ def bg(
 
 
 def reset_bg():
+    """Returns an ANSI escape sequence that resets text background
+    color to the default but preserves foreground coloring and text
+    attributes like bold, italics, underlines, etc...
+
+    """
     return '\033[49m'
 
 

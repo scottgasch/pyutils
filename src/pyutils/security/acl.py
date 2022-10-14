@@ -115,7 +115,7 @@ class SetBasedACL(SimpleACL):
 
 class AllowListACL(SetBasedACL):
     """Convenience subclass for a list that only allows known items.
-    i.e. a 'allowlist'
+    i.e. an 'allowlist'
     """
 
     def __init__(self, *, allow_set: Optional[Set[Any]]) -> None:

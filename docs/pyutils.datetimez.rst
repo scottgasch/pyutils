@@ -1,4 +1,4 @@
-pyutils.datetimez package
+yutils.datetimez package
 =========================
 
 Submodules
@@ -30,7 +30,122 @@ allows the user to use free form english expressions.
 .. automodule:: pyutils.datetimez.dateparse_utils
    :members:
    :undoc-members:
-   :show-inheritance:
+   :exclude-members: enterAmpm,
+                     enterBaseAndOffsetDateExpr,
+                     enterBaseAndOffsetTimeExpr,
+                     enterBaseDate,
+                     enterBaseTime,
+                     enterCountUnitsBeforeAfterTimeExpr,
+                     enterDateExpr,
+                     enterDayMonthMaybeYearExpr,
+                     enterDayName,
+                     enterDayOfMonth,
+                     enterDdiv,
+                     enterDeltaBeforeAfter,
+                     enterDeltaDateExprRelativeToTodayImplied,
+                     enterDeltaNextLast,enterDeltaPlusMinusExpr,
+                     enterDeltaPlusMinusTimeExpr,
+                     enterDeltaRelativeToTodayExpr,
+                     enterDeltaTimeBeforeAfter,
+                     enterDeltaTimeFraction,
+                     enterDeltaTimeUnit,
+                     enterDeltaUnit,
+                     enterDtdiv,
+                     enterFirstLastWeekdayInMonthMaybeYearExpr,
+                     enterFirstOrLast,
+                     enterFractionBeforeAfterTimeExpr,
+                     enterHour,
+                     enterLtz,
+                     enterMicros,
+                     enterMinute,
+                     enterMonthDayMaybeYearExpr,
+                     enterMonthExpr,
+                     enterMonthName,
+                     enterMonthNumber,
+                     enterNFoosFromTodayAgoExpr,
+                     enterNth,
+                     enterNthWeekdayInMonthMaybeYearExpr,
+                     enterNtz,
+                     enterParse,
+                     enterSecond,
+                     enterSingleDateExpr,
+                     enterSingleTimeExpr,
+                     enterSpecialDate,
+                     enterSpecialDateMaybeYearExpr,
+                     enterSpecialTime,
+                     enterSpecialTimeExpr,
+                     enterTddiv,
+                     enterTdiv,
+                     enterThisNextLast,
+                     enterTimeExpr,
+                     enterTwelveHourTimeExpr,
+                     enterTwentyFourHourTimeExpr,
+                     enterTzExpr,
+                     enterUnsignedInt,
+                     enterYear,
+                     enterYearMonthDayExpr,
+                     exitAmpm,
+                     exitBaseAndOffsetDateExpr,
+                     exitBaseAndOffsetTimeExpr,
+                     exitBaseDate,
+                     exitBaseTime,
+                     exitCountUnitsBeforeAfterTimeExpr,
+                     exitDateExpr,
+                     exitDayMonthMaybeYearExpr,
+                     exitDayName,
+                     exitDayOfMonth,
+                     exitDdiv,
+                     exitDeltaBeforeAfter,
+                     exitDeltaDateExprRelativeToTodayImplied,
+                     exitDeltaNextLast,
+                     exitDeltaPlusMinusExpr,
+                     exitDeltaPlusMinusTimeExpr,
+                     exitDeltaRelativeToTodayExpr,
+                     exitDeltaTimeBeforeAfter,
+                     exitDeltaTimeFraction,
+                     exitDeltaTimeUnit,
+                     exitDeltaUnit,
+                     exitDtdiv,
+                     exitFirstLastWeekdayInMonthMaybeYearExpr,
+                     exitFirstOrLast,
+                     exitFractionBeforeAfterTimeExpr,
+                     exitHour,
+                     exitLtz,
+                     exitMicros,
+                     exitMinute,
+                     exitMonthDayMaybeYearExpr,
+                     exitMonthExpr,
+                     exitMonthName
+                     exitMonthName,
+                     exitMonthName,
+                     exitMonthNumber,
+                     exitMonthNumber,
+                     exitNFoosFromTodayAgoExpr,
+                     exitNextLastUnit,
+                     exitNth,
+                     exitNthWeekdayInMonthMaybeYearExpr,
+                     exitNtz,
+                     exitParse,
+                     exitSecond,
+                     exitSingleDateExpr,
+                     exitSingleTimeExpr,
+                     exitSpecialDate,
+                     exitSpecialDateMaybeYearExpr,
+                     exitSpecialTime,
+                     exitSpecialTimeExpr,
+                     exitTddiv,
+                     exitTdiv,
+                     exitThisNextLast,
+                     exitTimeExpr,
+                     exitTwelveHourTimeExpr,
+                     exitTwentyFourHourTimeExpr,
+                     exitTzExpr,
+                     exitUnsignedInt,
+                     exitYear,
+                     exitYearMonthDayExpr,
+                     main,
+                     visitErrorNode,
+                     visitTerminal
 
 pyutils.datetimez.dateparse\_utilsLexer module
 ----------------------------------------------
@@ -38,32 +153,17 @@ pyutils.datetimez.dateparse\_utilsLexer module
 This code is auto-generated by ANTLR from the dateparse\_utils.g4
 grammar.
 
-.. automodule:: pyutils.datetimez.dateparse_utilsLexer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pyutils.datetimez.dateparse\_utilsListener module
 -------------------------------------------------
 
 This code is auto-generated by ANTLR from the dateparse\_utils.g4
 grammar.
 
-.. automodule:: pyutils.datetimez.dateparse_utilsListener
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pyutils.datetimez.dateparse\_utilsParser module
 -----------------------------------------------
 
 This code is auto-generated by ANTLR from the dateparse\_utils.g4
 grammar.
-
-.. automodule:: pyutils.datetimez.dateparse_utilsParser
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 pyutils.datetimez.datetime\_utils module
 ----------------------------------------

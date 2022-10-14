@@ -77,7 +77,7 @@ class NumericPopulation(object):
             heappush(self.lowers, -heappop(self.highers))
 
     def get_median(self) -> float:
-        """Returns the approximate median (p50) so far in O(1) time."""
+        """Returns the approximate median (p50) so far in :math:`O(1)` time."""
 
         if len(self.lowers) == len(self.highers):
             return -self.lowers[0]
@@ -87,14 +87,14 @@ class NumericPopulation(object):
             return self.highers[0]
 
     def get_mean(self) -> float:
-        """Returns the mean (arithmetic mean) so far in O(1) time."""
+        """Returns the mean (arithmetic mean) so far in :math:`O(1)` time."""
 
         count = len(self)
         return self.aggregate / count
 
     def get_mode(self) -> Tuple[float, int]:
         """Returns the mode (most common member in the population)
-        in O(n) time."""
+        in :math:`O(n)` time."""
 
         count: Dict[float, int] = collections.defaultdict(int)
         for n in self.lowers:
@@ -104,7 +104,7 @@ class NumericPopulation(object):
         return dict_utils.item_with_max_value(count)
 
     def get_stdev(self) -> float:
-        """Returns the stdev so far in O(n) time."""
+        """Returns the stdev so far in :math:`O(n)` time."""
 
         mean = self.get_mean()
         variance = 0.0
@@ -127,7 +127,7 @@ class NumericPopulation(object):
 
     def get_percentile(self, n: float) -> float:
         """Returns the number at approximately pn% (i.e. the nth percentile)
-        of the distribution in O(n log n) time.  Not thread-safe;
+        of the distribution in :math:`O(n log_2 n)` time.  Not thread-safe;
         does caching across multiple calls without an invocation to
         add_number for perf reasons.
         """

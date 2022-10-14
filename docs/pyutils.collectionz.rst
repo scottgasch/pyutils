@@ -7,10 +7,34 @@ Submodules
 pyutils.collectionz.bidict module
 ---------------------------------
 
-The bidict.BiDict class is a bidirectional dictionary.  It maps each
-key to a value in constant time and each value back to the one or more
-keys it is associated with in constant time.  It does this by simply
-storing the data twice.
+The bidict.BiDict class is a subclass of :py:class:`dict` that
+implements a bidirectional dictionary.  That is, it maps each key to a
+value in constant time and each value back to the one or more keys it
+is associated with in constant time.  It does this by simply storing
+the data twice.
+
+Sample usage::
+
+    # Initialize with a normal dict...
+    third_party_wierdos = BiDict({
+        'prometheus-fastapi-instrumentator': 'prometheus_fastapi_instrumentator',
+        'scikit-learn': 'sklearn',
+        'antlr4-python3-runtime' : 'antlr4',
+        'python-dateutil': 'dateutil',
+        'speechrecognition': 'speech_recognition',
+        'beautifulsoup4': 'bs4',
+        'python-dateutil': 'dateutil',
+        'homeassistant-api': 'homeassistant_api',
+    })
+
+    # Use in one direction:
+    x = third_party_wierdos['scikit-learn']
+
+    # Use in opposite direction:
+    y = third_party_wierdos.inverse['python_dateutil']
+
+    # Note: type(y) is List since one value may map back to multiple keys.
+
 
 .. automodule:: pyutils.collectionz.bidict
    :members:
