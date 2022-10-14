@@ -2,7 +2,12 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Helpers for commandline argument parsing."""
+"""These are helpers for commandline argument parsing meant to work
+with Python's :mod:`argparse` module from the standard library.  It
+contains validators for new argument types (such as free-form dates,
+durations, IP addresses, etc...)  and an action that creates a pair of
+flags: one to disable a feature and another to enable it.
+"""
 
 import argparse
 import datetime
@@ -74,7 +79,15 @@ class ActionNoYes(argparse.Action):
 
 def valid_bool(v: Any) -> bool:
     """
-    If the string is a valid bool, return its value.  Sample usage::
+    If the string is a valid bool, return its value.  Otherwise raise.
+
+    Args:
+        v: data passed to an argument expecting a bool on the cmdline.
+
+    Returns:
+        The boolean value of v or raises an ArgumentTypeError on error.
+
+    Sample usage::
 
         args.add_argument(
             '--auto',
@@ -99,6 +112,9 @@ def valid_bool(v: Any) -> bool:
     >>> valid_bool("1")
     True
 
+    >>> valid_bool("off")   # Note: expect False; invalid would raise.
+    False
+
     >>> valid_bool(12345)
     Traceback (most recent call last):
     ...
@@ -118,9 +134,17 @@ def valid_bool(v: Any) -> bool:
 def valid_ip(ip: str) -> str:
     """
     If the string is a valid IPv4 address, return it.  Otherwise raise
-    an ArgumentTypeError.  Sample usage::
+    an ArgumentTypeError.
 
-        group.add_argument(
+    Args:
+        ip: data passed to a commandline arg expecting an IP(v4) address.
+
+    Returns:
+        The IP address, if valid.  Raises ArgumentTypeError otherwise.
+
+    Sample usage::
+
+        args.add_argument(
             "-i",
             "--ip_address",
             metavar="TARGET_IP_ADDRESS",
@@ -150,7 +174,15 @@ def valid_ip(ip: str) -> str:
 def valid_mac(mac: str) -> str:
     """
     If the string is a valid MAC address, return it.  Otherwise raise
-    an ArgumentTypeError.  Sample usage::
+    an ArgumentTypeError.
+
+    Args:
+        mac: a value passed to a commandline flag expecting a MAC address.
+
+    Returns:
+        The MAC address passed or raises ArgumentTypeError on error.
+
+    Sample usage::
 
         group.add_argument(
             "-m",
@@ -185,7 +217,16 @@ def valid_mac(mac: str) -> str:
 def valid_percentage(num: str) -> float:
     """
     If the string is a valid (0 <= n <= 100) percentage, return it.
-    Otherwise raise an ArgumentTypeError.  Sample usage::
+    Otherwise raise an ArgumentTypeError.
+
+    Arg:
+        num: data passed to a flag expecting a percentage with a value
+             between 0 and 100 inclusive.
+
+    Returns:
+        The number if valid, otherwise raises ArgumentTypeError.
+
+    Sample usage::
 
         args.add_argument(
             '--percent_change',
@@ -217,8 +258,21 @@ def valid_percentage(num: str) -> float:
 
 def valid_filename(filename: str) -> str:
     """
-    If the string is a valid filename, return it.  Otherwise raise
-    an ArgumentTypeError.  Sample usage::
+    If the string contains a valid filename that exists on the filesystem,
+    return it.  Otherwise raise an ArgumentTypeError.
+
+    .. note::
+
+        This method will accept directories that exist on the filesystem
+        in addition to files.
+
+    Args:
+        filename: data passed to a flag expecting a valid filename.
+
+    Returns:
+        The filename if valid, otherwise raises ArgumentTypeError.
+
+    Sample usage::
 
         args.add_argument(
             '--network_mac_addresses_file',
@@ -247,7 +301,15 @@ def valid_filename(filename: str) -> str:
 
 def valid_date(txt: str) -> datetime.date:
     """If the string is a valid date, return it.  Otherwise raise
-    an ArgumentTypeError.  Sample usage::
+    an ArgumentTypeError.
+
+    Args:
+        txt: data passed to a commandline flag expecting a date.
+
+    Returns:
+        the datetime.date described by txt or raises ArgumentTypeError on error.
+
+    Sample usage::
 
         cfg.add_argument(
             "--date",
@@ -260,9 +322,10 @@ def valid_date(txt: str) -> datetime.date:
     >>> valid_date('6/5/2021')
     datetime.date(2021, 6, 5)
 
-    Note: dates like 'next wednesday' work fine, they are just
-    hard to test for without knowing when the testcase will be
-    executed...
+    .. note::
+        dates like 'next wednesday' work fine, they are just
+        hard to doctest for without knowing when the testcase will be
+        executed...
 
     >>> valid_date('next wednesday') # doctest: +ELLIPSIS
     -ANYTHING-
@@ -279,7 +342,15 @@ def valid_date(txt: str) -> datetime.date:
 
 def valid_datetime(txt: str) -> datetime.datetime:
     """If the string is a valid datetime, return it.  Otherwise raise
-    an ArgumentTypeError.  Sample usage::
+    an ArgumentTypeError.
+
+    Args:
+        txt: data passed to a commandline flag expecting a valid datetime.datetime.
+
+    Returns:
+        The datetime.datetime described by txt or raises ArgumentTypeError on error.
+
+    Sample usage::
 
         cfg.add_argument(
             "--override_timestamp",
@@ -293,11 +364,12 @@ def valid_datetime(txt: str) -> datetime.datetime:
     >>> valid_datetime('6/5/2021 3:01:02')
     datetime.datetime(2021, 6, 5, 3, 1, 2)
 
-    Because this thing uses an English date-expression parsing grammar
-    internally, much more complex datetimes can be expressed in free form.
-    See: `tests/datetimez/dateparse_utils_test.py` for examples.  These
-    are not included in here because they are hard to write valid doctests
-    for!
+    .. note::
+        Because this code uses an English date-expression parsing grammar
+        internally, much more complex datetimes can be expressed in free form.
+        See: `tests/datetimez/dateparse_utils_test.py` for examples.  These
+        are not included in here because they are hard to write valid doctests
+        for!
 
     >>> valid_datetime('next christmas at 4:15am') # doctest: +ELLIPSIS
     -ANYTHING-
@@ -314,16 +386,41 @@ def valid_datetime(txt: str) -> datetime.datetime:
 
 def valid_duration(txt: str) -> datetime.timedelta:
     """If the string is a valid time duration, return a
-    datetime.timedelta representing the period of time.
+    datetime.timedelta representing the duration described.
+    This uses `datetime_utils.parse_duration` to parse durations
+    and expects data such as:
+
+        - 15 days, 3 hours, 15 minutes
+        - 15 days 3 hours 15 minutes
+        - 15d 3h 15m
+        - 15d3h5m
+        - 3m 2s
+        - 1000s
+
+    If the duration is not parsable, raise an ArgumentTypeError.
+
+    Args:
+        txt: data passed to a commandline arg expecting a duration.
+
+    Returns:
+        The datetime.timedelta described by txt or raises ArgumentTypeError
+        on error.
+
     Sample usage::
 
         cfg.add_argument(
             '--ip_cache_max_staleness',
             type=argparse_utils.valid_duration,
-            default=datetime.timedelta(seconds=60 * 60 * 12),
+            default=datetime.timedelta(seconds=60 * 60 * 4),
             metavar='DURATION',
             help='Max acceptable age of the IP address cache'
         )
+
+    >>> valid_duration('15d3h5m')
+    datetime.timedelta(days=15, seconds=11100)
+
+    >>> valid_duration('15 days 3 hours 5 min')
+    datetime.timedelta(days=15, seconds=11100)
 
     >>> valid_duration('3m')
     datetime.timedelta(seconds=180)
@@ -335,7 +432,6 @@ def valid_duration(txt: str) -> datetime.timedelta:
     Traceback (most recent call last):
     ...
     argparse.ArgumentTypeError: a little while is not a valid duration.
-
     """
     from pyutils.datetimez.datetime_utils import parse_duration
 
