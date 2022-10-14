@@ -2,8 +2,9 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A bunch of color names mapped into RGB tuples and some methods for
-setting the text color, background, etc... using ANSI escape
+"""
+A bunch of color names mapped into RGB tuples and some methods for
+setting the text color, background color, style, etc... using ANSI escape
 sequences.  See: https://en.wikipedia.org/wiki/ANSI_escape_code.
 """
 
@@ -1672,72 +1673,112 @@ COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
 
 
 def clear() -> str:
-    """Clear screen ANSI escape sequence"""
+    """Returns:
+    An ANSI escape sequence that clears the screen.
+    """
     return "\x1B[H\x1B[2J"
 
 
 def clear_screen() -> str:
-    """Clear screen ANSI escape sequence"""
-    return "\x1B[H\x1B[2J"
+    """Returns:
+    An ANSI escape sequence that clears the screen.
+    """
+    return clear()
 
 
 def clear_line() -> str:
-    """Clear the current line ANSI escape sequence"""
+    """Returns:
+    An ANSI escape sequence that clears the current line from the cursor
+    position to the end of the line.
+    """
     return "\x1B[2K\r"
 
 
 def reset() -> str:
-    """Reset text attributes to 'normal'"""
+    """Returns:
+        An ANSI escape sequence that resets text attributes to 'normal'.  This
+        sequence ends any different foreground or background color settings.
+        It also ends any special text styling (italics, bold, underline, etc...)
+        that have been previously set.
+
+    See also :py:meth:`reset_bg` and :py:meth:`reset_fg`.
+    """
     return "\x1B[m"
 
 
 def normal() -> str:
-    """Reset text attributes to 'normal'"""
-    return "\x1B[m"
+    """Returns:
+        An ANSI escape sequence that resets text attributes to 'normal'.  This
+        sequence ends any different foreground or background color settings.
+        It also ends any special text styling (italics, bold, underline, etc...)
+        that have been previously set.
+
+    See also :py:meth:`reset_bg` and :py:meth:`reset_fg`.
+    """
+    return reset()
 
 
 def bold() -> str:
-    """Set text to bold"""
+    """Returns:
+    The ANSI escape sequence to set text to bold weight.
+    """
     return "\x1B[1m"
 
 
 def italic() -> str:
-    """Set text to italic"""
+    """Returns:
+    The ANSI escape sequence to set text to italics style.
+    """
     return "\x1B[3m"
 
 
 def italics() -> str:
-    """Set text to italic"""
+    """Returns:
+    The ANSI escape sequence to set text to italics style.
+    """
     return italic()
 
 
 def underline() -> str:
-    """Set text to underline"""
+    """Returns:
+    The ANSI escape sequence to set text to underlined style.
+    """
     return "\x1B[4m"
 
 
 def strikethrough() -> str:
-    """Set text to strikethrough"""
+    """Returns:
+    The ANSI escape sequence to set text to strike-through mode.
+    """
     return "\x1B[9m"
 
 
 def strike_through() -> str:
-    """Set text to strikethrough"""
+    """Returns:
+    The ANSI escape sequence to set text to strike-through mode.
+    """
     return strikethrough()
 
 
-def is_16color(num: int) -> bool:
-    """Is num a valid 16 color number?"""
+def _is_16color(num: int) -> bool:
+    """One ANSI escape sequences (^[[#m) can be used to change text
+    foreground and background color if and only if the R, G and B
+    numbers are 128 or 255.  This means this code can be used to
+    create 16 colors.
+    """
     return num in (255, 128)
 
 
-def is_216color(num: int) -> bool:
-    """Is num a valid 256 color number?"""
+def _is_216color(num: int) -> bool:
+    """Another ANSI escape sequence (^[[38;5;#m) can be used to change
+    text color to 216 separate color values with each of R, G and B
+    one of 6 possible values."""
     return num in set([0, 95, 135, 175, 223, 255])
 
 
 def _simple_color_number(red: int, green: int, blue: int) -> int:
-    """Construct a simple color number"""
+    """Construct a simple color number.  This is a 3 bit number
+    used to construct a 16-color escape code."""
     r = red > 0
     g = green > 0
     b = blue > 0
@@ -1745,7 +1786,33 @@ def _simple_color_number(red: int, green: int, blue: int) -> int:
 
 
 def fg_16color(red: int, green: int, blue: int) -> str:
-    """Set foreground color using 16 color mode"""
+    """
+    Set text foreground color to a color in 16-color space.
+
+    Args:
+        red: the red channel value of the foreground color to set
+        green: the green channel value of the foreground color to set
+        blue: the blue channel value of the foreground color to set
+
+    Returns:
+        An ANSI escape code that sets the foreground color described
+        by the red, green and blue from the 16 color space.
+
+    .. note::
+
+        In 16 color mode, the possible color values are limited to
+        red, green, yellow, blue, purple, cyan, white and black
+        each with or without a "bright" attribute.  This function
+        takes R/G/B parameter values that can be used to describe
+        colors that can't be represented in 16-color space.  If
+        such a color is described by the parameters, it maps the
+        color to its closest representation in 16-color space.
+
+    This is used by :py:meth:`fg` internally but can be called
+    directly too.  See also :py:meth:`fg_216color`,
+    :py:meth:`fg_24bit`, and :py:meth:`bg_16color`.
+    """
+
     code = _simple_color_number(red, green, blue) + 30
     bright_count = 0
     if red > 128:
@@ -1760,7 +1827,34 @@ def fg_16color(red: int, green: int, blue: int) -> str:
 
 
 def bg_16color(red: int, green: int, blue: int) -> str:
-    """Set background using 16 color mode"""
+    """
+    Set text background color to a color in 16-color space.
+
+    Args:
+        red: the red channel value of background color to set
+        green: the green channel value of the background color to set
+        blue: the blue channel value of the background color to set
+
+    Returns:
+        An ANSI escape sequence that sets the background color to the
+        color described by the red, green and blue parameters in the
+        16 color space.
+
+    .. note::
+
+        In 16 color mode, the possible color values are limited to
+        red, green, yellow, blue, purple, cyan, white and black
+        each with or without a "bright" attribute.  This function
+        takes R/G/B parameter values that can be used to describe
+        colors that can't be represented in 16-color space.  If
+        such a color is described by the parameters, it maps the
+        color to its closest representation in 16-color space.
+
+    This is used by :py:meth:`bg` internally but can be invoked
+    directly if needed.  See also :py:meth:`fg_16color`,
+    :py:meth:`bg_216color`, and :py:meth:`bg_24bit`.
+    """
+
     code = _simple_color_number(red, green, blue) + 40
     bright_count = 0
     if red > 128:
@@ -1775,6 +1869,7 @@ def bg_16color(red: int, green: int, blue: int) -> str:
 
 
 def _pixel_to_216color(n: int) -> int:
+    """Help convert full RGB color descriptions into valid 216 color space"""
     if n >= 255:
         return 5
     if n >= 233:
@@ -1789,7 +1884,30 @@ def _pixel_to_216color(n: int) -> int:
 
 
 def fg_216color(red: int, green: int, blue: int) -> str:
-    """Set foreground using 216 color mode"""
+    """
+    Set text foreground color to a color in 216 color space.
+
+    Args:
+        red: the red channel value of the foreground color to set
+        green: the green channel value of the foreground color to set
+        blue: the blue channel value of the foreground color to set
+
+    Returns:
+        An ANSI escape code that sets the foreground color described
+        by the red, green and blue from the 216 color space.
+
+    .. note::
+
+        In 216 color mode there are 216 total colors available.
+        This is less than the 16M (256^3) possibilities that can
+        be described by full RGB tuples.  When passed colors that
+        are not available in 216 color mode, this code finds the
+        closest match in 216 color space and returns that.
+
+    This is used by :py:meth:`fg` internally but can be invoked
+    directly if needed.  See also :py:meth:`fg_16color`,
+    :py:meth`fg_24bit`, and :py:meth:`bg_216color`.
+    """
     r = _pixel_to_216color(red)
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
@@ -1798,7 +1916,30 @@ def fg_216color(red: int, green: int, blue: int) -> str:
 
 
 def bg_216color(red: int, green: int, blue: int) -> str:
-    """Set background using 216 color mode"""
+    """
+    Set text background color to a color in 216 color space.
+
+    Args:
+        red: the red channel value of the background color to set
+        green: the green channel value of the background color to set
+        blue: the blue channel value of the foreground color to set
+
+    Returns:
+        An ANSI escape code that sets the background color described
+        by the red, green and blue from the 216 color space.
+
+    .. note::
+
+        In 216 color mode there are 216 total colors available.
+        This is less than the 16M (256^3) possibilities that can
+        be described by full RGB tuples.  When passed colors that
+        are not available in 216 color mode, this code finds the
+        closest match in 216 color space and returns that.
+
+    This is used by :py:meth:`bg` internally but can be invoked
+    directly if needed.  See also :py:meth:`bg_16color`,
+    :py:meth:`bg_24bit`, and :py:meth:`fg_216color`.
+    """
     r = _pixel_to_216color(red)
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
@@ -1806,20 +1947,73 @@ def bg_216color(red: int, green: int, blue: int) -> str:
     return f"\x1B[48;5;{code}m"
 
 
+def _pixel_to_24bit_color(value: int) -> int:
+    """Helper to ensure a color channel value is valid in 24-bit color space."""
+    if value < 0:
+        return 0
+    if value > 255:
+        return 255
+    return value
+
+
 def fg_24bit(red: int, green: int, blue: int) -> str:
-    """Set foreground using 24bit color mode"""
-    return f"\x1B[38;2;{red};{green};{blue}m"
+    """
+    Set text foreground color to a color in 24-bit color space.
+
+    Args:
+        red: the red channel value of the foreground color to set
+        green: the green channel value of the foreground color to set
+        blue: the blue channel value of the foreground color to set
+
+    Returns:
+        An ANSI escape code that sets the foreground color described
+        by the red, green and blue from 24-bit color space.
+
+    .. note::
+
+        In 24-bit color space we can represent any color described
+        by red, green or blue values where 0 <= value <= 255.
+        Values outside of this range will be mapped into the 24-bit
+        color space.
+
+    This is used by :py:meth:`fg` internally but can be invoked directly
+    if useful.  See also :py:meth:`fg_216color` and :py:meth:`bg_24bit`.
+    """
+    return f"\x1B[38;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
 
 
 def bg_24bit(red: int, green: int, blue: int) -> str:
-    """Set background using 24bit color mode"""
-    return f"\x1B[48;2;{red};{green};{blue}m"
+    """
+    Set text background color to a color in 24-bit color space.
+
+    Args:
+        red: the red channel value of the background color to set
+        green: the green channel value of the backgrounf color to set
+        blue: the blue channel value of the background color to set
+
+    Returns:
+        An ANSI escape code that sets the background color described
+        by the red, green and blue from 24-bit color space.
+
+    .. note::
+
+        In 24-bit color space we can represent any color described
+        by red, green or blue values where 0 <= value <= 255.
+        Values outside of this range will be mapped into the 24-bit
+        color space.
+
+    This is used by :py:meth:`fg` internally but can be invoked directly
+    if useful.  See also :py:meth:`fg_216color` and :py:meth:`bg_24bit`.
+    """
+    return f"\x1B[48;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
 
 
 def _find_color_by_name(name: str) -> Tuple[int, int, int]:
+    """Given a color name, look up its RGB channel values from the COLOR_NAMES_TO_RGB
+    table."""
     rgb = COLOR_NAMES_TO_RGB.get(name.lower(), None)
     if rgb is None:
-        name = guess_name(name)
+        name = _guess_name(name)
         rgb = COLOR_NAMES_TO_RGB.get(name.lower(), None)
         assert rgb is not None
     return rgb
@@ -1836,10 +2030,10 @@ def fg(
     force_216color: bool = False,
 ) -> str:
     """Return the ANSI escape sequence to change the foreground color
-    being printed.  Target colors may be indicated by name or R/G/B.
-    Result will use the 16 or 216 color scheme if force_16color or
-    force_216color are passed (respectively).  Otherwise the code will
-    do what it thinks best.
+    text is printed to the console with.  Target colors may be
+    indicated either by name or R/G/B values.  Result will use the 16
+    or 216 color scheme if force_16color or force_216color are passed
+    (respectively).  Otherwise the code will do what it thinks best.
 
     Args:
         name: the name of the color to set
@@ -1852,12 +2046,20 @@ def fg(
     Returns:
         String containing the ANSI escape sequence to set desired foreground
 
+    .. note::
+
+        16-color and 216-color spaces can't be used to represent all colors
+        describable by 8 bit R, G and B channels (i.e. normal R/G/B hex values)
+        If you set the force_16color or force_216color arguments but describe
+        a color (by name or R/G/B) that can't be represented in the forced
+        color space the code will pick the closest approximation available.
+
     >>> import string_utils as su
     >>> su.to_base64(fg('blue'))
     b'G1szODs1OzIxbQ==\\n'
     """
     if name is not None and name == 'reset':
-        return '\033[39m'
+        return reset_fg()
 
     if name is not None and string_utils.is_full_string(name):
         rgb = _find_color_by_name(name)
@@ -1876,11 +2078,11 @@ def fg(
         green = 0
     if blue is None:
         blue = 0
-    if (is_16color(red) and is_16color(green) and is_16color(blue)) or force_16color:
+    if (_is_16color(red) and _is_16color(green) and _is_16color(blue)) or force_16color:
         logger.debug("Using 16-color strategy")
         return fg_16color(red, green, blue)
     if (
-        is_216color(red) and is_216color(green) and is_216color(blue)
+        _is_216color(red) and _is_216color(green) and _is_216color(blue)
     ) or force_216color:
         logger.debug("Using 216-color strategy")
         return fg_216color(red, green, blue)
@@ -1889,16 +2091,21 @@ def fg(
 
 
 def reset_fg():
-    """Returns: an ANSI escape code to reset just the foreground color while
-    preserving the background color and any other formatting (bold, italics, etc...)"""
+    """Returns: an ANSI escape code to reset just the foreground color
+    while preserving the background color and any other formatting
+    (bold, italics, etc...)
+    """
     return '\033[39m'
 
 
 def _rgb_to_yiq(rgb: Tuple[int, int, int]) -> int:
+    """Helper for contrasting pick_contrasting_color.  Maps an RGB
+    color tuple in to YIQ space.  See: https://en.wikipedia.org/wiki/YIQ."""
     return (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) // 1000
 
 
 def _contrast(rgb: Tuple[int, int, int]) -> Tuple[int, int, int]:
+    """Helper for contrasting pick_contrasting_color."""
     if _rgb_to_yiq(rgb) < 128:
         return (0xFF, 0xFF, 0xFF)
     return (0, 0, 0)
@@ -1912,7 +2119,8 @@ def pick_contrasting_color(
 ) -> Tuple[int, int, int]:
     """This method will return a red, green, blue tuple representing a
     contrasting color given the red, green, blue of a background
-    color or a color name of the background color.
+    color or a color name of the background color.  This is meant to
+    help ensure text printed on this background color will be visible.
 
     Args:
         name: the name of the color to contrast
@@ -1941,7 +2149,7 @@ def pick_contrasting_color(
     return _contrast(rgb)
 
 
-def guess_name(name: str) -> str:
+def _guess_name(name: str) -> str:
     """Try to guess what color the user is talking about"""
     best_guess = None
     max_ratio = None
@@ -1965,7 +2173,7 @@ def bg(
     force_16color: bool = False,
     force_216color: bool = False,
 ) -> str:
-    """Returns an ANSI color code for changing the current background
+    """Returns an ANSI color code for changing the current text background
     color.
 
     Args:
@@ -1979,12 +2187,20 @@ def bg(
     Returns:
         A string containing the requested escape sequence
 
+    .. note::
+
+        16-color and 216-color spaces can't be used to represent all colors
+        describable by 8 bit R, G and B channels (i.e. normal R/G/B hex values)
+        If you set the force_16color or force_216color arguments but describe
+        a color (by name or R/G/B) that can't be represented in the forced
+        color space the code will pick the closest approximation available.
+
     >>> import string_utils as su
     >>> su.to_base64(bg("red"))    # b'\x1b[48;5;196m'
     b'G1s0ODs1OzE5Nm0=\\n'
     """
     if name is not None and name == 'reset':
-        return '\033[49m'
+        return reset_bg()
 
     if name is not None and string_utils.is_full_string(name):
         rgb = _find_color_by_name(name)
@@ -2002,11 +2218,11 @@ def bg(
         green = 0
     if blue is None:
         blue = 0
-    if (is_16color(red) and is_16color(green) and is_16color(blue)) or force_16color:
+    if (_is_16color(red) and _is_16color(green) and _is_16color(blue)) or force_16color:
         logger.debug("Using 16-color strategy")
         return bg_16color(red, green, blue)
     if (
-        is_216color(red) and is_216color(green) and is_216color(blue)
+        _is_216color(red) and _is_216color(green) and _is_216color(blue)
     ) or force_216color:
         logger.debug("Using 216-color strategy")
         return bg_216color(red, green, blue)
@@ -2018,12 +2234,11 @@ def reset_bg():
     """Returns an ANSI escape sequence that resets text background
     color to the default but preserves foreground coloring and text
     attributes like bold, italics, underlines, etc...
-
     """
     return '\033[49m'
 
 
-class StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
+class _StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
     """An interceptor for data written to stdout.  Use as a context."""
 
     def __init__(self):
@@ -2046,21 +2261,54 @@ class StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
         return False
 
 
-class ProgrammableColorizer(StdoutInterceptor):
-    """A colorizing interceptor; pass it re.Patterns -> methods that do
-    something (usually add color to) the match.
+class ProgrammableColorizer(_StdoutInterceptor):
+    """A colorizing interceptor; pass it re.Patterns -> methods that
+    do something (usually add color to) the match.  This may be useful
+    for adding color to non-colorized text in a stream without
+    changing the code that emits the text directly.  In the example
+    doctest below I'm inserting [RED] and [RESET] strings but you
+    could just as easily insert escape sequences returned from
+    :py:meth:`fg`, :py:meth:`bg`, and :py:meth:`reset`.
 
+    >>> def red(match: re.Match) -> str:
+    ...     return '[RED]'
+
+    >>> def reset(match: re.Match) -> str:
+    ...     return '[RESET]'
+
+    >>> with ProgrammableColorizer( [ (re.compile('^[^ ]+'), red),
+    ...                               (re.compile('$'), reset) ] ) as c:
+    ...     c.write("This matches the pattern and will call red()")
+    ...     c.write("     ...this won't")
+    [RED] matches the pattern and will call red()[RESET]     ...this won't[RESET]
     """
 
     def __init__(
         self,
         patterns: Iterable[Tuple[re.Pattern, Callable[[Any, re.Pattern], str]]],
     ):
+        """
+        Setup the programmable colorizing context; tell it how to operate.
+
+        Args:
+            patterns: an iterable collection of tuples.  Each tuple has an
+                re.Pattern that describes the text pattern which
+                will trigger the colorization and a method to call when the
+                pattern is matched.  These methods receive the `re.MATCH`
+                object and usually just emit some ANSI escape sequence to
+                colorize the stream.  See the example above.
+        """
         super().__init__()
         self.patterns = list(patterns)
 
     @overrides
     def write(self, s: str):
+        """Use this method to feed the stream of text through the colorizer.
+        See the example above.
+
+        Args:
+            s: A line from the stream to colorize.
+        """
         for pattern in self.patterns:
             s = pattern[0].sub(pattern[1], s)
         self.buf += s
