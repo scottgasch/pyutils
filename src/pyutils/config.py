@@ -2,20 +2,26 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Global configuration driven by commandline arguments, environment variables,
-saved configuration files, and zookeeper-based dynamic configurations.  This
-works across several modules.
+"""Global program configuration driven by commandline arguments and,
+optionally, from saved (local or Zookeeper) configuration files... with
+optional support for dynamic arguments (i.e. that can change during runtime).
 
-Example usage:
+Let's start with an example of how to use :py:mod:`pyutils.config`.  It's
+pretty easy for normal commandline arguments because it uses :py:mod:`argparse`:
 
     In your file.py::
 
         from pyutils import config
 
+        # Call add_commandline_args to get an argparse.ArgumentParser
+        # for file.py.  Each file uses a separate ArgumentParser
+        # chained off the main namespace.
         parser = config.add_commandline_args(
             "Module",
             "Args related to module doing the thing.",
         )
+
+        # Then simply add argparse-style arguments to it, as usual.
         parser.add_argument(
             "--module_do_the_thing",
             type=bool,
@@ -27,6 +33,7 @@ Example usage:
 
         from pyutils import config
 
+        # main.py may have some arguments of its own, so add them.
         parser = config.add_commandline_args(
             "Main",
             "A program that does the thing.",
@@ -39,13 +46,17 @@ Example usage:
         )
 
         def main() -> None:
-            config.parse()   # Very important, this must be invoked!
+            config.parse()   # Then remember to call config.parse() early on.
 
-    If you set this up and remember to invoke config.parse(), all commandline
-    arguments will play nicely together.  This is done automatically for you
-    if you're using the :meth:`bootstrap.initialize` decorator on
-    your program's entry point.  See :meth:`python_modules.bootstrap.initialize`
-    for more details.::
+    If you set this up and remember to invoke :py:meth:`pyutils.config.parse`,
+    all commandline arguments will play nicely together across all modules / files
+    in your program automatically.  Argparse help messages will group flags by
+    the file they affect.
+
+    If you use :py:meth:`pyutils.bootstrap.initialize`, a decorator that can
+    optionally wrap your program's entry point, it will remember to call
+    :py:meth:`pyutils.config.parse` for you so you can omit the last part.
+    That looks like this::
 
         from pyutils import bootstrap
 
@@ -56,7 +67,8 @@ Example usage:
         if __name__ == '__main__':
             main()
 
-    Either way, you'll get this behavior from the commandline::
+    Either way, you'll get an aggregated usage message along with flags broken
+    down per file in help::
 
         % main.py -h
         usage: main.py [-h]
@@ -75,11 +87,39 @@ Example usage:
           --dry_run
                        Should we really do the thing?
 
-    Arguments themselves should be accessed via
-    :code:`config.config['arg_name']`.  e.g.::
+    Once :py:meth:`pyutils.config.parse` has been called (either automatically
+    by :py:mod:`puytils.bootstrap` or manually, the program configuration
+    state is ready in a dict-like object called `config.config`.  For example,
+    to check the state of the `--dry_run` flag::
 
         if not config.config['dry_run']:
             module.do_the_thing()
+
+    Using :py:mod:`pyutils.config` allows you to "save" and "load" whole
+    sets of commandline arguments using the `--config_savefile` and the
+    `--config_loadfile` arguments.  The former saves all arguments (other than
+    itself) to an ascii file whose path you provide.  The latter reads all
+    arguments from an ascii file whose path you provide.
+
+    Saving and loading sets of arguments can make complex operations easier
+    to set up.  They also allows for dynamic arguments.
+
+    If you use Apache Zookeeper, you can prefix paths to
+    `--config_savefile` and `--config_loadfile` with the string "zk:"
+    to cause the path to be interpreted as a Zookeeper path rather
+    than one on the local filesystem.  When loading arguments from
+    Zookeeker, the :py:mod:`pyutils.config` code registers a listener
+    to be notified on state change (e.g. when some other instance
+    overwrites your Zookeeper based configuration).  Listeners then
+    dynamically update the value of any flag in the `config.config`
+    dict whose name contains the string "dynamic".  So, for example,
+    the `--dynamic_database_connect_string` argument would be
+    modifiable at runtime when using Zookeeper based configurations.
+    Flags that do not contain the string "dynamic" will not change.
+    And nothing is dynamic unless we're reading configuration from
+    Zookeeper.
+
+    For more information about Zookeeper, see https://zookeeper.apache.org/.
 """
 
 import argparse
@@ -88,7 +128,7 @@ import os
 import pprint
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
@@ -175,7 +215,12 @@ GROUP.add_argument(
     type=str,
     metavar='FILENAME',
     default=None,
-    help='Populate a config file (compatible with --config_loadfile) with the given path for later use.  If the given path begins with "zk:" it is interpreted as a zookeeper path instead of a filesystem path.  When updating zookeeper-based configs, all running programs that read their configuration from zookeeper (via --config_loadfile=zk:path) at startup time will see their configuration dynamically updated; flags with "dynamic" in their names (e.g. --my_dynamic_flag) may have their values changed.  You should therefore either write your code to handle dynamic argument changes or avoid naming arguments "dynamic" if you use zookeeper configuration paths.',
+    help='Populate a config file (compatible with --config_loadfile) and write it at the given path for later [re]use.  If the given path begins with "zk:" it is interpreted as a zookeeper path instead of a local filesystem path.  When updating zookeeper-based configs, all running programs that read their configuration from zookeeper (via --config_loadfile=zk:<path>) will see the update.  Those that also enabled --config_allow_dynamic_updates will change the value of any flags with the string "dynamic" in their names (e.g. --my_dynamic_flag or --dynamic_database_connect_string).',
+)
+GROUP.add_argument(
+    '--config_allow_dynamic_updates',
+    default=False,
+    help='If enabled, allow config flags with the string "dynamic" in their names to change at runtime when a new Zookeeper based configuration is created.  See the --config_savefile help message for more information about this option.',
 )
 GROUP.add_argument(
     '--config_rejects_unrecognized_arguments',
@@ -193,15 +238,23 @@ GROUP.add_argument(
 
 class Config:
     """
+    .. warning::
+
+        Do not instantiate this class directly; it is meant to be a
+        global singleton called `pyutils.config.CONFIG`.  Instead, use
+        :py:meth:`pyutils.config.add_commandline_args` to get an
+        `ArgumentGroup` and add your arguments to it.  Then call
+        :py:meth:`pyutils.config.parse` to parse global configuration
+        from your main program entry point.
+
     Everything in the config module used to be module-level functions and
     variables but it made the code ugly and harder to maintain.  Now, this
     class does the heavy lifting.  We still rely on some globals, though:
 
-        ARGS and GROUP to interface with argparse
-        PROGRAM_NAME stores argv[0] close to program invocation
-        ORIG_ARGV stores the original argv list close to program invocation
-        CONFIG and config: hold the (singleton) instance of this class.
-
+        - ARGS and GROUP to interface with argparse
+        - PROGRAM_NAME stores argv[0] close to program invocation
+        - ORIG_ARGV stores the original argv list close to program invocation
+        - CONFIG and config: hold the (singleton) instance of this class.
     """
 
     def __init__(self):
@@ -242,7 +295,8 @@ class Config:
     def add_commandline_args(
         title: str, description: str = ""
     ) -> argparse._ArgumentGroup:
-        """Create a new context for arguments and return a handle.
+        """Create a new context for arguments and return an ArgumentGroup
+        to the caller for module-level population.
 
         Args:
             title: A title for your module's commandline arguments group.
@@ -265,8 +319,10 @@ class Config:
 
     @staticmethod
     def is_flag_already_in_argv(var: str) -> bool:
-        """Returns true if a particular flag is passed on the commandline
-        and false otherwise.
+        """
+        Returns:
+            True if a particular flag is passed on the commandline
+            and False otherwise.
 
         Args:
             var: The flag to search for.
@@ -305,30 +361,6 @@ class Config:
             else:
                 reordered_action_groups.insert(0, grp)
         return reordered_action_groups
-
-    @staticmethod
-    def _parse_arg_into_env(arg: str) -> Optional[Tuple[str, str, List[str]]]:
-        """Internal helper to parse commandling args into environment vars."""
-        arg = arg.strip()
-        if not arg.startswith('['):
-            return None
-        arg = arg.strip('[')
-        if not arg.endswith(']'):
-            return None
-        arg = arg.strip(']')
-
-        chunks = arg.split()
-        if len(chunks) > 1:
-            var = chunks[0]
-        else:
-            var = arg
-
-        # Environment vars the same as flag names without
-        # the initial -'s and in UPPERCASE.
-        env = var.upper()
-        while env[0] == '-':
-            env = env[1:]
-        return var, env, chunks
 
     @staticmethod
     def _to_bool(in_str: str) -> bool:
@@ -370,49 +402,6 @@ class Config:
         """
         return in_str.lower() in ("true", "1", "yes", "y", "t", "on")
 
-    def _augment_sys_argv_from_environment_variables(self):
-        """Internal.  Look at the system environment for variables that match
-        commandline arg names.  This is done via some munging such that:
-
-        :code:`--argument_to_match`
-
-        ...is matched by:
-
-        :code:`ARGUMENT_TO_MATCH`
-
-        This allows users to set args via shell environment variables
-        in lieu of passing them on the cmdline.
-
-        """
-        usage_message = Config.usage()
-        optional = False
-        arg = ''
-
-        # Foreach valid optional commandline option (chunk) generate
-        # its analogous environment variable.
-        for chunk in usage_message.split():
-            if chunk[0] == '[':
-                optional = True
-            if optional:
-                arg += f'{chunk} '
-                if chunk[-1] == ']':
-                    optional = False
-                    _ = Config._parse_arg_into_env(arg)
-                    if _:
-                        var, env, chunks = _
-                        if env in os.environ:
-                            if not Config.is_flag_already_in_argv(var):
-                                value = os.environ[env]
-                                self.saved_messages.append(
-                                    f'Initialized from environment: {var} = {value}'
-                                )
-                                if len(chunks) == 1 and Config._to_bool(value):
-                                    sys.argv.append(var)
-                                elif len(chunks) > 1:
-                                    sys.argv.append(var)
-                                    sys.argv.append(value)
-                    arg = ''
-
     def _process_dynamic_args(self, event):
         """Invoked as a callback when a zk-based config changed."""
 
@@ -441,7 +430,7 @@ class Config:
                 # 'dynamic' if we are going to allow them to change at
                 # runtime as a signal that the programmer is expecting
                 # this.
-                if 'dynamic' in arg:
+                if 'dynamic' in arg and config.config['config_allow_dynamic_updates']:
                     temp_argv.append(arg)
                     logger.info("Updating %s from zookeeper async config change.", arg)
 
@@ -581,10 +570,19 @@ class Config:
         self.saved_messages.append(f'Saved config to zookeeper in {zkpath}')
 
     def parse(self, entry_module: Optional[str]) -> Dict[str, Any]:
-        """Main program should call this early in main().  Note that the
-        :code:`bootstrap.initialize` wrapper takes care of this automatically.
+        """Main program should invoke this early in main().  Note that the
+        :py:meth:`pyutils.bootstrap.initialize` wrapper takes care of this automatically.
         This should only be called once per program invocation.
 
+        Args:
+            entry_module: Optional string to ensure we understand which module
+                contains the program entry point.  Determined heuristically if not
+                provided.
+
+        Returns:
+            A dict containing the parsed program configuration.  Note that this can
+                be safely ignored since it is also saved in `config.config` and may
+                be used directly using that identifier.
         """
         if self.config_parse_called:
             return self.config
@@ -592,7 +590,7 @@ class Config:
         # If we're about to do the usage message dump, put the main
         # module's argument group last in the list (if possible) so that
         # when the user passes -h or --help, it will be visible on the
-        # screen w/o scrolling.
+        # screen w/o scrolling.  This just makes for a nicer --help screen.
         for arg in sys.argv:
             if arg in ('--help', '-h'):
                 if entry_module is not None:
@@ -601,14 +599,8 @@ class Config:
                     entry_module
                 )
 
-        # Examine the environment for variables that match known flags.
-        # For a flag called --example_flag the corresponding environment
-        # variable would be called EXAMPLE_FLAG.  If found, hackily add
-        # these into sys.argv to be parsed.
-        self._augment_sys_argv_from_environment_variables()
-
-        # Look for loadfile and read/parse it if present.  This also
-        # works by jamming these values onto sys.argv.
+        # Look for --config_loadfile argument and, if found, read/parse
+        # Note that this works by jamming values onto sys.argv; kinda ugly.
         self._augment_sys_argv_from_loadfile()
 
         # Parse (possibly augmented, possibly completely overwritten)
@@ -616,10 +608,12 @@ class Config:
         known, unknown = ARGS.parse_known_args()
         self.config.update(vars(known))
 
-        # Reconstruct the argv with unrecognized flags for the benefit of
-        # future argument parsers.  For example, unittest_main in python
-        # has some of its own flags.  If we didn't recognize it, maybe
-        # someone else will.
+        # Reconstruct the sys.argv with unrecognized flags for the
+        # benefit of future argument parsers.  For example,
+        # unittest_main in python has some of its own flags.  If we
+        # didn't recognize it, maybe someone else will.  Or, if
+        # --config_rejects_unrecognized_arguments was passed, die
+        # if we have unknown arguments.
         if len(unknown) > 0:
             if config['config_rejects_unrecognized_arguments']:
                 raise Exception(
@@ -643,6 +637,9 @@ class Config:
         if config['config_dump']:
             self.dump_config()
 
+        # Finally, maybe exit now if the user passed
+        # --config_exit_after_parse indicating they want to just
+        # update a config file and halt.
         self.config_parse_called = True
         if config['config_exit_after_parse']:
             print("Exiting because of --config_exit_after_parse.")

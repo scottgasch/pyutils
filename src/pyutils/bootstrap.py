@@ -271,9 +271,8 @@ def dump_all_objects() -> None:
 
 def initialize(entry_point):
     """
-    Remember to initialize config, initialize logging, set/log a random
-    seed, etc... before running main.  If you use this decorator around
-    your main, like this::
+    Do whole program setup and instrumentation.  See module comments for
+    details.  To use::
 
         from pyutils import bootstrap
 
@@ -283,21 +282,6 @@ def initialize(entry_point):
 
         if __name__ == '__main__':
             main()
-
-    You get:
-
-    * The ability to break into pdb on unhandled exceptions,
-    * automatic support for :file:`config.py` (argument parsing)
-    * automatic logging support for :file:`logging.py`,
-    * the ability to enable code profiling,
-    * the ability to enable module import auditing,
-    * optional memory profiling for your program,
-    * ability to set random seed via commandline,
-    * automatic program timing and reporting,
-    * more verbose error handling and reporting,
-
-    Most of these are enabled and/or configured via commandline flags
-    (see below).
     """
 
     @functools.wraps(entry_point)

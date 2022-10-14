@@ -7,7 +7,8 @@ library grew into pyutils: a set of collections, helpers and utilities
 that I find useful and hope you will too.
 
 Code is under `src/pyutils/`.  Most code includes documentation and inline
-doctests.
+doctests.  I've tried to organize it into logical packages based on the
+code's functionality.
 
 Unit and integration tests are under `tests/*`.  To run all tests::
 
@@ -15,27 +16,28 @@ Unit and integration tests are under `tests/*`.  To run all tests::
     ./run_tests.py --all [--coverage]
 
 See the README under `tests/` and the code of `run_tests.py` for more
-options / information.
+options / information about running tests.
 
 This package generates Sphinx docs which are available at:
 
     https://wannabe.guru.org/pydocs/pyutils/pyutils.html
 
 Package code is checked into a local git server and available to clone
-from git at https://wannabe.guru.org/git/pyutils.git or from a web browser
-at:
+from git at https://wannabe.guru.org/git/pyutils.git or to view in a
+web browser at:
 
     https://wannabe.guru.org/gitweb/?p=pyutils.git;a=summary
 
 For a long time this was just a local library on my machine that my
-tools imported but I've now decided to release it on PyPi.  Early
+tools imported but I've now decided to release it on PyPi.  Earlier
 development happened in a different git repo:
 
     https://wannabe.guru.org/gitweb/?p=python_utils.git;a=summary
 
-I hope you find this useful.  LICENSE and NOTICE describe reusing this
-code and where everything came from.  Drop me a line if you are using
-this, find a bug, have a question, or have a suggestion:
+The LICENSE and NOTICE files at the root of the project describe
+reusing this code and where everything came from.  Drop me a line
+if you are using this, find a bug, have a question, or have a
+suggestion:
 
   --Scott Gasch (scott.gasch@gmail.com)
 
@@ -45,6 +47,7 @@ Subpackages
 
 .. toctree::
    :maxdepth: 4
+   :name: mastertoc
 
    pyutils.collectionz
    pyutils.compress
@@ -62,14 +65,21 @@ pyutils.ansi module
 -------------------
 
 This file mainly contains code for changing the nature of text printed
-to the console via ANSI escape sequences.  e.g. it can be used to emit
-text that is bolded, underlined, italicised, colorized, etc...
+to the console via ANSI escape sequences.  For example, it can be used
+to emit text that is bolded, underlined, italicised, colorized, etc...
 
-It also contains a colorizing context that will apply color patterns
-based on regular expressions to any data emitted to stdout that may be
-useful in adding color to other programs' outputs, for instance.
+It does *not* contain ANSI escape sequences that do things like move
+the cursor or record/restore its position.  It is focused on text style
+only.
 
-Here are the predefined color names it knows:
+The file includes a colorizing context that will apply color patterns
+based on regular expressions / callables to any data emitted to stdout
+that may be useful in adding color to other programs' outputs, for
+instance.
+
+In addition, it contains a mapping from color name to RGB value that it
+uses to enable friendlier color names in most of its functions.  Here
+is the list of predefined color names it knows:
 
 .. raw:: html
 
@@ -2135,7 +2145,7 @@ Here are the predefined color names it knows:
 .. note::
 
    You can also use raw RGB values with this module so you do not have to use
-   the predefined color names.
+   these predefined color names unless you want to.
 
 ---
 
@@ -2147,15 +2157,9 @@ Here are the predefined color names it knows:
 pyutils.argparse\_utils module
 ------------------------------
 
-I use the Python internal :py:mod:`argparse` module for commandline argument
-parsing but found it lacking in some ways.  This module contains code to
-fill those gaps.  It include stuff like:
-
-    - An :class:`argparse.Action` to create pairs of flags such as
-      `--feature` and `--no_feature`.
-    - A helper to parse and validate bools, IP addresses, MAC
-      addresses, filenames, percentages, dates, datetimes, and
-      durations passed as flags.
+I use and love the Python internal :py:mod:`argparse` module for
+commandline argument parsing but found it lacking in some ways.  This
+module contains code to fill those gaps.  See also :py:mod:`pyutils.config`.
 
 ---
 
@@ -2167,16 +2171,10 @@ fill those gaps.  It include stuff like:
 pyutils.bootstrap module
 ------------------------
 
-Bootstrap module defines a decorator meant to wrap your main function.
-This decorator will do several things for you:
-
-    - If your code uses the :file:`config.py` module (see below), it invokes
-      :py:meth:`parse` automatically to initialize `config.config` from commandline
-      flags, environment variables, or other sources.
-    - It will optionally break into pdb in response to an unhandled
-      Exception at the top level of your code.
-    - It initializes logging for your program (see :file:`logging.py`).
-    - It can optionally run a code and/or memory profiler on your code.
+The bootstrap module defines a decorator meant to wrap your main function.
+This is optional, of course: you can use this library without using the
+bootstrap decorator on your main.  If you choose to use it, though, it will
+do some work for you automatically.
 
 ---
 
@@ -2188,22 +2186,17 @@ This decorator will do several things for you:
 pyutils.config module
 ---------------------
 
-This module reads the program's configuration parameters from: the
-commandline (using :py:mod:`argparse`), environment variables and/or a
-shared zookeeper-based configuration.  It stores this configuration
-state in a dict-like structure that can be queried by your code at
-runtime.
+The config module is an opinionated way to set up input parameters
+to your program.  It is enabled by using the :py:mod:`pyutils.bootstrap`
+decorator or by simply calling :py:meth:`pyutils.config.parse` early in main
+(which is what :py:meth:`pyutils.bootstrap.initialize` does for you).
 
-It handles creating a nice `--help` message for your code.
-
-It can optionally react to dynamic config changes and change state at
-runtime (if and only if you name your flag with the *dynamic_* prefix
-and are using zookeeper-based configs).
-
-It can optionally save and retrieve sets of arguments from files on
-the local disk or on Zookeeper.
-
-All of my examples use this as does the pyutils library itself.
+If you use this module, input parameters to your program can come from
+the commandline (and are configured using Python's :py:mod:`argparse`).
+But they can also be be augmented or replaced using saved configuration
+files stored either on the local filesystem or on Apache Zookeeper.
+There is a provision for enabling dynamic arguments (i.e. that can change
+during runtime) via Zookeeper.
 
 ---
 
