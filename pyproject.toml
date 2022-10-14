@@ -1,6 +1,6 @@
 [project]
 name = "pyutils"
-version = "0.0.1b"
+version = "0.0.1b2"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
@@ -18,6 +18,7 @@ dependencies = [
     "bitstring",
     "cloudpickle",
     "holidays",
+    "kazoo",
     "overrides",
     "python-dateutil",
     "pytz",

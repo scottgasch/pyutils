@@ -14,3 +14,22 @@ This version -------- 0.0.1b
 Previous version ---- 
 Total commits -------        6
 ```
+# 🎁 Release notes (`0.0.1b2`)
+
+## Changes
+- Improve documentation.
+- More work on improving docs.
+- Improve docs.
+- Add some example code.
+- Followup to previous changes in math_utils; have the code use its own len.
+- Moving zookeeper.py here caused a dep on kazoo.
+- Make markdown look nicer.
+- Update README with link to local git repo + previous version.
+- Cut version 0.0.1b
+
+## Metadata
+```
+This version -------- 0.0.1b2
+Previous version ---- 
+Total commits -------        9
+```
