@@ -2,9 +2,11 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""This is a helper class that tries to define every __dunder__ method
-so as to defer that evaluation of an object as long as possible.  It
-is used by smart_future.py as a base class.
+"""This is the base class of :class:`SmartFuture`.  It is essentially
+a class that tries to have every Python __dunder__ method defined
+reasonably for it such that, when it is used in a manner that requires
+its value to be known, it calls a `resolve` method to wait for the
+data it represents.
 
 """
 

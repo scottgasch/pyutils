@@ -2137,6 +2137,8 @@ Here are the predefined color names it knows:
    You can also use raw RGB values with this module so you do not have to use
    the predefined color names.
 
+---
+
 .. automodule:: pyutils.ansi
    :members:
    :undoc-members:
@@ -2154,6 +2156,8 @@ fill those gaps.  It include stuff like:
     - A helper to parse and validate bools, IP addresses, MAC
       addresses, filenames, percentages, dates, datetimes, and
       durations passed as flags.
+
+---
 
 .. automodule:: pyutils.argparse_utils
    :members:
@@ -2173,6 +2177,8 @@ This decorator will do several things for you:
       Exception at the top level of your code.
     - It initializes logging for your program (see :file:`logging.py`).
     - It can optionally run a code and/or memory profiler on your code.
+
+---
 
 .. automodule:: pyutils.bootstrap
    :members:
@@ -2199,6 +2205,8 @@ the local disk or on Zookeeper.
 
 All of my examples use this as does the pyutils library itself.
 
+---
+
 .. automodule:: pyutils.config
    :members:
    :undoc-members:
@@ -2208,6 +2216,8 @@ pyutils.decorator\_utils module
 -------------------------------
 
 This is a grab bag of decorators.
+
+---
 
 .. automodule:: pyutils.decorator_utils
    :members:
@@ -2219,6 +2229,8 @@ pyutils.dict\_utils module
 
 A bunch of helpers for dealing with Python dicts.
 
+---
+
 .. automodule:: pyutils.dict_utils
    :members:
    :undoc-members:
@@ -2228,6 +2240,8 @@ pyutils.exec\_utils module
 --------------------------
 
 Helper code for dealing with subprocesses.
+
+---
 
 .. automodule:: pyutils.exec_utils
    :members:
@@ -2239,6 +2253,8 @@ pyutils.function\_utils module
 
 Helper util for dealing with functions.
 
+---
+
 .. automodule:: pyutils.function_utils
    :members:
    :undoc-members:
@@ -2248,6 +2264,8 @@ pyutils.id\_generator module
 ----------------------------
 
 Generate unique identifiers.
+
+---
 
 .. automodule:: pyutils.id_generator
    :members:
@@ -2260,6 +2278,8 @@ pyutils.iter\_utils module
 Iterator utilities including a :py:class:`PeekingIterator`, :py:class:`PushbackIterator`,
 and :py:class:`SamplingIterator`.
 
+---
+
 .. automodule:: pyutils.iter_utils
    :members:
    :undoc-members:
@@ -2269,6 +2289,8 @@ pyutils.list\_utils module
 --------------------------
 
 Utilities for dealing with Python lists.
+
+---
 
 .. automodule:: pyutils.list_utils
    :members:
@@ -2292,6 +2314,8 @@ logging should be initialized and controlled.  It uses standard Python
     - Log probalistically,
     - Clear rogue logging handlers added by other imports.
 
+---
+
 .. automodule:: pyutils.logging_utils
    :members:
    :undoc-members:
@@ -2305,6 +2329,8 @@ makes population summary statistics available to your code quickly, GCD
 computation, literate float truncation, percentage <-> multiplier, prime
 number determination, etc...
 
+---
+
 .. automodule:: pyutils.math_utils
    :members:
    :undoc-members:
@@ -2314,6 +2340,8 @@ pyutils.misc\_utils module
 --------------------------
 
 Miscellaneous utilities: are we running as root, and is a debugger attached?
+
+---
 
 .. automodule:: pyutils.misc_utils
    :members:
@@ -2328,6 +2356,8 @@ singleton classes that (optionally / conditionally) load their state
 from some external location and (optionally / conditionally) save their
 state to an external location at shutdown.
 
+---
+
 .. automodule:: pyutils.persistent
    :members:
    :undoc-members:
@@ -2339,6 +2369,8 @@ pyutils.remote\_worker module
 This module defines a helper that is invoked by the remote executor to
 run pickled code on a remote machine.  It is used by code marked with
 `@parallelize(method=Method.REMOTE)` in the parallelize framework.
+
+---
 
 .. automodule:: pyutils.remote_worker
    :members:
@@ -2356,6 +2388,8 @@ state that dynamically changes.  These classes update their state
 (either automatically or when invoked to poll) and allow their callers
 to wait on state changes.
 
+---
+
 .. automodule:: pyutils.state_tracker
    :members:
    :undoc-members:
@@ -2366,6 +2400,8 @@ pyutils.stopwatch module
 
 This is a stopwatch context that just times how long something took to
 execute.
+
+---
 
 .. automodule:: pyutils.stopwatch
    :members:
@@ -2378,6 +2414,8 @@ pyutils.string\_utils module
 A bunch of utilities for dealing with strings.  Based on a really great
 starting library from Davide Zanotti, I've added a pile of other string
 functions so hopefully it will handle all of your string-needs.
+
+---
 
 .. automodule:: pyutils.string_utils
    :members:
@@ -2397,6 +2435,8 @@ Utilities for dealing with and creating text chunks.  For example:
     - create a header line,
     - draw a box around some text.
 
+---
+
 .. automodule:: pyutils.text_utils
    :members:
    :undoc-members:
@@ -2406,6 +2446,8 @@ pyutils.unittest\_utils module
 ------------------------------
 
 Utilities to support smarter unit tests.
+
+---
 
 .. automodule:: pyutils.unittest_utils
    :members:
@@ -2417,6 +2459,8 @@ pyutils.unscrambler module
 
 Unscramble scrambled English words quickly.
 
+---
+
 .. automodule:: pyutils.unscrambler
    :members:
    :undoc-members:
@@ -2427,6 +2471,8 @@ pyutils.zookeeper module
 
 A helper module for dealing with Zookeeper that adds some functionality.
 
+---
+
 .. automodule:: pyutils.zookeeper
    :members:
    :undoc-members:
@@ -2434,6 +2480,8 @@ A helper module for dealing with Zookeeper that adds some functionality.
 
 Module contents
 ---------------
+
+---
 
 .. automodule:: pyutils
    :members:

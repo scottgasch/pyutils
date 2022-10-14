@@ -2,7 +2,19 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A decorator to help with dead simple parallelization."""
+"""A decorator to help with dead simple parallelization.  See usage
+below.
+
+This will just work with `Method.THREAD` and `Method.PROCESS` but to
+use `Method.REMOTE` you need to do some setup work.  You need to
+configure a pool of workers.  Each worker should run the same version
+of Python, ideally in identically configured virtual environments.
+And you need to be able to ssh into each machine using key-based
+authentication (i.e. non-iteractively) and run python.  List machines
+in the location set by `--remote_worker_records_file` (see
+:file:executors.h for flag and an example JSON file under examples).
+
+"""
 
 
 import atexit

@@ -4,6 +4,11 @@
 
 """A simple utility to unpickle some code, run it, and pickle the
 results.  Please don't unpickle (or run!) code you do not know.
+
+This script is used by code in parallelize, namely the
+:class:`RemoteExecutor`, to schedule work on a remote machine.
+The code in :file:`parallelize.py` uses a user-defined configuration
+to schedule work this way.  See that file for setup instructions.
 """
 
 import logging
