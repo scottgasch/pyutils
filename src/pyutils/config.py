@@ -7,7 +7,8 @@ optionally, from saved (local or Zookeeper) configuration files... with
 optional support for dynamic arguments (i.e. that can change during runtime).
 
 Let's start with an example of how to use :py:mod:`pyutils.config`.  It's
-pretty easy for normal commandline arguments because it uses :py:mod:`argparse`:
+pretty easy for normal commandline arguments because it wraps :py:mod:`argparse`
+(see https://docs.python.org/3/library/argparse.html):
 
     In your file.py::
 
@@ -139,13 +140,15 @@ ORIG_ARGV: List[str] = sys.argv.copy()
 
 
 class OptionalRawFormatter(argparse.HelpFormatter):
-    """This formatter has the same bahavior as the normal argparse text
-    formatter except when the help text of an argument begins with
-    "RAW|".  In that case, the line breaks are preserved and the text
-    is not wrapped.
+    """This formatter has the same bahavior as the normal argparse
+    text formatter except when the help text of an argument begins
+    with "RAW|".  In that case, the line breaks are preserved and the
+    text is not wrapped.  It is enabled automatically if you use
+    :py:mod:`pyutils.config`.
 
-    Use this, for example, when you need the helptext of an argument
-    to have its spacing preserved exactly, e.g.::
+    Use this by prepending "RAW|" in your help message to disable
+    word wrapping and indicate that the help message is already
+    formatted and should be preserved.  Here's an example usage::
 
         args.add_argument(
             '--mode',
@@ -170,6 +173,7 @@ class OptionalRawFormatter(argparse.HelpFormatter):
           PRECOMPUTE = populate hash table with optimal guesses.
             ''',
         )
+
     """
 
     def _split_lines(self, text, width):

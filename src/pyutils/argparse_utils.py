@@ -3,10 +3,15 @@
 # © Copyright 2021-2022, Scott Gasch
 
 """These are helpers for commandline argument parsing meant to work
-with Python's :mod:`argparse` module from the standard library.  It
-contains validators for new argument types (such as free-form dates,
-durations, IP addresses, etc...)  and an action that creates a pair of
-flags: one to disable a feature and another to enable it.
+with Python's :mod:`argparse` module from the standard library (See:
+https://docs.python.org/3/library/argparse.html).  It contains
+validators for new argument types (such as free-form dates, durations,
+IP addresses, etc...)  and an action that creates a pair of flags: one
+to disable a feature and another to enable it.
+
+See also :py:class:`pyutils.config.OptionalRawFormatter` which is
+automatically enabled if you use :py:mod:`config` module.
+
 """
 
 import argparse

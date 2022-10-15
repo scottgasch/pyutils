@@ -2186,17 +2186,18 @@ do some work for you automatically.
 pyutils.config module
 ---------------------
 
-The config module is an opinionated way to set up input parameters
-to your program.  It is enabled by using the :py:mod:`pyutils.bootstrap`
-decorator or by simply calling :py:meth:`pyutils.config.parse` early in main
-(which is what :py:meth:`pyutils.bootstrap.initialize` does for you).
+The config module is an opinionated way to set up input parameters to
+your program.  It is enabled by using the :py:mod:`pyutils.bootstrap`
+decorator around your main entry point or by simply calling
+:py:meth:`pyutils.config.parse` early in main (which is what
+:py:meth:`pyutils.bootstrap.initialize` does for you).
 
-If you use this module, input parameters to your program can come from
+If you use this module, input parameters to your program come from
 the commandline (and are configured using Python's :py:mod:`argparse`).
 But they can also be be augmented or replaced using saved configuration
 files stored either on the local filesystem or on Apache Zookeeper.
 There is a provision for enabling dynamic arguments (i.e. that can change
-during runtime) via Zookeeper.
+during runtime) via Zookeeper (which is disabled by default).
 
 ---
 
@@ -2207,10 +2208,6 @@ during runtime) via Zookeeper.
 
 pyutils.decorator\_utils module
 -------------------------------
-
-This is a grab bag of decorators.
-
----
 
 .. automodule:: pyutils.decorator_utils
    :members:
