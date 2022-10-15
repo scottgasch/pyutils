@@ -51,10 +51,13 @@ source of all forked code.
     + Added sphinx style pydocs.
 
   3. The timeout decortator in decorator_utils.py is based on original
-  work published in ActiveState code recipes and covered by the PSF
-  license.  It is from here:
+  work by Stephen "Zero" Chappell published in ActiveState code
+  recipes and covered by the PSF license.  It is from here:
 
   https://code.activestate.com/recipes/307871-timing-out-function/
+
+  The original PSF license text is included in the relevant section
+  of decorator_utils.py.
 
   Scott's modifications include:
     + Adding docs + comments including a doctest unittest,

@@ -6,16 +6,25 @@ a generally useful pattern I stuffed it into a local library.  That
 library grew into pyutils: a set of collections, helpers and utilities
 that I find useful and hope you will too.
 
-Code is under `src/pyutils/`.  Most code includes documentation and inline
-doctests.  I've tried to organize it into logical packages based on the
-code's functionality.
+Code is under `src/pyutils/
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=src/pyutils;h=e716e14b7a895e5c6206af90f4628bf756f040fe;hb=HEAD>`_.
+Most code includes inlint documentation and doctests.  I've tried to
+organize it into logical packages based on the code's functionality.
+Note that when words would collide with a Python library or reserved
+word I've used a 'z' at the end, e.g. 'collectionz' instead of
+'collections', 'typez' instead of 'type', etc...
 
-Unit and integration tests are under `tests/*`.  To run all tests::
+There's some example code that uses various features of this project checked
+in under `examples/ <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=examples;h=d9744bf2b171ba7a9ff21ae1d3862b673647fff4;hb=HEAD>`_ that you can check out.
+
+Unit and integration tests are under `tests/
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=tests;h=8c303f23cd89b6d2e4fbf214a5c7dcc0941151b4;hb=HEAD>`_.
+To run all tests::
 
     cd tests/
     ./run_tests.py --all [--coverage]
 
-See the README under `tests/` and the code of `run_tests.py` for more
+See the `README <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/README;hb=HEAD>`_ under `tests/` and the code of `run_tests.py` for more
 options / information about running tests.
 
 This package generates Sphinx docs which are available at:
@@ -34,10 +43,13 @@ development happened in a different git repo:
 
     https://wannabe.guru.org/gitweb/?p=python_utils.git;a=summary
 
-The LICENSE and NOTICE files at the root of the project describe
-reusing this code and where everything came from.  Drop me a line
-if you are using this, find a bug, have a question, or have a
-suggestion:
+The `LICENSE
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`_
+and `NOTICE
+<[https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+files at the root of the project describe reusing this code and where
+everything came from.  Drop me a line if you are using this, find a
+bug, have a question, or have a suggestion:
 
   --Scott Gasch (scott.gasch@gmail.com)
 
@@ -2217,10 +2229,6 @@ pyutils.decorator\_utils module
 pyutils.dict\_utils module
 --------------------------
 
-A bunch of helpers for dealing with Python dicts.
-
----
-
 .. automodule:: pyutils.dict_utils
    :members:
    :undoc-members:
@@ -2228,10 +2236,6 @@ A bunch of helpers for dealing with Python dicts.
 
 pyutils.exec\_utils module
 --------------------------
-
-Helper code for dealing with subprocesses.
-
----
 
 .. automodule:: pyutils.exec_utils
    :members:
@@ -2241,10 +2245,6 @@ Helper code for dealing with subprocesses.
 pyutils.function\_utils module
 ------------------------------
 
-Helper util for dealing with functions.
-
----
-
 .. automodule:: pyutils.function_utils
    :members:
    :undoc-members:
@@ -2252,10 +2252,6 @@ Helper util for dealing with functions.
 
 pyutils.id\_generator module
 ----------------------------
-
-Generate unique identifiers.
-
----
 
 .. automodule:: pyutils.id_generator
    :members:
@@ -2265,11 +2261,6 @@ Generate unique identifiers.
 pyutils.iter\_utils module
 --------------------------
 
-Iterator utilities including a :py:class:`PeekingIterator`, :py:class:`PushbackIterator`,
-and :py:class:`SamplingIterator`.
-
----
-
 .. automodule:: pyutils.iter_utils
    :members:
    :undoc-members:
@@ -2277,10 +2268,6 @@ and :py:class:`SamplingIterator`.
 
 pyutils.list\_utils module
 --------------------------
-
-Utilities for dealing with Python lists.
-
----
 
 .. automodule:: pyutils.list_utils
    :members:
@@ -2290,22 +2277,6 @@ Utilities for dealing with Python lists.
 pyutils.logging\_utils module
 -----------------------------
 
-This is a module that offers an opinionated take on how whole program
-logging should be initialized and controlled.  It uses standard Python
-:py:mod:`logging` but gives you control, via commandline config, to:
-
-    - Set the logging level of the program including overriding the
-      logging level for individual modules,
-    - Define the logging message format including easily adding a
-      PID/TID marker on all messages to help with multithreaded debugging,
-    - Control the destination (file, `sys.stderr`, syslog) of messages,
-    - Control the facility and logging level used with syslog,
-    - Squelch repeated messages,
-    - Log probalistically,
-    - Clear rogue logging handlers added by other imports.
-
----
-
 .. automodule:: pyutils.logging_utils
    :members:
    :undoc-members:
@@ -2313,13 +2284,6 @@ logging should be initialized and controlled.  It uses standard Python
 
 pyutils.math\_utils module
 --------------------------
-
-Helper utilities that are "mathy" such as a :py:class:`NumericPopulation` that
-makes population summary statistics available to your code quickly, GCD
-computation, literate float truncation, percentage <-> multiplier, prime
-number determination, etc...
-
----
 
 .. automodule:: pyutils.math_utils
    :members:
@@ -2329,10 +2293,6 @@ number determination, etc...
 pyutils.misc\_utils module
 --------------------------
 
-Miscellaneous utilities: are we running as root, and is a debugger attached?
-
----
-
 .. automodule:: pyutils.misc_utils
    :members:
    :undoc-members:
@@ -2340,13 +2300,6 @@ Miscellaneous utilities: are we running as root, and is a debugger attached?
 
 pyutils.persistent module
 -------------------------
-
-Persistent defines a class hierarchy and decorator for creating
-singleton classes that (optionally / conditionally) load their state
-from some external location and (optionally / conditionally) save their
-state to an external location at shutdown.
-
----
 
 .. automodule:: pyutils.persistent
    :members:
@@ -2356,12 +2309,6 @@ state to an external location at shutdown.
 pyutils.remote\_worker module
 -----------------------------
 
-This module defines a helper that is invoked by the remote executor to
-run pickled code on a remote machine.  It is used by code marked with
-`@parallelize(method=Method.REMOTE)` in the parallelize framework.
-
----
-
 .. automodule:: pyutils.remote_worker
    :members:
    :undoc-members:
@@ -2369,16 +2316,6 @@ run pickled code on a remote machine.  It is used by code marked with
 
 pyutils.state\_tracker module
 -----------------------------
-
-This module defines several classes (:py:class:`StateTracker`,
-:py:class:`AutomaticStateTracker`, and
-:py:class:`WaitableAutomaticStateTracker`) that can be used as base
-classes.  These class patterns are meant to encapsulate and represent
-state that dynamically changes.  These classes update their state
-(either automatically or when invoked to poll) and allow their callers
-to wait on state changes.
-
----
 
 .. automodule:: pyutils.state_tracker
    :members:
@@ -2401,9 +2338,14 @@ execute.
 pyutils.string\_utils module
 ----------------------------
 
-A bunch of utilities for dealing with strings.  Based on a really great
-starting library from Davide Zanotti, I've added a pile of other string
-functions so hopefully it will handle all of your string-needs.
+A bunch of utilities for dealing with strings.  Based on a really
+great starting library from Davide Zanotti (forked from
+https://github.com/daveoncode/python-string-utils/tree/master/string_utils),
+I've added a pile of other string functions (see `NOTICE
+<[https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+file in the root of this project for a detailed account of what was
+added and changed) so hopefully it will handle all of your
+string-needs.
 
 ---
 
@@ -2415,18 +2357,6 @@ functions so hopefully it will handle all of your string-needs.
 pyutils.text\_utils module
 --------------------------
 
-Utilities for dealing with and creating text chunks.  For example:
-
-    - Make a bar graph,
-    - make a spark line,
-    - left, right, center, justify text,
-    - word wrap text,
-    - indent text,
-    - create a header line,
-    - draw a box around some text.
-
----
-
 .. automodule:: pyutils.text_utils
    :members:
    :undoc-members:
@@ -2434,10 +2364,6 @@ Utilities for dealing with and creating text chunks.  For example:
 
 pyutils.unittest\_utils module
 ------------------------------
-
-Utilities to support smarter unit tests.
-
----
 
 .. automodule:: pyutils.unittest_utils
    :members:
@@ -2447,10 +2373,6 @@ Utilities to support smarter unit tests.
 pyutils.unscrambler module
 --------------------------
 
-Unscramble scrambled English words quickly.
-
----
-
 .. automodule:: pyutils.unscrambler
    :members:
    :undoc-members:
@@ -2459,10 +2381,6 @@ Unscramble scrambled English words quickly.
 pyutils.zookeeper module
 ------------------------
 
-A helper module for dealing with Zookeeper that adds some functionality.
-
----
-
 .. automodule:: pyutils.zookeeper
    :members:
    :undoc-members:
@@ -2470,8 +2388,6 @@ A helper module for dealing with Zookeeper that adds some functionality.
 
 Module contents
 ---------------
-
----
 
 .. automodule:: pyutils
    :members:

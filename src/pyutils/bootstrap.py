@@ -14,24 +14,24 @@ If you decorate your main method (i.e. program entry point) like this::
     * automatic support for :py:mod:`pyutils.config` (argument parsing, see
       that module for details),
     * The ability to break into pdb on unhandled exceptions (which is
-      enabled/disabled via the commandline flag `--debug_unhandled_exceptions`),
-    * automatic logging support from :py:mod:`pyutils.logging` controllable
+      enabled/disabled via the commandline flag :code:`--debug_unhandled_exceptions`),
+    * automatic logging support from :py:mod:`pyutils.logging_utils` controllable
       via several commandline flags,
     * the ability to optionally enable whole-program code profiling and reporting
-      when you run your code using commandline flag `--run_profiler`,
+      when you run your code using commandline flag :code:`--run_profiler`,
     * the ability to optionally enable import auditing via the commandline flag
-      `--audit_import_events`.  This logs a message whenever a module is imported
+      :code:`--audit_import_events`.  This logs a message whenever a module is imported
       *after* the bootstrap module itself is loaded.  Note that other modules may
       already be loaded when bootstrap is loaded and these imports will not be
       logged.  If you're trying to debug import events or dependency problems,
       I suggest putting bootstrap very early in your import list and using this
       flag.
     * optional memory profiling for your program set via the commandline flag
-      `--trace_memory`.  This provides a report of python memory utilization
+      :code:`--trace_memory`.  This provides a report of python memory utilization
       at program termination time.
     * the ability to set the global random seed via commandline flag for
       reproducable runs (as long as subsequent code doesn't reset the seed)
-      using the `--set_random_seed` flag,
+      using the :code:`--set_random_seed` flag,
     * automatic program timing and reporting logged to the INFO log,
     * more verbose error handling and reporting.
 

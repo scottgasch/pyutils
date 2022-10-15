@@ -2,9 +2,9 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A helper class for generating thread safe monotonically increasing
+"""
+A helper class for generating thread safe monotonically increasing
 id numbers.
-
 """
 
 import itertools
@@ -22,6 +22,14 @@ def get(name: str, *, start=0) -> int:
     Returns a thread-safe, monotonically increasing id suitable for use
     as a globally unique identifier.
 
+    Args:
+        name: the sequence identifier name.
+        start: the starting id (i.e. the first id that should be returned)
+
+    Returns:
+        An integer id such that within one sequence identifier name the
+        id returned is unique and is the maximum id ever returned.
+
     >>> import id_generator
     >>> id_generator.get('student_id')
     0
@@ -35,7 +43,7 @@ def get(name: str, *, start=0) -> int:
     if name not in generators:
         generators[name] = itertools.count(start, 1)
     x = next(generators[name])
-    logger.debug("Generated next id %d", x)
+    logger.debug("Generated next id %d in sequence %s", x, name)
     return x
 
 

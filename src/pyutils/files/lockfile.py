@@ -17,15 +17,15 @@ import warnings
 from dataclasses import dataclass
 from typing import Literal, Optional
 
-from pyutils import config, decorator_utils
+from pyutils import argparse_utils, config, decorator_utils
 from pyutils.datetimez import datetime_utils
 
 cfg = config.add_commandline_args(f'Lockfile ({__file__})', 'Args related to lockfiles')
 cfg.add_argument(
-    '--lockfile_held_duration_warning_threshold_sec',
-    type=float,
-    default=60.0,
-    metavar='SECONDS',
+    '--lockfile_held_duration_warning_threshold',
+    type=argparse_utils.valid_duration,
+    default=datetime.timedelta(60.0),
+    metavar='DURATION',
     help='If a lock is held for longer than this threshold we log a warning',
 )
 logger = logging.getLogger(__name__)
@@ -179,7 +179,9 @@ class LockFile(contextlib.AbstractContextManager):
             duration = ts - self.locktime
             if (
                 duration
-                >= config.config['lockfile_held_duration_warning_threshold_sec']
+                >= config.config[
+                    'lockfile_held_duration_warning_threshold'
+                ].total_seconds()
             ):
                 # Note: describe duration briefly only does 1s granularity...
                 str_duration = datetime_utils.describe_duration_briefly(int(duration))

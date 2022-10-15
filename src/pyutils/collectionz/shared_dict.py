@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-"""
-The MIT License (MIT)
+"""The MIT License (MIT)
 
 Copyright (c) 2020 LuizaLabs
 
@@ -25,9 +24,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This class is based on https://github.com/luizalabs/shared-memory-dict.
-For details about what is preserved from the original and what was changed
-by Scott, see NOTICE at the root of this module.
+This class is based on
+https://github.com/luizalabs/shared-memory-dict.  For details about
+what is preserved from the original and what was changed by Scott, see
+`NOTICE
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+at the root of this module.
+
 """
 
 import pickle
@@ -97,6 +100,11 @@ class SharedDict(object):
 
         Subsequent processes may safely omit name and size args.
 
+        Args:
+            name: the name of the shared dict, only required for initial caller
+            size_bytes: the maximum size of data storable in the shared dict,
+                only required for the first caller.
+
         """
         assert size_bytes is None or size_bytes > 0
         self._serializer = PickleSerializer()
@@ -105,7 +113,10 @@ class SharedDict(object):
         self.name = self.shared_memory.name
 
     def get_name(self):
-        """Returns the name of the shared memory buffer backing the dict."""
+        """
+        Returns:
+            The name of the shared memory buffer backing the dict.
+        """
         return self.name
 
     def _get_or_create_memory_block(
@@ -113,6 +124,7 @@ class SharedDict(object):
         name: Optional[str] = None,
         size_bytes: Optional[int] = None,
     ) -> shared_memory.SharedMemory:
+        """Internal helper."""
         try:
             return shared_memory.SharedMemory(name=name)
         except FileNotFoundError:
@@ -120,6 +132,7 @@ class SharedDict(object):
             return shared_memory.SharedMemory(name=name, create=True, size=size_bytes)
 
     def _ensure_memory_initialization(self):
+        """Internal helper."""
         with SharedDict.LOCK:
             memory_is_empty = (
                 bytes(self.shared_memory.buf).split(SharedDict.NULL_BYTE, 1)[0] == b''
@@ -128,6 +141,7 @@ class SharedDict(object):
                 self.clear()
 
     def _write_memory(self, db: Dict[Hashable, Any]) -> None:
+        """Internal helper."""
         data = self._serializer.dumps(db)
         with SharedDict.LOCK:
             try:
@@ -136,11 +150,13 @@ class SharedDict(object):
                 raise ValueError("exceeds available storage") from e
 
     def _read_memory(self) -> Dict[Hashable, Any]:
+        """Internal helper."""
         with SharedDict.LOCK:
             return self._serializer.loads(self.shared_memory.buf.tobytes())
 
     @contextmanager
     def _modify_dict(self):
+        """Internal helper."""
         with SharedDict.LOCK:
             db = self._read_memory()
             yield db
@@ -148,25 +164,29 @@ class SharedDict(object):
 
     def close(self) -> None:
         """Unmap the shared dict and memory behind it from this
-        process.  Called by automatically __del__"""
+        process.  Called by automatically :meth:`__del__`.
+        """
         if not hasattr(self, 'shared_memory'):
             return
         self.shared_memory.close()
 
     def cleanup(self) -> None:
-        """Unlink the shared dict and memory behind it.  Only the last process should
-        invoke this.  Not called automatically."""
+        """Unlink the shared dict and memory behind it.  Only the last process
+        should invoke this.  Not called automatically."""
         if not hasattr(self, 'shared_memory'):
             return
         with SharedDict.LOCK:
             self.shared_memory.unlink()
 
     def clear(self) -> None:
-        """Clear the dict."""
+        """Clears the shared dict."""
         self._write_memory({})
 
     def copy(self) -> Dict[Hashable, Any]:
-        """Returns a shallow copy of the dict."""
+        """
+        Returns:
+            A shallow copy of the shared dict.
+        """
         return self._read_memory()
 
     def __getitem__(self, key: Hashable) -> Any:
@@ -208,7 +228,14 @@ class SharedDict(object):
         return repr(self._read_memory())
 
     def get(self, key: str, default: Optional[Any] = None) -> Any:
-        """Gets the value associated with key or a default."""
+        """
+        Args:
+            key: the key to lookup
+            default: the value returned if key is not present
+
+        Returns:
+            The value associated with key or a default.
+        """
         return self._read_memory().get(key, default)
 
     def keys(self) -> KeysView[Hashable]:

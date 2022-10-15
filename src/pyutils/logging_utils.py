@@ -3,28 +3,41 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Utilities related to logging.  To use it you must invoke
-:meth:`initialize_logging`.  If you use the
-:meth:`bootstrap.initialize` decorator on your program's entry point,
-it will call this for you.  See :meth:`python_modules.bootstrap.initialize`
-for more details.  If you use this you get:
+"""
+This is a module that offers an opinionated take on how whole program
+logging should be initialized and controlled.  It uses the standard
+Python :mod:`logging` but gives you control, via commandline config,
+to do things such as:
 
-* Ability to set logging level,
-* ability to define the logging format,
-* ability to tee all logging on stderr,
-* ability to tee all logging into a file,
-* ability to rotate said file as it grows,
-* ability to tee all logging into the system log (syslog) and
-  define the facility and level used to do so,
-* easy automatic pid/tid stamp on logging for debugging threads,
-* ability to squelch repeated log messages,
-* ability to log probabilistically in code,
-* ability to only see log messages from a particular module or
-  function,
-* ability to clear logging handlers added by earlier loaded modules.
+    * Set the logging default level (debug, info, warning, error, critical)
+      of the whole program (see: :code:`--logging_level`)... and to override
+      the logging level for individual modules/functions based on their names
+      (see :code:`--lmodule`),
+    * define the logging message format (see :code:`--logging_format` and
+      :code:`--logging_date_format`) including easily adding a PID/TID
+      marker on all messages to help with multithreaded debugging
+      (:code:`--logging_debug_threads`) and force module names of code
+      that emits log messages to be included in the format
+      (:code:`--logging_debug_modules`),
+    * control the destination of logged messages:
 
-All of these are controlled via commandline arguments to your program,
-see the code below for details.
+        - log to the console/stderr (:code:`--logging_console`) and/or
+        - log to a rotated file (:code:`--logging_filename`,
+          :code:`--logging_filename_maxsize` and :code:`--logging_filename_count`)
+          and/or
+        - log to the UNIX syslog (:code:`--logging_syslog` and
+          :code:`--logging_syslog_facility`)
+
+    * optionally squelch repeated messages (:code:`--logging_squelch_repeats`),
+    * optionally log probalistically (:code:`--logging_probabilistically`),
+    * capture printed messages into the info log (:code:`--logging_captures_prints`),
+    * and optionally clear unwanted logging handlers added by other imports
+      before this one (:code:`--logging_clear_preexisting_handlers`).
+
+To use this functionality, call :meth:`initialize_logging` early
+in your program entry point.  If you use the
+:meth:`pyutils.bootstrap.initialize` decorator on your program's entry
+point, it will call this for you automatically.
 """
 
 import collections
@@ -220,6 +233,37 @@ def squelch_repeated_log_messages(squelch_after_n_repeats: int) -> Callable:
         of code produces different messages (because of, e.g., a format
         string), the messages are considered to be different.
 
+    An example of this from the pyutils code itself can be found in
+    :meth:`pyutils.ansi.fg` and :meth:`pyutils.ansi.bg` methods::
+
+        @logging_utils.squelch_repeated_log_messages(1)
+        def fg(
+            name: Optional[str] = "",
+            red: Optional[int] = None,
+            green: Optional[int] = None,
+            blue: Optional[int] = None,
+            *,
+            force_16color: bool = False,
+            force_216color: bool = False,
+        ) -> str:
+            ...
+
+    These methods log stuff like "Using 24-bit color strategy" which
+    gets old really fast and fills up the logs.  By decorating the methods
+    with :code:`@logging_utils.squelch_repeated_log_messages(1)` the code
+    is requesting that its logged messages be dropped silently after the
+    first one is produced (note the argument 1).
+
+    Users can insist that all logged messages always be reflected in the
+    logs using the :code:`--no_logging_squelch_repeats` flag but the default
+    behavior is to allow code to request it be squelched.
+
+    :code:`--logging_squelch_repeats` only affects code with this decorator
+    on it; it ignores all other code.
+
+    Args:
+        squelch_after_n_repeats: the number of repeated messages allowed to
+            log before subsequent messages are silently dropped.
     """
 
     def squelch_logging_wrapper(f: Callable):
@@ -239,8 +283,8 @@ class SquelchRepeatedMessagesFilter(logging.Filter):
 
     This filter only affects logging messages that repeat more than a
     threshold number of times from functions that are tagged with the
-    @logging_utils.squelched_logging_ok decorator (see above); others
-    are ignored.
+    :code:`@logging_utils.squelched_logging_ok` decorator (see above);
+    all others are ignored.
 
     This functionality is enabled by default but can be disabled via
     the :code:`--no_logging_squelch_repeats` commandline flag.
@@ -252,6 +296,7 @@ class SquelchRepeatedMessagesFilter(logging.Filter):
 
     @overrides
     def filter(self, record: logging.LogRecord) -> bool:
+        """Should we drop this log message?"""
         id1 = f'{record.module}:{record.funcName}'
         if id1 not in squelched_logging_counts:
             return True
@@ -264,11 +309,22 @@ class SquelchRepeatedMessagesFilter(logging.Filter):
 
 class DynamicPerScopeLoggingLevelFilter(logging.Filter):
     """This filter only allows logging messages from an allow list of
-    module names or module:function names.  Blocks all others.
+    module names or `module:function` names.  Blocks all others.  This
+    filter is used to implement the :code:`--lmodule` commandline option.
+
+    .. note::
+
+        You probably don't need to use this directly, just use
+        :code:`--lmodule`.  For example, to set logging level to INFO
+        everywhere except "module:function" where it should be DEBUG::
+
+            # myprogram.py --logging_level=INFO --lmodule=module:function=DEBUG
+
     """
 
     @staticmethod
     def level_name_to_level(name: str) -> int:
+        """Given a level name, return its numberic value."""
         numeric_level = getattr(logging, name, None)
         if not isinstance(numeric_level, int):
             raise ValueError(f'Invalid level: {name}')
@@ -277,8 +333,18 @@ class DynamicPerScopeLoggingLevelFilter(logging.Filter):
     def __init__(
         self,
         default_logging_level: int,
-        per_scope_logging_levels: str,
+        per_scope_logging_levels: Optional[str],
     ) -> None:
+        """Construct the Filter.
+
+        Args:
+            default_logging_level: the logging level of the whole program
+            per_scope_logging_levels: optional, comma separated overrides of
+                logging level per scope of the format scope=level where
+                scope is of the form "module:function" or ":function" and
+                level is one of NOTSET, DEBUG, INFO, WARNING, ERROR or
+                CRITICAL.
+        """
         super().__init__()
         self.valid_levels = set(
             ['NOTSET', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
@@ -344,12 +410,19 @@ probabilistic_logging_levels: Dict[str, float] = {}
 
 def logging_is_probabilistic(probability_of_logging: float) -> Callable:
     """A decorator that indicates that all logging statements within the
-    scope of a particular (marked) function are not deterministic
-    (i.e. they do not always unconditionally log) but rather are
-    probabilistic (i.e. they log N% of the time, randomly).
+    scope of a particular (marked via decorator) function are not
+    deterministic (i.e. they do not always unconditionally log) but rather
+    are probabilistic (i.e. they log N% of the time, randomly) when the
+    user passes the :code:`--logging_probabilistically` commandline flag
+    (which is enabled by default).
 
     .. note::
+
         This affects *ALL* logging statements within the marked function.
+        If you want it to only affect a subset of logging statements,
+        log those statements in a separate function that you invoke
+        from within the "too large" scope and mark that separate function
+        with the :code:`logging_is_probabilistic` decorator instead.
 
     That this functionality can be disabled (forcing all logged
     messages to produce output) via the
@@ -369,14 +442,17 @@ def logging_is_probabilistic(probability_of_logging: float) -> Callable:
 class ProbabilisticFilter(logging.Filter):
     """
     A filter that logs messages probabilistically (i.e. randomly at some
-    percent chance).
+    percent chance).  This filter is used with a decorator (see
+    :meth:`logging_is_probabilistic`) to implement the
+    :code:`--logging_probabilistically` commandline flag.
 
     This filter only affects logging messages from functions that have
-    been tagged with the @logging_utils.probabilistic_logging decorator.
+    been tagged with the `@logging_utils.probabilistic_logging` decorator.
     """
 
     @overrides
     def filter(self, record: logging.LogRecord) -> bool:
+        """Should the message be logged?"""
         id1 = f'{record.module}:{record.funcName}'
         if id1 not in probabilistic_logging_levels:
             return True
@@ -386,7 +462,7 @@ class ProbabilisticFilter(logging.Filter):
 
 class OnlyInfoFilter(logging.Filter):
     """A filter that only logs messages produced at the INFO logging
-    level.  This is used by the ::code`--logging_info_is_print`
+    level.  This is used by the :code:`--logging_info_is_print`
     commandline option to select a subset of the logging stream to
     send to a stdout handler.
     """
@@ -399,7 +475,14 @@ class OnlyInfoFilter(logging.Filter):
 class MillisecondAwareFormatter(logging.Formatter):
     """
     A formatter for adding milliseconds to log messages which, for
-    whatever reason, the default python logger doesn't do.
+    whatever reason, the default Python logger doesn't do.
+
+    .. note::
+
+        You probably don't need to use this directly but it is
+        wired in under :meth:initialize_logging so that the
+        timestamps in log messages have millisecond level
+        precision.
     """
 
     converter = datetime.datetime.fromtimestamp  # type: ignore
@@ -417,16 +500,17 @@ class MillisecondAwareFormatter(logging.Formatter):
         return s
 
 
-def log_about_logging(
+def _log_about_logging(
     logger,
     default_logging_level,
     preexisting_handlers_count,
     fmt,
     facility_name,
 ):
-    """Some of the initial messages in the debug log are about how we
-    have set up logging itself."""
-
+    """This is invoked automatically after logging is initialized such
+    that the first messages in the log are about how logging itself
+    was configured.
+    """
     level_name = logging._levelToName.get(
         default_logging_level, str(default_logging_level)
     )
@@ -499,29 +583,13 @@ def log_about_logging(
 
 
 def initialize_logging(logger=None) -> logging.Logger:
-    """Initialize logging for the program.  This must be called if you want
-    to use any of the functionality provided by this module such as:
-
-    * Ability to set logging level,
-    * ability to define the logging format,
-    * ability to tee all logging on stderr,
-    * ability to tee all logging into a file,
-    * ability to rotate said file as it grows,
-    * ability to tee all logging into the system log (syslog) and
-      define the facility and level used to do so,
-    * easy automatic pid/tid stamp on logging for debugging threads,
-    * ability to squelch repeated log messages,
-    * ability to log probabilistically in code,
-    * ability to only see log messages from a particular module or
-      function,
-    * ability to clear logging handlers added by earlier loaded modules.
-
-    All of these are controlled via commandline arguments to your program,
-    see the code below for details.
+    """Initialize logging for the program.  See module level comments
+    for information about what functionality this provides and how to
+    enable or disable functionality via the commandline.
 
     If you use the
     :meth:`bootstrap.initialize` decorator on your program's entry point,
-    it will call this for you.  See :meth:`python_modules.bootstrap.initialize`
+    it will call this for you.  See :meth:`pyutils.bootstrap.initialize`
     for more details.
     """
     global LOGGING_INITIALIZED
@@ -683,7 +751,7 @@ def initialize_logging(logger=None) -> logging.Logger:
 
     # At this point the logger is ready, handlers are set up,
     # etc... so log about the logging configuration.
-    log_about_logging(
+    _log_about_logging(
         logger,
         default_logging_level,
         preexisting_handlers_count,
@@ -711,14 +779,6 @@ def tprint(*args, **kwargs) -> None:
         print(*args, **kwargs)
     else:
         pass
-
-
-def dprint(*args, **kwargs) -> None:
-    """Legacy function used to print to stderr still needed by some code.
-    Please just use normal logging with --logging_console which
-    accomplishes the same thing in new code.
-    """
-    print(*args, file=sys.stderr, **kwargs)
 
 
 class OutputMultiplexer(object):
@@ -805,7 +865,7 @@ class OutputMultiplexer(object):
 
     def print(self, *args, **kwargs):
         """Produce some output to all sinks."""
-        from pyutils.string_utils import sprintf, strip_escape_sequences
+        from pyutils.string_utils import _sprintf, strip_escape_sequences
 
         end = kwargs.pop("end", None)
         if end is not None:
@@ -817,7 +877,7 @@ class OutputMultiplexer(object):
                 raise TypeError("sep must be None or a string")
         if kwargs:
             raise TypeError("invalid keyword arguments to print()")
-        buf = sprintf(*args, end="", sep=sep)
+        buf = _sprintf(*args, end="", sep=sep)
         if sep is None:
             sep = " "
         if end is None:
@@ -879,6 +939,16 @@ class OutputMultiplexerContext(OutputMultiplexer, contextlib.ContextDecorator):
         filenames=None,
         handles=None,
     ):
+        """
+        Args:
+            destination_bitv: a bitvector that indicates where we should
+                send output.  See :class:`OutputMultiplexer` for options.
+            logger: optional logger to use for log destination messages.
+            filenames: optional filenames to write for filename destination
+                messages.
+            handles: optional open filehandles to write for filehandle
+                destination messages.
+        """
         super().__init__(
             destination_bitv,
             logger=logger,
@@ -898,10 +968,12 @@ class OutputMultiplexerContext(OutputMultiplexer, contextlib.ContextDecorator):
 
 def hlog(message: str) -> None:
     """Write a message to the house log (syslog facility local7 priority
-    info) by calling /usr/bin/logger.  This is pretty hacky but used
-    by a bunch of code.  Another way to do this would be to use
+    info) by calling `/usr/bin/logger`.  This is pretty hacky but used
+    by a bunch of (my) code.  Another way to do this would be to use
     :code:`--logging_syslog` and :code:`--logging_syslog_facility` but
     I can't actually say that's easier.
+
+    TODO: this needs to move.
     """
     message = message.replace("'", "'\"'\"'")
     os.system(f"/usr/bin/logger -p local7.info -- '{message}'")

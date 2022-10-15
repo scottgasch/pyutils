@@ -4,13 +4,12 @@
 
 """Helpers for unittests.
 
-.. note::
+.. warning::
 
-    When you import this we automatically wrap unittest.main()
-    with a call to bootstrap.initialize so that we getLogger
-    config, commandline args, logging control, etc... this works
-    fine but it's a little hacky so caveat emptor.
-
+    When you import this we automatically wrap the standard Python
+    `unittest.main` with a call to :meth:`pyutils.bootstrap.initialize`
+    so that we get logger config, commandline args, logging control,
+    etc... this works fine but may be unexpected behavior.
 """
 
 import contextlib
@@ -74,27 +73,40 @@ cfg.add_argument(
     help='Db connection spec for perf data (iff --unittest_persistance_strategy is DATABASE)',
 )
 
-# >>> This is the hacky business, FYI. <<<
 unittest.main = bootstrap.initialize(unittest.main)
 
 
 class PerfRegressionDataPersister(ABC):
-    """A base class for a signature dealing with persisting perf
-    regression data."""
-
-    def __init__(self):
-        pass
+    """A base class that defines an interface for dealing with
+    persisting perf regression data.
+    """
 
     @abstractmethod
     def load_performance_data(self, method_id: str) -> Dict[str, List[float]]:
+        """Load the historical performance data for the supplied method.
+
+        Args:
+            method_id: the method for which we want historical perf data.
+        """
         pass
 
     @abstractmethod
     def save_performance_data(self, method_id: str, data: Dict[str, List[float]]):
+        """Save the historical performance data of the supplied method.
+
+        Args:
+            method_id: the method whose historical perf data we're saving.
+            data: the historical performance data being persisted.
+        """
         pass
 
     @abstractmethod
     def delete_performance_data(self, method_id: str):
+        """Delete the historical performance data of the supplied method.
+
+        Args:
+            method_id: the method whose data should be erased.
+        """
         pass
 
 
@@ -102,6 +114,10 @@ class FileBasedPerfRegressionDataPersister(PerfRegressionDataPersister):
     """A perf regression data persister that uses files."""
 
     def __init__(self, filename: str):
+        """
+        Args:
+            filename: the filename to save/load historical performance data
+        """
         super().__init__()
         self.filename = filename
         self.traces_to_delete: List[str] = []
@@ -154,12 +170,22 @@ class FileBasedPerfRegressionDataPersister(PerfRegressionDataPersister):
 
 
 def check_method_for_perf_regressions(func: Callable) -> Callable:
-    """
-    This is meant to be used on a method in a class that subclasses
-    unittest.TestCase.  When thus decorated it will time the execution
-    of the code in the method, compare it with a database of
-    historical perfmance, and fail the test with a perf-related
-    message if it has become too slow.
+    """This decorator is meant to be used on a method in a class that
+    subclasses :class:`unittest.TestCase`.  When decorated, method
+    execution timing (i.e. performance) will be measured and compared
+    with a database of historical performance for the same method.
+    The wrapper will then fail the test with a perf-related message if
+    it has become too slow.
+
+    See also :meth:`check_all_methods_for_perf_regressions`.
+
+    Example usage::
+
+        class TestMyClass(unittest.TestCase):
+
+            @check_method_for_perf_regressions
+            def test_some_part_of_my_class(self):
+                ...
 
     """
 
@@ -246,17 +272,32 @@ Here is the current, full db perf timing distribution:
 
 
 def check_all_methods_for_perf_regressions(prefix='test_'):
-    """Decorate unittests with this to pay attention to the perf of the
-    testcode and flag perf regressions.  e.g.
+    """This decorator is meant to apply to classes that subclass from
+    :class:`unittest.TestCase` and, when applied, has the affect of
+    decorating each method that matches the `prefix` given with the
+    :meth:`check_method_for_perf_regressions` wrapper (see above).
+    This wrapper causes us to measure perf and fail tests that regress
+    perf dramatically.
 
-    import pyutils.unittest_utils as uu
+    Args:
+        prefix: the prefix of method names to check for regressions
 
-    @uu.check_all_methods_for_perf_regressions()
-    class TestMyClass(unittest.TestCase):
+    See also :meth:`check_method_for_perf_regressions` to check only
+    a single method.
 
-        def test_some_part_of_my_class(self):
-            ...
+    Example usage.  By decorating the class, all methods with names
+    that begin with `test_` will be perf monitored::
 
+        import pyutils.unittest_utils as uu
+
+        @uu.check_all_methods_for_perf_regressions()
+        class TestMyClass(unittest.TestCase):
+
+            def test_some_part_of_my_class(self):
+                ...
+
+            def test_som_other_part_of_my_class(self):
+                ...
     """
 
     def decorate_the_testcase(cls):
@@ -272,7 +313,7 @@ def check_all_methods_for_perf_regressions(prefix='test_'):
 
 class RecordStdout(contextlib.AbstractContextManager):
     """
-    Record what is emitted to stdout.
+    Records what is emitted to stdout into a buffer instead.
 
     >>> with RecordStdout() as record:
     ...     print("This is a test!")
@@ -332,6 +373,16 @@ class RecordStderr(contextlib.AbstractContextManager):
 class RecordMultipleStreams(contextlib.AbstractContextManager):
     """
     Record the output to more than one stream.
+
+    Example usage::
+
+        with RecordMultipleStreams(sys.stdout, sys.stderr) as r:
+            print("This is a test!", file=sys.stderr)
+            print("This is too", file=sys.stdout)
+
+        print(r().readlines())
+        r().close()
+
     """
 
     def __init__(self, *files) -> None:

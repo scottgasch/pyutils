@@ -2,8 +2,8 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A collection if :class:`Iterator` subclasses that can be composed
-with another iterator and provide extra functionality.  e.g.
+"""A collection of :class:`Iterator` subclasses that can be composed
+with another iterator and provide extra functionality:
 
     + :class:`PeekingIterator`
     + :class:`PushbackIterator`
@@ -19,7 +19,7 @@ from typing import Any, List, Optional
 class PeekingIterator(Iterator):
     """An iterator that lets you :meth:`peek` at the next item on deck.
     Returns None when there is no next item (i.e. when
-    :meth:`__next__` will produce a StopIteration exception).
+    :meth:`__next__` will produce a `StopIteration` exception).
 
     >>> p = PeekingIterator(iter(range(3)))
     >>> p.__next__()
@@ -38,10 +38,13 @@ class PeekingIterator(Iterator):
     Traceback (most recent call last):
       ...
     StopIteration
-
     """
 
     def __init__(self, source_iter: Iterator):
+        """
+        Args:
+            source_iter: the iterator we want to peek at
+        """
         self.source_iter = source_iter
         self.on_deck: List[Any] = []
 
@@ -56,6 +59,16 @@ class PeekingIterator(Iterator):
             return item
 
     def peek(self) -> Optional[Any]:
+        """Peek at the upcoming value on the top of our contained
+        :py:class:`Iterator` non-destructively (i.e. calling :meth:`__next__` will
+        still produce the peeked value).
+
+        Returns:
+            The value that will be produced by the contained iterator next
+            or None if the contained Iterator is exhausted and will raise
+            `StopIteration` when read.
+
+        """
         if len(self.on_deck) > 0:
             return self.on_deck[0]
         try:
@@ -67,8 +80,9 @@ class PeekingIterator(Iterator):
 
 
 class PushbackIterator(Iterator):
-    """An iterator that allows you to push items back
-    onto the front of the sequence.  e.g.
+    """An iterator that allows you to push items back onto the front
+    of the sequence so that they are produced before the items at the
+    front/top of the contained py:class:`Iterator`. e.g.
 
     >>> i = PushbackIterator(iter(range(3)))
     >>> i.__next__()
@@ -90,6 +104,7 @@ class PushbackIterator(Iterator):
     Traceback (most recent call last):
       ...
     StopIteration
+
     """
 
     def __init__(self, source_iter: Iterator):
@@ -104,22 +119,29 @@ class PushbackIterator(Iterator):
             return self.pushed_back.pop()
         return self.source_iter.__next__()
 
-    def push_back(self, item: Any):
+    def push_back(self, item: Any) -> None:
+        """Push an item onto the top of the contained iterator such that
+        the next time :meth:`__next__` is invoked we produce that item.
+
+        Args:
+            item: the item to produce from :meth:`__next__` next.
+        """
         self.pushed_back.append(item)
 
 
 class SamplingIterator(Iterator):
-    """An iterator that simply echoes what source_iter produces but also
-    collects a random sample (of size sample_size) of the stream that can
-    be queried at any time.
+    """An :py:class:`Iterator` that simply echoes what its
+    `source_iter` produces but also collects a random sample (of size
+    `sample_size`) from the stream that can be queried at any time.
 
     .. note::
-        Until sample_size elements have been seen the sample will be
-        less than sample_size elements in length.
+        Until `sample_size` elements have been produced by the
+        `source_iter`, the sample return will be less than `sample_size`
+        elements in length.
 
     .. note::
-        If sample_size is > len(source_iter) then it will produce a
-        copy of source_iter.
+        If `sample_size` is >= `len(source_iter)` then this will produce
+        a copy of `source_iter`.
 
     >>> import collections
     >>> import random
@@ -174,6 +196,20 @@ class SamplingIterator(Iterator):
         return item
 
     def get_sample(self) -> List[Any]:
+        """
+        Returns:
+            The current sample set populated randomly from the items
+            returned by the contained :class:`Iterator` so far.
+
+        .. note::
+            Until `sample_size` elements have been produced by the
+            `source_iter`, the sample return will be less than `sample_size`
+            elements in length.
+
+        .. note::
+            If `sample_size` is >= `len(source_iter)` then this will produce
+            a copy of `source_iter`.
+        """
         return self.resovoir
 
 

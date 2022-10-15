@@ -2,9 +2,30 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A :class:`Persistent` is just a class with a load and save method.  This
-module defines the :class:`Persistent` base and a decorator that can be used to
-create a persistent singleton that autoloads and autosaves."""
+"""
+This module defines a class hierarchy (base class :class:`Persistent`) and
+a decorator (`@persistent_autoloaded_singleton`) that can be used to create
+objects that load and save their state from some external storage location
+automatically, optionally and conditionally.
+
+A :class:`Persistent` is just a class with a :meth:`Persistent.load` and
+:meth:`Persistent.save` method.   Various subclasses such as
+:class:`JsonFileBasedPersistent` and :class:`PicklingFileBasedPersistent`
+define these methods to, save data in a particular format.  The details
+of where and whether to save are left to your code to decide by implementing
+interface methods like :meth:`Persistent.get_filename` and
+:meth:`Persistent.should_we_load_data`.
+
+This module inculdes some helpers to make deciding whether to load persisted
+state easier such as :meth:`was_file_written_today` and
+:meth:`was_file_written_within_n_seconds`.
+
+:class:`Persistent` classes are good for things backed by persisted
+state that is loaded all or most of the time.  For example, the high
+score list of a game, the configuration settings of a tool,
+etc... Really anything that wants to save/load state from storage and
+not bother with the plumbing to do so.
+"""
 
 import atexit
 import datetime
@@ -63,33 +84,50 @@ class Persistent(ABC):
 
 
 class FileBasedPersistent(Persistent):
-    """A Persistent that uses a file to save/load data and knows the conditions
-    under which the state should be saved/loaded."""
+    """A :class:`Persistent` subclass that uses a file to save/load
+    data and knows the conditions under which the state should be
+    saved/loaded.
+    """
 
     @staticmethod
     @abstractmethod
     def get_filename() -> str:
-        """Since this class saves/loads to/from a file, what's its full path?"""
+        """
+        Returns:
+            The full path of the file in which we are saving/loading data.
+        """
         pass
 
     @staticmethod
     @abstractmethod
     def should_we_save_data(filename: str) -> bool:
+        """
+        Returns:
+            True if we should save our state now or False otherwise.
+        """
         pass
 
     @staticmethod
     @abstractmethod
     def should_we_load_data(filename: str) -> bool:
+        """
+        Returns:
+            True if we should load persisted state now or False otherwise.
+        """
         pass
 
     @abstractmethod
     def get_persistent_data(self) -> Any:
+        """
+        Returns:
+            The raw state data read from the filesystem.  Can be any format.
+        """
         pass
 
 
 class PicklingFileBasedPersistent(FileBasedPersistent):
     """
-    A class that stores its state in a file as pickled python objects.
+    A class that stores its state in a file as pickled Python objects.
 
     Example usage::
 
@@ -97,8 +135,11 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
         @persistent.persistent_autoloaded_singleton()
         class MyClass(persistent.PicklingFileBasedPersistent):
-            def __init__(self, data: Whatever):
-                #initialize youself from data
+            def __init__(self, data: Optional[Whatever]):
+                if data:
+                    # initialize state from data
+                else:
+                    # if desired, initialize an "empty" object with new state.
 
             @staticmethod
             @overrides
@@ -116,9 +157,9 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
                 return persistent.was_file_written_within_n_seconds(whatever)
 
         # Persistent will handle the plumbing to instantiate your class from its
-        # persisted state iff the should_we_load_data says it's ok to.  It will
-        # also persist the current in memory state to disk at program exit iff
-        # the should_we_save_data methods says to.
+        # persisted state iff the :meth:`should_we_load_data` says it's ok to.  It
+        # will also persist the current in-memory state to disk at program exit iff
+        # the :meth:`should_we_save_data` methods says to.
         c = MyClass()
 
     """
@@ -159,8 +200,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
 
 class JsonFileBasedPersistent(FileBasedPersistent):
-    """
-    A class that stores its state in a JSON format file.
+    """A class that stores its state in a JSON format file.
 
     Example usage::
 
@@ -168,8 +208,15 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
         @persistent.persistent_autoloaded_singleton()
         class MyClass(persistent.JsonFileBasedPersistent):
-            def __init__(self, data: Whatever):
-                #initialize youself from data
+            def __init__(self, data: Optional[dict[str, Any]]):
+                # load already deserialized the JSON data for you; it's
+                # a "cooked" JSON dict of string -> values, lists, dicts,
+                # etc...
+                if data:
+                    #initialize youself from data...
+                else:
+                    # if desired, initialize an empty state object
+                    # when json_data isn't provided.
 
             @staticmethod
             @overrides
@@ -186,12 +233,12 @@ class JsonFileBasedPersistent(FileBasedPersistent):
             def should_we_load_data(filename: str) -> bool:
                 return persistent.was_file_written_within_n_seconds(whatever)
 
-        # Persistent will handle the plumbing to instantiate your class from its
-        # persisted state iff the should_we_load_data says it's ok to.  It will
-        # also persist the current in memory state to disk at program exit iff
-        # the should_we_save_data methods says to.
+        # Persistent will handle the plumbing to instantiate your
+        # class from its persisted state iff the
+        # :meth:`should_we_load_data` says it's ok to.  It will also
+        # persist the current in memory state to disk at program exit
+        # iff the :meth:`should_we_save_data methods` says to.
         c = MyClass()
-
     """
 
     @classmethod
@@ -214,7 +261,6 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                 for line in lines:
                     line = re.sub(r'#.*$', '', line)
                     buf += line
-
                 json_dict = json.loads(buf)
                 return cls(json_dict)
 
@@ -244,7 +290,7 @@ def was_file_written_today(filename: str) -> bool:
     """Convenience wrapper around :meth:`was_file_written_within_n_seconds`.
 
     Args:
-        filename: filename to check
+        filename: path / filename to check
 
     Returns:
         True if filename was written today.
@@ -264,7 +310,6 @@ def was_file_written_today(filename: str) -> bool:
     >>> was_file_written_today(filename)
     False
     """
-
     if not file_utils.does_file_exist(filename):
         return False
 
@@ -339,7 +384,7 @@ class persistent_autoloaded_singleton(object):
     chance to read state from somewhere persistent (disk, db,
     whatever).  Subsequent calls to construt instances of the wrapped
     class will return a single, global instance (i.e. the wrapped
-    class is a singleton).
+    class is must be a singleton).
 
     If :meth:`load` fails (returns None), the c'tor is invoked with the
     original args as a fallback.

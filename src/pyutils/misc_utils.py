@@ -9,7 +9,9 @@ import sys
 
 
 def is_running_as_root() -> bool:
-    """Returns True if running as root.
+    """
+    Returns:
+        True if running as root, False otherwise.
 
     >>> is_running_as_root()
     False
@@ -18,8 +20,10 @@ def is_running_as_root() -> bool:
 
 
 def debugger_is_attached() -> bool:
-    """Return if the debugger is attached"""
-
+    """
+    Returns:
+        True if a debugger is attached, False otherwise.
+    """
     gettrace = getattr(sys, 'gettrace', lambda: None)
     return gettrace() is not None
 

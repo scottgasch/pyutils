@@ -2,7 +2,7 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A fast word unscrambler library."""
+"""A fast (English) word unscrambler."""
 
 import logging
 from typing import Dict, Mapping, Optional
@@ -93,13 +93,16 @@ class Unscrambler(object):
     population and then using a pregenerated index to look up known
     words the same set of letters.
 
-    Note that each instance of Unscrambler caches its index to speed
-    up lookups number 2..N; careless reinstantiation will by slower.
-
     Sigs are designed to cluster similar words near each other so both
     lookup methods support a "fuzzy match" argument that can be set to
     request similar words that do not match exactly in addition to any
     exact matches.
+
+    .. note::
+
+        Each instance of Unscrambler caches its index to speed up
+        lookups number 2..N; careless deletion / reinstantiation will
+        suffer slower performance.
     """
 
     def __init__(self, indexfile: Optional[str] = None):
@@ -107,7 +110,8 @@ class Unscrambler(object):
         Constructs an unscrambler.
 
         Args:
-            indexfile: overrides the default indexfile location if provided
+            indexfile: overrides the default indexfile location if provided.
+                To [re]generate the indexfile, see :meth:`repopulate`.
         """
 
         # Cached index per instance.
@@ -126,7 +130,10 @@ class Unscrambler(object):
 
     @staticmethod
     def get_indexfile(indexfile: Optional[str]) -> str:
-        """Returns the current indexfile location."""
+        """
+        Returns:
+            The current indexfile location
+        """
         if indexfile is None:
             if 'unscrambler_default_indexfile' in config.config:
                 indexfile = config.config['unscrambler_default_indexfile']
@@ -189,16 +196,16 @@ class Unscrambler(object):
         Returns:
             The word's signature.
 
-        >>> train = Unscrambler.compute_word_sig('train')
-        >>> train
-        23178969883741
+        >>> test = Unscrambler.compute_word_sig('test')
+        >>> test
+        105560478284788
 
-        >>> retain = Unscrambler.compute_word_sig('retrain')
-        >>> retain
-        24282502197479
+        >>> teste = Unscrambler.compute_word_sig('teste')
+        >>> teste
+        105562386542095
 
-        >>> retain - train
-        1103532313738
+        >>> teste - test
+        1908257307
 
         """
         population = list_utils.population_counts(word)
@@ -216,9 +223,14 @@ class Unscrambler(object):
         """
         Repopulates the indexfile.
 
+        Args:
+            dictfile: a file that contains one word per line
+            indexfile: the file to populate with sig, word pairs for future use
+                by this class.
+
         .. warning::
 
-            Before calling this method, change letter_sigs from the
+            Before calling this method, change `letter_sigs` from the
             default above unless you want to populate the same exact
             files.
         """
@@ -302,12 +314,6 @@ class Unscrambler(object):
             if window_size > 0 or (fsig == sig):
                 ret[word] = fsig == sig
         return ret
-
-
-#
-# To repopulate, change letter_sigs and then call Unscrambler.repopulate.
-# See notes above.  See also ~/bin/unscramble.py --populate_destructively.
-#
 
 
 if __name__ == "__main__":

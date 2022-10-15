@@ -9,15 +9,23 @@ from typing import Callable
 
 def function_identifier(f: Callable) -> str:
     """
-    Given a callable function, return a string that identifies it.
-    Usually that string is just __module__:__name__ but there's a
+    Given a named `Callable`, return a string that identifies it.
+    Usually that string is just "__module__:__name__" but there's a
     corner case: when __module__ is __main__ (i.e. the callable is
     defined in the same module as __main__).  In this case,
     f.__module__ returns "__main__" instead of the file that it is
-    defined in.  Work around this using pathlib.Path (see below).
+    defined in.  Work around this using `pathlib.Path`.
+
+    Args:
+        f: a Callable
+
+    Returns:
+        A unique identifier for that callable in the format
+        module:function that avoids the pseudo-module '__main__'
 
     >>> function_identifier(function_identifier)
     'function_utils:function_identifier'
+
     """
 
     if f.__module__ == '__main__':

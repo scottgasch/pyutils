@@ -2,7 +2,7 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Mathematical helpers."""
+"""Helper utilities with a mathematical / statictical focus."""
 
 import collections
 import functools
@@ -14,8 +14,16 @@ from pyutils import dict_utils
 
 
 class NumericPopulation(object):
-    """A numeric population with some statistics such as median, mean, pN,
-    stdev, etc...
+    """This object *store* a numerical population in a way that enables relatively
+    fast addition of new numbers (:math:`O(2log_2 n)`) and instant access to the
+    median value in the population (:math:`O(1)`).  It also provides other population
+    summary statistics such as the :meth:`mode`, :meth:`get_percentile` and
+    :meth:`stdev`.
+
+    .. note::
+
+        Because this class stores a copy of all numbers added to it, it shouldn't
+        be used for very large populations.  Consider sampling.
 
     >>> pop = NumericPopulation()
     >>> pop.add_number(1)
@@ -48,7 +56,11 @@ class NumericPopulation(object):
 
     def add_number(self, number: float):
         """Adds a number to the population.  Runtime complexity of this
-        operation is :math:`O(2 log_2 n)`"""
+        operation is :math:`O(2 log_2 n)`
+
+        Args:
+            number: the number to add_number to the population
+        """
 
         if not self.highers or number > self.highers[0]:
             heappush(self.highers, number)
@@ -62,7 +74,10 @@ class NumericPopulation(object):
             self.minimum = number
 
     def __len__(self):
-        """Return the population size."""
+        """
+        Returns:
+            the population's current size.
+        """
         n = 0
         if self.highers:
             n += len(self.highers)
@@ -71,14 +86,17 @@ class NumericPopulation(object):
         return n
 
     def _rebalance(self):
+        """Internal helper for rebalancing the `lowers` and `highers` heaps"""
         if len(self.lowers) - len(self.highers) > 1:
             heappush(self.highers, -heappop(self.lowers))
         elif len(self.highers) - len(self.lowers) > 1:
             heappush(self.lowers, -heappop(self.highers))
 
     def get_median(self) -> float:
-        """Returns the approximate median (p50) so far in :math:`O(1)` time."""
-
+        """
+        Returns:
+            The median (p50) of the current population in :math:`O(1)` time.
+        """
         if len(self.lowers) == len(self.highers):
             return -self.lowers[0]
         elif len(self.lowers) > len(self.highers):
@@ -87,15 +105,19 @@ class NumericPopulation(object):
             return self.highers[0]
 
     def get_mean(self) -> float:
-        """Returns the mean (arithmetic mean) so far in :math:`O(1)` time."""
-
+        """
+        Returns:
+            The mean (arithmetic mean) so far in :math:`O(1)` time.
+        """
         count = len(self)
         return self.aggregate / count
 
     def get_mode(self) -> Tuple[float, int]:
-        """Returns the mode (most common member in the population)
-        in :math:`O(n)` time."""
-
+        """
+        Returns:
+            The population mode (most common member in the population)
+            in :math:`O(n)` time.
+        """
         count: Dict[float, int] = collections.defaultdict(int)
         for n in self.lowers:
             count[-n] += 1
@@ -104,8 +126,10 @@ class NumericPopulation(object):
         return dict_utils.item_with_max_value(count)
 
     def get_stdev(self) -> float:
-        """Returns the stdev so far in :math:`O(n)` time."""
-
+        """
+        Returns:
+            The stdev of the current population in :math:`O(n)` time.
+        """
         mean = self.get_mean()
         variance = 0.0
         for n in self.lowers:
@@ -117,6 +141,7 @@ class NumericPopulation(object):
         return math.sqrt(variance) / count
 
     def _create_sorted_copy_if_needed(self, count: int):
+        """Internal helper."""
         if not self.sorted_copy or count != len(self.sorted_copy):
             self.sorted_copy = []
             for x in self.lowers:
@@ -126,10 +151,17 @@ class NumericPopulation(object):
             self.sorted_copy = sorted(self.sorted_copy)
 
     def get_percentile(self, n: float) -> float:
-        """Returns the number at approximately pn% (i.e. the nth percentile)
-        of the distribution in :math:`O(n log_2 n)` time.  Not thread-safe;
-        does caching across multiple calls without an invocation to
-        add_number for perf reasons.
+        """
+        Returns: the number at approximately pn% in the population
+        (i.e. the nth percentile) in :math:`O(n log_2 n)` time (it
+        performs a full sort).  This is not the most efficient
+        algorithm.
+
+        Not thread-safe; does caching across multiple calls without
+        an invocation to :meth:`add_number` for perf reasons.
+
+        Args:
+            n: the percentile to compute
         """
         if n == 50:
             return self.get_median()
@@ -143,7 +175,14 @@ class NumericPopulation(object):
 
 
 def gcd_floats(a: float, b: float) -> float:
-    """Returns the greatest common divisor of a and b."""
+    """
+    Returns:
+        The greatest common divisor of a and b.
+
+    Args:
+        a: first operand
+        b: second operatnd
+    """
     if a < b:
         return gcd_floats(b, a)
 
@@ -154,7 +193,13 @@ def gcd_floats(a: float, b: float) -> float:
 
 
 def gcd_float_sequence(lst: List[float]) -> float:
-    """Returns the greatest common divisor of a list of floats."""
+    """
+    Returns:
+        The greatest common divisor of a list of floats.
+
+    Args:
+        lst: a list of operands
+    """
     if len(lst) <= 0:
         raise ValueError("Need at least one number")
     elif len(lst) == 1:
@@ -167,11 +212,15 @@ def gcd_float_sequence(lst: List[float]) -> float:
 
 
 def truncate_float(n: float, decimals: int = 2):
-    """Truncate a float to a particular number of decimals.
+    """
+    Returns:
+        A truncated float to a particular number of decimals.
+
+    Args:
+        n: the float to truncate
 
     >>> truncate_float(3.1415927, 3)
     3.141
-
     """
     assert 0 < decimals < 10
     multiplier = 10**decimals
@@ -179,8 +228,12 @@ def truncate_float(n: float, decimals: int = 2):
 
 
 def percentage_to_multiplier(percent: float) -> float:
-    """Given a percentage (e.g. 155%), return a factor needed to scale a
-    number by that percentage.
+    """Given a percentage that represents a return or percent change
+    (e.g. 155%), determine the factor (i.e.  multiplier) needed to
+    scale a number by that percentage (e.g. 2.55x)
+
+    Args:
+        percent: the return percent to scale by
 
     >>> percentage_to_multiplier(155)
     2.55
@@ -188,6 +241,7 @@ def percentage_to_multiplier(percent: float) -> float:
     1.45
     >>> percentage_to_multiplier(-25)
     0.75
+
     """
     multiplier = percent / 100
     multiplier += 1.0
@@ -195,7 +249,11 @@ def percentage_to_multiplier(percent: float) -> float:
 
 
 def multiplier_to_percent(multiplier: float) -> float:
-    """Convert a multiplicative factor into a percent change.
+    """Convert a multiplicative factor into a percent change or return
+    percentage.
+
+    Args:
+        multiplier: the multiplier for which to compute the percent change
 
     >>> multiplier_to_percent(0.75)
     -25.0
@@ -216,8 +274,16 @@ def multiplier_to_percent(multiplier: float) -> float:
 @functools.lru_cache(maxsize=1024, typed=True)
 def is_prime(n: int) -> bool:
     """
-    Returns True if n is prime and False otherwise.  Obviously(?) very slow for
-    very large input numbers.
+    Args:
+        n: the number for which primeness is to be determined.
+
+    Returns:
+        True if n is prime and False otherwise.
+
+    .. note::
+
+         Obviously(?) very slow for very large input numbers until
+         we get quantum computers.
 
     >>> is_prime(13)
     True

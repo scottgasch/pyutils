@@ -3,7 +3,18 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Utilities for dealing with "text"."""
+"""
+Utilities for dealing with and creating text chunks.  For example:
+
+    - Make a bar graph / progress graph,
+    - make a spark line,
+    - left, right, center, justify text,
+    - word wrap text,
+    - indent / dedent text,
+    - create a header line,
+    - draw a box around some text.
+
+"""
 
 import contextlib
 import enum
@@ -116,6 +127,13 @@ def bar_graph(
         redraw: if True, omit a line feed after the carriage return
             so that subsequent calls to this method redraw the graph
             iteratively.
+
+    See also :meth:`bar_graph_string`, :meth:`sparkline`.
+
+    Example::
+
+        '[███████████████████████████████████                                   ] 0.5'
+
     """
     ret = "\r" if redraw else "\n"
     bar = bar_graph_string(
@@ -164,6 +182,8 @@ def bar_graph_string(
         reset_seq: sequence to use to turn off color
         left_end: the character at the left side of the graph
         right_end: the character at the right side of the graph
+
+    See also :meth:`bar_graph`, :meth:`sparkline`.
 
     >>> bar_graph_string(5, 10, fgcolor='', reset_seq='')
     '[███████████████████████████████████                                   ] 0.5'
@@ -214,6 +234,8 @@ def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
         * the maximum number in the population
         * a string representation of the population in a concise format
 
+    See also :meth:`bar_graph`, :meth:`bar_graph_string`.
+
     >>> sparkline([1, 2, 3, 5, 10, 3, 5, 7])
     (1, 10, '▁▁▂▄█▂▄▆')
 
@@ -248,6 +270,8 @@ def distribute_strings(
 
     Returns:
         The distributed, justified string.
+
+    See also :meth:`justify_string`, :meth:`justify_text`.
 
     >>> distribute_strings(['this', 'is', 'a', 'test'], width=40)
     '      this      is      a      test     '
@@ -358,6 +382,8 @@ def justify_text(
 
     Returns:
         The justified text.
+
+    See also :meth:`justify_text`.
 
     >>> justify_text('This is a test of the emergency broadcast system.  This is only a test.',
     ...              width=40, alignment='j')  #doctest: +NORMALIZE_WHITESPACE
@@ -596,6 +622,8 @@ def box(
     Returns:
         the box as a string
 
+    See also :meth:`print_box`, :meth:`preformatted_box`.
+
     >>> print(box('title', 'this is some text', width=20).strip())
     ╭──────────────────╮
     │       title      │
@@ -627,6 +655,8 @@ def preformatted_box(
 
     Returns:
         the box as a string
+
+    See also :meth:`print_box`, :meth:`box`.
 
     >>> print(preformatted_box('title', 'this\\nis\\nsome\\ntext', width=20).strip())
     ╭──────────────────╮
@@ -685,6 +715,20 @@ def print_box(
     color: str = '',
 ) -> None:
     """Draws a box with nice rounded corners.
+
+    Args:
+        title: the title of the box
+        text: the text inside the box
+        width: the width of the box
+        color: the box's color
+
+    Returns:
+        None
+
+    Side-effects:
+        Prints a box with your text on the console to sys.stdout.
+
+    See also :meth:`preformatted_box`, :meth:`box`.
 
     >>> print_box('Title', 'This is text', width=30)
     ╭────────────────────────────╮

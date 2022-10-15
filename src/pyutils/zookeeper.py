@@ -3,7 +3,13 @@
 
 # © Copyright 2022, Scott Gasch
 
-"""This is a module for making it easier to deal with Zookeeper / Kazoo."""
+"""
+This is a module for making it easier to deal with Zookeeper / Kazoo.
+Apache Zookeeper (https://zookeeper.apache.org/) is a consistent centralized
+datastore.  :mod:`pyutils.config` optionally uses it to save/read program
+configuration.  But it's also very useful for things like distributed
+master election, locking, etc...
+"""
 
 
 import datetime
@@ -58,6 +64,11 @@ PROGRAM_NAME: str = os.path.basename(sys.argv[0])
 
 
 def get_started_zk_client() -> KazooClient:
+    """
+    Returns:
+        A zk client library reference that has been connected and started
+        using the commandline provided address, certificates and passphrase.
+    """
     zk = KazooClient(
         hosts=config.config['zookeeper_nodes'],
         use_ssl=True,
@@ -73,7 +84,7 @@ def get_started_zk_client() -> KazooClient:
 
 class RenewableReleasableLease(NonBlockingLease):
     """This is a hacky subclass of kazoo.recipe.lease.NonBlockingLease
-    that adds some behaviors:
+    (see https://kazoo.readthedocs.io/en/latest/api/recipe/lease.html#kazoo.recipe.lease.NonBlockingLease) that adds some behaviors:
 
         + Ability to renew the lease if it's already held without
           going through the effort of reobtaining the same lease
@@ -106,6 +117,18 @@ class RenewableReleasableLease(NonBlockingLease):
         identifier: str = None,
         utcnow=datetime.datetime.utcnow,
     ):
+        """Construct the RenewableReleasableLease.
+
+        Args:
+            client: a KazooClient that is connected and started
+            path: the path to the lease in zookeeper
+            duration: duration during which the lease is reserved
+            identifier: unique name to use for this lease holder.
+                Reuse in order to renew the lease.
+            utcnow: clock function, by default returning
+                :meth:`datetime.datetime.utcnow`. Used for testing.
+
+        """
         super().__init__(client, path, duration, identifier, utcnow)
         self.client = client
         self.path = path
@@ -155,7 +178,7 @@ class RenewableReleasableLease(NonBlockingLease):
 
         Args:
             duration: the amount of additional time to add to the
-                      current lease expiration.
+                current lease expiration.
 
         Returns:
             True if the lease was successfully renewed,
@@ -186,11 +209,14 @@ class RenewableReleasableLease(NonBlockingLease):
         return False
 
     def __bool__(self):
-        """Note that this implementation differs from that of the base
-        class in that it probes zookeeper to ensure that the lease is
-        not yet expired and is therefore more expensive.
         """
+        .. note:
 
+            This implementation differs from that of the base class in
+            that it probes zookeeper to ensure that the lease is not yet
+            expired and is therefore more expensive.
+
+        """
         if not self.obtained:
             return False
         lock = self.client.Lock(self.path, self.identifier)

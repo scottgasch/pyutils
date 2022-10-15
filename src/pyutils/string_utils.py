@@ -25,9 +25,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-This class is based on: https://github.com/daveoncode/python-string-utils.
-See NOTICE in the root of this module for a detailed enumeration of what
-work is Davide's and what work was added by Scott.
+This class is based on:
+https://github.com/daveoncode/python-string-utils.  See `NOTICE
+<[https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+in the root of this module for a detailed enumeration of what work is
+Davide's and what work was added by Scott.
+
 """
 
 import base64
@@ -213,7 +216,14 @@ TENS_WORDS = [
     "ninety",
 ]
 
-scales = ["hundred", "thousand", "million", "billion", "trillion", "quadrillion"]
+MAGNITUDE_SCALES = [
+    "hundred",
+    "thousand",
+    "million",
+    "billion",
+    "trillion",
+    "quadrillion",
+]
 
 NUM_WORDS = {}
 NUM_WORDS["and"] = (1, 0)
@@ -221,7 +231,7 @@ for i, word in enumerate(UNIT_WORDS):
     NUM_WORDS[word] = (1, i)
 for i, word in enumerate(TENS_WORDS):
     NUM_WORDS[word] = (1, i * 10)
-for i, word in enumerate(scales):
+for i, word in enumerate(MAGNITUDE_SCALES):
     if i == 0:
         NUM_WORDS[word] = (100, 0)
     else:
@@ -237,6 +247,8 @@ def is_none_or_empty(in_str: Optional[str]) -> bool:
     Returns:
         True if the input string is either None or an empty string,
         False otherwise.
+
+    See also :meth:`is_string` and :meth:`is_empty_string`.
 
     >>> is_none_or_empty("")
     True
@@ -258,6 +270,8 @@ def is_string(obj: Any) -> bool:
     Returns:
         True if the object is a string and False otherwise.
 
+    See also :meth:`is_empty_string`, :meth:`is_none_or_empty`.
+
     >>> is_string('test')
     True
     >>> is_string(123)
@@ -277,6 +291,8 @@ def is_empty_string(in_str: Any) -> bool:
 
     Returns:
         True if the string is empty and False otherwise.
+
+    See also :meth:`is_none_or_empty`, :meth:`is_full_string`.
     """
     return is_empty(in_str)
 
@@ -288,6 +304,8 @@ def is_empty(in_str: Any) -> bool:
 
     Returns:
         True if the string is empty and false otherwise.
+
+    See also :meth:`is_none_or_empty`, :meth:`is_full_string`.
 
     >>> is_empty('')
     True
@@ -312,6 +330,8 @@ def is_full_string(in_str: Any) -> bool:
         True if the object is a string and is not empty ('') and
         is not only composed of whitespace.
 
+    See also :meth:`is_string`, :meth:`is_empty_string`, :meth:`is_none_or_empty`.
+
     >>> is_full_string('test!')
     True
     >>> is_full_string('')
@@ -334,6 +354,10 @@ def is_number(in_str: str) -> bool:
     Returns:
         True if the string contains a valid numberic value and
         False otherwise.
+
+    See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
+    :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
+    etc...
 
     >>> is_number(100.5)
     Traceback (most recent call last):
@@ -365,6 +389,10 @@ def is_integer_number(in_str: str) -> bool:
         decimal, hex, or octal, regular or scientific) integral
         expression and False otherwise.
 
+    See also :meth:`is_number`, :meth:`is_decimal_number`,
+    :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
+    etc...
+
     >>> is_integer_number('42')
     True
     >>> is_integer_number('42.0')
@@ -385,6 +413,9 @@ def is_hexidecimal_integer_number(in_str: str) -> bool:
 
     Returns:
         True if the string is a hex integer number and False otherwise.
+
+    See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
+    :meth:`is_octal_integer_number`, :meth:`is_binary_integer_number`, etc...
 
     >>> is_hexidecimal_integer_number('0x12345')
     True
@@ -422,6 +453,10 @@ def is_octal_integer_number(in_str: str) -> bool:
     Returns:
         True if the string is a valid octal integral number and False otherwise.
 
+    See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
+    :meth:`is_hexidecimal_integer_number`, :meth:`is_binary_integer_number`,
+    etc...
+
     >>> is_octal_integer_number('0o777')
     True
     >>> is_octal_integer_number('-0O115')
@@ -445,6 +480,10 @@ def is_binary_integer_number(in_str: str) -> bool:
 
     Returns:
         True if the string contains a binary integral number and False otherwise.
+
+    See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
+    :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
+    etc...
 
     >>> is_binary_integer_number('0b10111')
     True
@@ -472,8 +511,18 @@ def to_int(in_str: str) -> int:
     Returns:
         The integral value of the string or raises on error.
 
+    See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
+    :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
+    :meth:`is_binary_integer_number`, etc...
+
     >>> to_int('1234')
     1234
+    >>> to_int('0x1234')
+    4660
+    >>> to_int('0b01101')
+    13
+    >>> to_int('0o777')
+    511
     >>> to_int('test')
     Traceback (most recent call last):
     ...
@@ -492,6 +541,18 @@ def to_int(in_str: str) -> int:
 
 def number_string_to_integer(in_str: str) -> int:
     """Convert a string containing a written-out number into an int.
+
+    Args:
+        in_str: the string containing the long-hand written out integer number
+            in English.  See examples below.
+
+    Returns:
+        The integer whose value was parsed from in_str.
+
+    See also :meth:`integer_to_number_string`.
+
+    .. warning::
+        This code only handles integers; it will not work with decimals / floats.
 
     >>> number_string_to_integer("one hundred fifty two")
     152
@@ -529,8 +590,19 @@ def number_string_to_integer(in_str: str) -> int:
 
 def integer_to_number_string(num: int) -> str:
     """
-    Opposite of number_string_to_integer; convert a number to a written out
-    longhand format.
+    Opposite of :meth:`number_string_to_integer`; converts a number to a written out
+    longhand format in English.
+
+    Args:
+        num: the integer number to convert
+
+    Returns:
+        The long-hand written out English form of the number.  See examples below.
+
+    See also :meth:`number_string_to_integer`.
+
+    .. warning::
+        This method does not handle decimals or floats, only ints.
 
     >>> integer_to_number_string(9)
     'nine'
@@ -540,7 +612,6 @@ def integer_to_number_string(num: int) -> str:
 
     >>> integer_to_number_string(123219982)
     'one hundred twenty three million two hundred nineteen thousand nine hundred eighty two'
-
     """
 
     if num < 20:
@@ -583,6 +654,8 @@ def is_decimal_number(in_str: str) -> bool:
         otherwise.  A decimal may be signed or unsigned or use
         a "scientific notation".
 
+    See also :meth:`is_integer_number`.
+
     .. note::
         We do not consider integers without a decimal point
         to be decimals; they return False (see example).
@@ -602,6 +675,8 @@ def strip_escape_sequences(in_str: str) -> str:
 
     Returns:
         in_str with escape sequences removed.
+
+    See also: :mod:`pyutils.ansi`.
 
     .. note::
         What is considered to be an "escape sequence" is defined
@@ -647,6 +722,7 @@ def add_thousands_separator(in_str: str, *, separator_char=',', places=3) -> str
 
 
 def _add_thousands_separator(in_str: str, *, separator_char=',', places=3) -> str:
+    """Internal helper"""
     decimal_part = ""
     if '.' in in_str:
         (in_str, decimal_part) = in_str.split('.')
@@ -743,6 +819,8 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     Returns:
         An integer number of bytes or None to indicate an error.
 
+    See also :meth:`number_to_suffix_string`.
+
     >>> suffix_string_to_number('1Mb')
     1048576
     >>> suffix_string_to_number('13.1Gb')
@@ -784,6 +862,8 @@ def number_to_suffix_string(num: int) -> Optional[str]:
         A string with a suffix representing num bytes concisely or
         None to indicate an error.
 
+    See also: :meth:`suffix_string_to_number`.
+
     >>> number_to_suffix_string(14066017894)
     '13.1Gb'
     >>> number_to_suffix_string(1024 * 1024)
@@ -821,6 +901,13 @@ def is_credit_card(in_str: Any, card_type: str = None) -> bool:
 
     Returns:
         True if in_str is a valid credit card number.
+
+    .. warning::
+        This code is not verifying the authenticity of the credit card (i.e.
+        not checking whether it's a real card that can be charged); rather
+        it's only checking that the number follows the "rules" for numbering
+        established by credit card issuers.
+
     """
     if not is_full_string(in_str):
         return False
@@ -849,6 +936,8 @@ def is_camel_case(in_str: Any) -> bool:
         * it's composed only by letters ([a-zA-Z]) and optionally numbers ([0-9])
         * it contains both lowercase and uppercase letters
         * it does not start with a number
+
+    See also :meth:`is_snake_case`, :meth:`is_slug`, and :meth:`camel_case_to_snake_case`.
     """
     return is_full_string(in_str) and CAMEL_CASE_TEST_RE.match(in_str) is not None
 
@@ -864,6 +953,8 @@ def is_snake_case(in_str: Any, *, separator: str = "_") -> bool:
         * it's composed only by lowercase/uppercase letters and digits
         * it contains at least one underscore (or provided separator)
         * it does not start with a number
+
+    See also :meth:`is_camel_case`, :meth:`is_slug`, and :meth:`snake_case_to_camel_case`.
 
     >>> is_snake_case('this_is_a_test')
     True
@@ -916,6 +1007,8 @@ def is_uuid(in_str: Any, allow_hex: bool = False) -> bool:
     Returns:
         True if the in_str contains a valid UUID and False otherwise.
 
+    See also :meth:`generate_uuid`.
+
     >>> is_uuid('6f8aa2f9-686c-4ac3-8766-5712354a04cf')
     True
     >>> is_uuid('6f8aa2f9686c4ac387665712354a04cf')
@@ -937,6 +1030,9 @@ def is_ip_v4(in_str: Any) -> bool:
 
     Returns:
         True if in_str contains a valid IPv4 address and False otherwise.
+
+    See also :meth:`extract_ip_v4`, :meth:`is_ip_v6`, :meth:`extract_ip_v6`,
+    and :meth:`is_ip`.
 
     >>> is_ip_v4('255.200.100.75')
     True
@@ -964,6 +1060,9 @@ def extract_ip_v4(in_str: Any) -> Optional[str]:
         The first extracted IPv4 address from in_str or None if
         none were found or an error occurred.
 
+    See also :meth:`is_ip_v4`, :meth:`is_ip_v6`, :meth:`extract_ip_v6`,
+    and :meth:`is_ip`.
+
     >>> extract_ip_v4('   The secret IP address: 127.0.0.1 (use it wisely)   ')
     '127.0.0.1'
     >>> extract_ip_v4('Your mom dresses you funny.')
@@ -984,6 +1083,9 @@ def is_ip_v6(in_str: Any) -> bool:
     Returns:
         True if in_str contains a valid IPv6 address and False otherwise.
 
+    See also :meth:`is_ip_v4`, :meth:`extract_ip_v4`, :meth:`extract_ip_v6`,
+    and :meth:`is_ip`.
+
     >>> is_ip_v6('2001:db8:85a3:0000:0000:8a2e:370:7334')
     True
     >>> is_ip_v6('2001:db8:85a3:0000:0000:8a2e:370:?')    # invalid "?"
@@ -1000,6 +1102,9 @@ def extract_ip_v6(in_str: Any) -> Optional[str]:
     Returns:
         The first IPv6 address found in in_str or None if no address
         was found or an error occurred.
+
+    See also :meth:`is_ip_v4`, :meth:`is_ip_v6`, :meth:`extract_ip_v4`,
+    and :meth:`is_ip`.
 
     >>> extract_ip_v6('IP: 2001:db8:85a3:0000:0000:8a2e:370:7334')
     '2001:db8:85a3:0000:0000:8a2e:370:7334'
@@ -1022,6 +1127,9 @@ def is_ip(in_str: Any) -> bool:
         True if in_str contains a valid IP address (either IPv4 or
         IPv6).
 
+    See also :meth:`is_ip_v4`, :meth:`is_ip_v6`, :meth:`extract_ip_v6`,
+    and :meth:`extract_ip_v4`.
+
     >>> is_ip('255.200.100.75')
     True
     >>> is_ip('2001:db8:85a3:0000:0000:8a2e:370:7334')
@@ -1043,6 +1151,9 @@ def extract_ip(in_str: Any) -> Optional[str]:
         The first IP address (IPv4 or IPv6) found in in_str or
         None to indicate none found or an error condition.
 
+    See also :meth:`is_ip_v4`, :meth:`is_ip_v6`, :meth:`extract_ip_v6`,
+    and :meth:`extract_ip_v4`.
+
     >>> extract_ip('Attacker: 255.200.100.75')
     '255.200.100.75'
     >>> extract_ip('Remote host: 2001:db8:85a3:0000:0000:8a2e:370:7334')
@@ -1062,6 +1173,8 @@ def is_mac_address(in_str: Any) -> bool:
 
     Returns:
         True if in_str is a valid MAC address False otherwise.
+
+    See also :meth:`extract_mac_address`, :meth:`is_ip`, etc...
 
     >>> is_mac_address("34:29:8F:12:0D:2F")
     True
@@ -1083,6 +1196,8 @@ def extract_mac_address(in_str: Any, *, separator: str = ":") -> Optional[str]:
     Returns:
         The first MAC address found in in_str or None to indicate no
         match or an error.
+
+    See also :meth:`is_mac_address`, :meth:`is_ip`, and :meth:`extract_ip`.
 
     >>> extract_mac_address(' MAC Address: 34:29:8F:12:0D:2F')
     '34:29:8F:12:0D:2F'
@@ -1110,6 +1225,8 @@ def is_slug(in_str: Any, separator: str = "-") -> bool:
     Returns:
         True if in_str is a slug string and False otherwise.
 
+    See also :meth:`is_camel_case`, :meth:`is_snake_case`, and :meth:`slugify`.
+
     >>> is_slug('my-blog-post-title')
     True
     >>> is_slug('My blog post title')
@@ -1129,6 +1246,8 @@ def contains_html(in_str: str) -> bool:
     Returns:
         True if the given string contains HTML/XML tags and False
         otherwise.
+
+    See also :meth:`strip_html`.
 
     .. warning::
         By design, this function matches ANY type of tag, so don't expect
@@ -1156,7 +1275,6 @@ def words_count(in_str: str) -> int:
         The number of words contained in the given string.
 
     .. note::
-
         This method is "smart" in that it does consider only sequences
         of one or more letter and/or numbers to be "words".  Thus a
         string like this: "! @ # % ... []" will return zero.  Moreover
@@ -1183,7 +1301,6 @@ def word_count(in_str: str) -> int:
         The number of words contained in the given string.
 
     .. note::
-
         This method is "smart" in that it does consider only sequences
         of one or more letter and/or numbers to be "words".  Thus a
         string like this: "! @ # % ... []" will return zero.  Moreover
@@ -1208,6 +1325,8 @@ def generate_uuid(omit_dashes: bool = False) -> str:
         A generated UUID string (using `uuid.uuid4()`) with or without
         dashes per the omit_dashes arg.
 
+    See also :meth:`is_uuid`, :meth:`generate_random_alphanumeric_string`.
+
     generate_uuid() # possible output: '97e3a716-6b33-4ab9-9bb1-8128cb24d76b'
     generate_uuid(omit_dashes=True) # possible output: '97e3a7166b334ab99bb18128cb24d76b'
     """
@@ -1225,6 +1344,8 @@ def generate_random_alphanumeric_string(size: int) -> str:
     Returns:
         A string of the specified size containing random characters
         (uppercase/lowercase ascii letters and digits).
+
+    See also :meth:`asciify`, :meth:`generate_uuid`.
 
     >>> random.seed(22)
     >>> generate_random_alphanumeric_string(9)
@@ -1263,6 +1384,8 @@ def camel_case_to_snake_case(in_str, *, separator="_"):
         original string if it is not a valid camel case string or some
         other error occurs.
 
+    See also :meth:`is_camel_case`, :meth:`is_snake_case`, and :meth:`is_slug`.
+
     >>> camel_case_to_snake_case('MacAddressExtractorFactory')
     'mac_address_extractor_factory'
     >>> camel_case_to_snake_case('Luke Skywalker')
@@ -1287,6 +1410,8 @@ def snake_case_to_camel_case(
         provided or the original string back again if it is not valid
         snake case or another error occurs.
 
+    See also :meth:`is_camel_case`, :meth:`is_snake_case`, and :meth:`is_slug`.
+
     >>> snake_case_to_camel_case('this_is_a_test')
     'ThisIsATest'
     >>> snake_case_to_camel_case('Han Solo')
@@ -1310,6 +1435,8 @@ def to_char_list(in_str: str) -> List[str]:
     Returns:
         A list of strings of length one each.
 
+    See also :meth:`from_char_list`.
+
     >>> to_char_list('test')
     ['t', 'e', 's', 't']
     """
@@ -1326,6 +1453,8 @@ def from_char_list(in_list: List[str]) -> str:
     Returns:
         The string resulting from gluing the characters in in_list
         together.
+
+    See also :meth:`to_char_list`.
 
     >>> from_char_list(['t', 'e', 's', 't'])
     'test'
@@ -1366,6 +1495,8 @@ def scramble(in_str: str) -> Optional[str]:
         in the same original string as no check is done.  Returns
         None to indicate error conditions.
 
+    See also :mod:`pyutils.unscrambler`.
+
     >>> random.seed(22)
     >>> scramble('awesome')
     'meosaew'
@@ -1382,6 +1513,8 @@ def strip_html(in_str: str, keep_tag_content: bool = False) -> str:
     Returns:
         A string with all HTML tags removed (optionally with tag contents
         preserved).
+
+    See also :meth:`contains_html`.
 
     .. note::
         This method uses simple regular expressions to strip tags and is
@@ -1410,6 +1543,8 @@ def asciify(in_str: str) -> str:
         where all content to are ascii-only.  This is accomplished
         by translating all non-ascii chars into their closest possible
         ASCII representation (eg: ó -> o, Ë -> E, ç -> c...).
+
+    See also :meth:`to_ascii`, :meth:`generate_random_alphanumeric_string`.
 
     .. warning::
         Some chars may be lost if impossible to translate.
@@ -1449,6 +1584,8 @@ def slugify(in_str: str, *, separator: str = "-") -> str:
         * all chars are encoded as ascii (by using :meth:`asciify`)
         * is safe for URL
 
+    See also :meth:`is_slug` and :meth:`asciify`.
+
     >>> slugify('Top 10 Reasons To Love Dogs!!!')
     'top-10-reasons-to-love-dogs'
     >>> slugify('Mönstér Mägnët')
@@ -1487,6 +1624,8 @@ def to_bool(in_str: str) -> bool:
 
         Otherwise False is returned.
 
+    See also :mod:`pyutils.argparse_utils`.
+
     >>> to_bool('True')
     True
 
@@ -1520,6 +1659,9 @@ def to_date(in_str: str) -> Optional[datetime.date]:
         an error.  This parser is relatively clever; see
         :class:`datetimez.dateparse_utils` docs for details.
 
+    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`extract_date`,
+    :meth:`is_valid_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
+
     >>> to_date('9/11/2001')
     datetime.date(2001, 9, 11)
     >>> to_date('xyzzy')
@@ -1544,6 +1686,9 @@ def extract_date(in_str: Any) -> Optional[datetime.datetime]:
 
     Returns:
         a datetime if date was found, otherwise None
+
+    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    :meth:`is_valid_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
 
     >>> extract_date("filename.txt    dec 13, 2022")
     datetime.datetime(2022, 12, 13, 0, 0)
@@ -1583,6 +1728,9 @@ def is_valid_date(in_str: str) -> bool:
         and False otherwise.  This parser is relatively clever; see
         :class:`datetimez.dateparse_utils` docs for details.
 
+    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    :meth:`extract_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
+
     >>> is_valid_date('1/2/2022')
     True
     >>> is_valid_date('christmas')
@@ -1613,6 +1761,9 @@ def to_datetime(in_str: str) -> Optional[datetime.datetime]:
         A python datetime parsed from in_str or None to indicate
         an error.  This parser is relatively clever; see
         :class:`datetimez.dateparse_utils` docs for details.
+
+    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    :meth:`extract_date`, :meth:`valid_datetime`.
 
     >>> to_datetime('7/20/1969 02:56 GMT')
     datetime.datetime(1969, 7, 20, 2, 56, tzinfo=<StaticTzInfo 'GMT'>)
@@ -1689,9 +1840,7 @@ def dedent(in_str: str) -> Optional[str]:
     Returns:
         A string with tab indentation removed or None on error.
 
-    .. note::
-
-        Inspired by analogous Scala function.
+    See also :meth:`indent`.
 
     >>> dedent('\t\ttest\\n\t\ting')
     'test\\ning'
@@ -1712,6 +1861,8 @@ def indent(in_str: str, amount: int) -> str:
     Returns:
         An indented string created by prepending amount spaces.
 
+    See also :meth:`dedent`.
+
     >>> indent('This is a test', 4)
     '    This is a test'
     """
@@ -1722,16 +1873,8 @@ def indent(in_str: str, amount: int) -> str:
     return line_separator.join(lines)
 
 
-def sprintf(*args, **kwargs) -> str:
-    """
-    Args:
-        This function uses the same syntax as the builtin print
-        function.
-
-    Returns:
-        An interpolated string capturing print output, like man(3)
-        `sprintf`.
-    """
+def _sprintf(*args, **kwargs) -> str:
+    """Internal helper."""
     ret = ""
 
     sep = kwargs.pop("sep", None)
@@ -1770,6 +1913,8 @@ def strip_ansi_sequences(in_str: str) -> str:
     Returns:
         in_str with recognized ANSI escape sequences removed.
 
+    See also :mod:`pyutils.ansi`.
+
     .. warning::
         This method works by using a regular expression.
         It works for all ANSI escape sequences I've tested with but
@@ -1800,7 +1945,6 @@ class SprintfStdout(contextlib.AbstractContextManager):
     >>> print(buf(), end='')
     test
     1, 2, 3
-
     """
 
     def __init__(self) -> None:
@@ -1830,7 +1974,6 @@ def capitalize_first_letter(in_str: str) -> str:
     'Test'
     >>> capitalize_first_letter("ALREADY!")
     'ALREADY!'
-
     """
     return in_str[0].upper() + in_str[1:]
 
@@ -1842,6 +1985,9 @@ def it_they(n: int) -> str:
 
     Returns:
         'it' if n is one or 'they' otherwize.
+
+    See also :meth:`is_are`, :meth:`pluralize`, :meth:`make_contractions`,
+    :meth:`thify`.
 
     Suggested usage::
 
@@ -1867,6 +2013,9 @@ def is_are(n: int) -> str:
     Returns:
         'is' if n is one or 'are' otherwize.
 
+    See also :meth:`it_they`, :meth:`pluralize`, :meth:`make_contractions`,
+    :meth:`thify`.
+
     Suggested usage::
 
         n = num_files_saved_to_tmp()
@@ -1891,6 +2040,9 @@ def pluralize(n: int) -> str:
 
     Returns:
         's' if n is greater than one otherwize ''.
+
+    See also :meth:`it_they`, :meth:`is_are`, :meth:`make_contractions`,
+    :meth:`thify`.
 
     Suggested usage::
 
@@ -1922,6 +2074,8 @@ def make_contractions(txt: str) -> str:
     Returns:
         Output text identical to original input except for any
         recognized contractions are formed.
+
+    See also :meth:`it_they`, :meth:`is_are`, :meth:`make_contractions`.
 
     .. note::
         The order in which we create contractions is defined by the
@@ -2026,6 +2180,8 @@ def thify(n: int) -> str:
     Returns:
         The proper cardinal suffix for a number.
 
+    See also :meth:`it_they`, :meth:`is_are`, :meth:`make_contractions`.
+
     Suggested usage::
 
         attempt_count = 0
@@ -2064,6 +2220,8 @@ def ngrams(txt: str, n: int):
     Returns:
         Generates the ngrams from the input string.
 
+    See also :meth:`ngrams_presplit`, :meth:`bigrams`, :meth:`trigrams`.
+
     >>> [x for x in ngrams('This is a test', 2)]
     ['This is', 'is a', 'a test']
     """
@@ -2078,12 +2236,16 @@ def ngrams(txt: str, n: int):
 def ngrams_presplit(words: Sequence[str], n: int):
     """
     Same as :meth:`ngrams` but with the string pre-split.
+
+    See also :meth:`ngrams`, :meth:`bigrams`, :meth:`trigrams`.
     """
     return list_utils.ngrams(words, n)
 
 
 def bigrams(txt: str):
     """Generates the bigrams (n=2) of the given string.
+
+    See also :meth:`ngrams`, :meth:`trigrams`.
 
     >>> [x for x in bigrams('this is a test')]
     ['this is', 'is a', 'a test']
@@ -2092,7 +2254,10 @@ def bigrams(txt: str):
 
 
 def trigrams(txt: str):
-    """Generates the trigrams (n=3) of the given string."""
+    """Generates the trigrams (n=3) of the given string.
+
+    See also :meth:`ngrams`, :meth:`bigrams`.
+    """
     return ngrams(txt, 3)
 
 
@@ -2115,6 +2280,8 @@ def shuffle_columns_into_list(
     Returns:
         A list of string created by following the instructions set forth
         in column_specs.
+
+    See also :meth:`shuffle_columns_into_dict`.
 
     >>> cols = '-rwxr-xr-x 1 scott wheel 3.1K Jul  9 11:34 acl_test.py'.split()
     >>> shuffle_columns_into_list(
@@ -2158,6 +2325,8 @@ def shuffle_columns_into_dict(
     Returns:
         A dict formed by applying the column_specs instructions.
 
+    See also :meth:`shuffle_columns_into_list`, :meth:`interpolate_using_dict`.
+
     >>> cols = '-rwxr-xr-x 1 scott wheel 3.1K Jul  9 11:34 acl_test.py'.split()
     >>> shuffle_columns_into_dict(
     ...     cols,
@@ -2187,11 +2356,13 @@ def interpolate_using_dict(txt: str, values: Dict[str, str]) -> str:
         txt: the mad libs template
         values: what you and your kids chose for each category.
 
+    See also :meth:`shuffle_columns_into_list`, :meth:`shuffle_columns_into_dict`.
+
     >>> interpolate_using_dict('This is a {adjective} {noun}.',
     ...                        {'adjective': 'good', 'noun': 'example'})
     'This is a good example.'
     """
-    return sprintf(txt.format(**values), end='')
+    return _sprintf(txt.format(**values), end='')
 
 
 def to_ascii(txt: str):
@@ -2201,6 +2372,9 @@ def to_ascii(txt: str):
 
     Returns:
         txt encoded as an ASCII byte string.
+
+    See also :meth:`to_base64`, :meth:`to_bitstring`, :meth:`to_bytes`,
+    :meth:`generate_random_alphanumeric_string`, :meth:`asciify`.
 
     >>> to_ascii('test')
     b'test'
@@ -2224,6 +2398,9 @@ def to_base64(txt: str, *, encoding='utf-8', errors='surrogatepass') -> bytes:
         txt encoded with a 64-chracter alphabet.  Similar to and compatible
         with uuencode/uudecode.
 
+    See also :meth:`is_base64`, :meth:`to_ascii`, :meth:`to_bitstring`,
+    :meth:`from_base64`.
+
     >>> to_base64('hello?')
     b'aGVsbG8/\\n'
     """
@@ -2239,6 +2416,8 @@ def is_base64(txt: str) -> bool:
         True if txt is a valid base64 encoded string.  This assumes
         txt was encoded with Python's standard base64 alphabet which
         is the same as what uuencode/uudecode uses).
+
+    See also :meth:`to_base64`, :meth:`from_base64`.
 
     >>> is_base64('test')    # all letters in the b64 alphabet
     True
@@ -2266,6 +2445,8 @@ def from_base64(b64: bytes, encoding='utf-8', errors='surrogatepass') -> str:
     Returns:
         The decoded form of b64 as a normal python string.  Similar to
         and compatible with uuencode / uudecode.
+
+    See also :meth:`to_base64`, :meth:`is_base64`.
 
     >>> from_base64(b'aGVsbG8/\\n')
     'hello?'
@@ -2304,6 +2485,9 @@ def to_bitstring(txt: str, *, delimiter='') -> str:
     Returns:
         txt converted to ascii/binary and then chopped into bytes.
 
+    See also :meth:`to_base64`, :meth:`from_bitstring`, :meth:`is_bitstring`,
+    :meth:`chunk`.
+
     >>> to_bitstring('hello?')
     '011010000110010101101100011011000110111100111111'
 
@@ -2329,6 +2513,9 @@ def is_bitstring(txt: str) -> bool:
         Note that if delimiter is non empty this code will not
         recognize the bitstring.
 
+    See also :meth:`to_base64`, :meth:`from_bitstring`, :meth:`to_bitstring`,
+    :meth:`chunk`.
+
     >>> is_bitstring('011010000110010101101100011011000110111100111111')
     True
 
@@ -2348,6 +2535,9 @@ def from_bitstring(bits: str, encoding='utf-8', errors='surrogatepass') -> str:
         The regular python string represented by bits.  Note that this
         code does not work with to_bitstring when delimiter is non-empty.
 
+    See also :meth:`to_base64`, :meth:`to_bitstring`, :meth:`is_bitstring`,
+    :meth:`chunk`.
+
     >>> from_bitstring('011010000110010101101100011011000110111100111111')
     'hello?'
     """
@@ -2364,6 +2554,8 @@ def ip_v4_sort_key(txt: str) -> Optional[Tuple[int, ...]]:
         A tuple of IP components arranged such that the sorting of
         IP addresses using a normal comparator will do something sane
         and desireable.
+
+    See also :meth:`is_ip_v4`.
 
     >>> ip_v4_sort_key('10.0.0.18')
     (10, 0, 0, 18)
@@ -2388,6 +2580,8 @@ def path_ancestors_before_descendants_sort_key(volume: str) -> Tuple[str, ...]:
         volumes using a normal comparator will do something sane
         and desireable.
 
+    See also :mod:`pyutils.files.file_utils`.
+
     >>> path_ancestors_before_descendants_sort_key('/usr/local/bin')
     ('usr', 'local', 'bin')
 
@@ -2407,6 +2601,8 @@ def replace_all(in_str: str, replace_set: str, replacement: str) -> str:
         replace_set: the set of target characters to replace
         replacement: the character to replace any member of replace_set
             with
+
+    See also :meth:`replace_nth`.
 
     Returns:
         The string with replacements executed.
@@ -2429,6 +2625,8 @@ def replace_nth(in_str: str, source: str, target: str, nth: int):
         source: the substring to replace
         target: the replacement text
         nth: which occurrance of source to replace?
+
+    See also :meth:`replace_all`.
 
     >>> replace_nth('this is a test', ' ', '-', 3)
     'this is a-test'

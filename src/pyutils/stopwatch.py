@@ -14,7 +14,7 @@ class Timer(contextlib.AbstractContextManager):
     """
     A stopwatch to time how long something takes (walltime).
 
-    e.g.
+    Example usage::
 
         with stopwatch.Timer() as t:
             do_the_thing()
