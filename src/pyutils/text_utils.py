@@ -55,6 +55,15 @@ def get_console_rows_columns() -> RowsColumns:
     rows: Union[Optional[str], int] = os.environ.get('LINES', None)
     cols: Union[Optional[str], int] = os.environ.get('COLUMNS', None)
     if not rows or not cols:
+        try:
+            size = os.get_terminal_size()
+            rows = size.lines
+            cols = size.columns
+        except Exception:
+            rows = None
+            cols = None
+
+    if not rows or not cols:
         logger.debug('Rows: %s, cols: %s, trying stty.', rows, cols)
         try:
             rows, cols = cmd(
@@ -64,11 +73,6 @@ def get_console_rows_columns() -> RowsColumns:
         except Exception:
             rows = None
             cols = None
-
-    if not rows or not cols:
-        size = os.get_terminal_size()
-        rows = size.lines
-        cols = size.columns
 
     if not rows or not cols:
         raise Exception('Can\'t determine console size?!')
