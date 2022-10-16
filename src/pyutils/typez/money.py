@@ -2,13 +2,23 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A class to represent money.  See also centcount.py"""
+"""A class to represent money.  This class represents monetary amounts as Python Decimals
+(see https://docs.python.org/3/library/decimal.html) internally.
+
+The type guards against inadvertent aggregation of instances with
+non-matching currencies, the division of one Money by another, and has
+a strict mode which disallows comparison or aggregation with
+non-CentCount operands (i.e. no comparison or aggregation with literal
+numbers).
+
+See also :class:`pyutils.typez.CentCount` which represents monetary
+amounts as an integral number of cents.
+
+"""
 
 import re
-from decimal import Decimal
-from typing import Optional, Tuple
-
-from pyutils import math_utils
+from decimal import ROUND_FLOOR, ROUND_HALF_DOWN, Decimal
+from typing import Optional, Tuple, Union
 
 
 class Money(object):
@@ -18,11 +28,23 @@ class Money(object):
 
     def __init__(
         self,
-        amount: Decimal = Decimal("0"),
+        amount: Union[Decimal, str, float, int, 'Money'] = Decimal("0"),
         currency: str = 'USD',
         *,
         strict_mode=False,
     ):
+        """
+        Args:
+            amount: the initial monetary amount to be represented; can be a
+                Money, int, float, Decimal, str, etc...
+            currency: if provided, indicates what currency this amount is
+                units of and guards against operations such as attempting
+                to aggregate Money instances with non-matching currencies
+                directly.
+            strict_mode: if True, disallows comparison or arithmetic operations
+                between Money instances and any non-Money types (e.g. literal
+                numbers).
+        """
         self.strict_mode = strict_mode
         if isinstance(amount, str):
             ret = Money._parse(amount)
@@ -39,13 +61,28 @@ class Money(object):
             self.currency = currency
 
     def __repr__(self):
-        a = float(self.amount)
-        a = round(a, 2)
-        s = f'{a:,.2f}'
-        if self.currency is not None:
-            return f'{s} {self.currency}'
+        q = Decimal(10) ** -2
+        sign, digits, exp = self.amount.quantize(q).as_tuple()
+        result = []
+        digits = list(map(str, digits))
+        build, next = result.append, digits.pop
+        for i in range(2):
+            build(next() if digits else '0')
+        build('.')
+        if not digits:
+            build('0')
+        i = 0
+        while digits:
+            build(next())
+            i += 1
+            if i == 3 and digits:
+                i = 0
+        if sign:
+            build('-')
+        if self.currency:
+            return ''.join(reversed(result)) + ' ' + self.currency
         else:
-            return f'${s}'
+            return '$' + ''.join(reversed(result))
 
     def __pos__(self):
         return Money(amount=self.amount, currency=self.currency)
@@ -105,13 +142,71 @@ class Money(object):
         return self.amount.__float__()
 
     def truncate_fractional_cents(self):
-        x = float(self)
-        self.amount = Decimal(math_utils.truncate_float(x))
+        """
+        Truncates fractional cents being represented.  e.g.
+
+        >>> m = Money(100.00)
+        >>> m *= 2
+        >>> m /= 3
+
+        At this point the internal representation of `m` is a long
+        `Decimal`:
+
+        >>> m.amount
+        Decimal('66.66666666666666666666666667')
+
+        It will be rendered by `__repr__` reasonably:
+
+        >>> m
+        66.67 USD
+
+        If you want to truncate this long decimal representation, this
+        method will do that for you:
+
+        >>> m.truncate_fractional_cents()
+        Decimal('66.66')
+        >>> m.amount
+        Decimal('66.66')
+        >>> m
+        66.66 USD
+
+        See also :meth:`round_fractional_cents`
+        """
+        self.amount = self.amount.quantize(Decimal('.01'), rounding=ROUND_FLOOR)
         return self.amount
 
     def round_fractional_cents(self):
-        x = float(self)
-        self.amount = Decimal(round(x, 2))
+        """
+        Rounds fractional cents being represented.  e.g.
+
+        >>> m = Money(100.00)
+        >>> m *= 2
+        >>> m /= 3
+
+        At this point the internal representation of `m` is a long
+        `Decimal`:
+
+        >>> m.amount
+        Decimal('66.66666666666666666666666667')
+
+        It will be rendered by `__repr__` reasonably:
+
+        >>> m
+        66.67 USD
+
+        If you want to round this long decimal representation, this
+        method will do that for you:
+
+        >>> m.round_fractional_cents()
+        Decimal('66.67')
+        >>> m.amount
+        Decimal('66.67')
+        >>> m
+        66.67 USD
+
+        See also :meth:`truncate_fractional_cents`
+        """
+        self.amount = self.amount.quantize(Decimal('.01'), rounding=ROUND_HALF_DOWN)
         return self.amount
 
     __radd__ = __add__
@@ -210,7 +305,18 @@ class Money(object):
 
     @classmethod
     def parse(cls, s: str) -> 'Money':
+        """Parses a string an attempts to create a Money instance.
+
+        Args:
+            s: the string to parse
+        """
         chunks = Money._parse(s)
         if chunks is not None:
             return Money(chunks[0], chunks[1])
         raise Exception(f'Unable to parse money string "{s}"')
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

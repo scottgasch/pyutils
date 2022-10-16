@@ -2,11 +2,20 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""This is the base class of :class:`SmartFuture`.  It is essentially
-a class that tries to have every Python __dunder__ method defined
-reasonably for it such that, when it is used in a manner that requires
-its value to be known, it calls a `resolve` method to wait for the
-data it represents.
+"""This is the base class of
+:class:`pyutils.parallelize.smart_future.SmartFuture`, which is a
+piece of the simple parallelization framework.
+
+This base class is essentially tries to have every Python `__dunder__`
+method defined with a reasonabe default implementation so that, when
+it is used in a manner that requires the value to be known, it calls
+:meth:`DeferredOperand.resolve` and either gets the requisite value or
+blocks until the data necessary to resolve the value is ready.  This
+is meant to enable more transparent :class:`Future` objects that can
+be just used directly.
+
+See :class:`pyutils.parallelize.smart_future.SmartFuture` for more
+information.
 
 """
 
@@ -21,8 +30,10 @@ T = TypeVar('T')
 
 class DeferredOperand(ABC, Generic[T]):
     """A wrapper around an operand whose value is deferred until it is
-    needed (i.e. accessed).  See the subclass :class:`SmartFuture` for
-    an example usage and/or a more useful patten.
+    needed (i.e. accessed).  See the subclass
+    :class:`pyutils.parallelize.smart_future.SmartFuture` for an
+    example usage and/or a more useful patten.
+
     """
 
     @abstractmethod
@@ -31,6 +42,18 @@ class DeferredOperand(ABC, Generic[T]):
 
     @staticmethod
     def resolve(x: Any) -> Any:
+        """
+        When this object is used in a manner that requires it to know
+        its value, this method is called to either return the value or
+        block until it can do so.
+
+        Args:
+            x: the object whose value is required
+
+        Returns:
+            The value of x... immediately if possible, eventually if
+            not possible.
+        """
         while isinstance(x, DeferredOperand):
             x = x._resolve()
         return x

@@ -72,7 +72,11 @@ def background_thread(
 ) -> Callable[..., Tuple[threading.Thread, threading.Event]]:
     """A function decorator to create a background thread.
 
-    Usage::
+    Args:
+        _funct: The function being wrapped such that it is invoked
+            on a background thread.
+
+    Example usage::
 
         @background_thread
         def random(a: int, b: str, stop_event: threading.Event) -> None:

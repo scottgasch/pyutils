@@ -2,7 +2,14 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""File-based locking helper."""
+"""This is a lockfile implementation I created for use with cronjobs
+on my machine to prevent multiple copies of a job from running in
+parallel.  When one job is running this code keeps a file on disk to
+indicate a lock is held.  Other copies will fail to start if they
+detect this lock until the lock is released.  There are provisions in
+the code for timing out locks, cleaning up a lock when a signal is
+received, gracefully retrying lock acquisition on failure, etc...
+"""
 
 from __future__ import annotations
 
@@ -91,11 +98,11 @@ class LockFile(contextlib.AbstractContextManager):
             signal.signal(signal.SIGTERM, self._signal)
         self.expiration_timestamp = expiration_timestamp
 
-    def locked(self):
+    def locked(self) -> bool:
         """Is it locked currently?"""
         return self.is_locked
 
-    def available(self):
+    def available(self) -> bool:
         """Is it available currently?"""
         return not os.path.exists(self.lockfile)
 
@@ -157,7 +164,7 @@ class LockFile(contextlib.AbstractContextManager):
             self._detect_stale_lockfile()
         return _try_acquire_lock_with_retries()
 
-    def release(self):
+    def release(self) -> None:
         """Release the lock"""
         try:
             os.unlink(self.lockfile)

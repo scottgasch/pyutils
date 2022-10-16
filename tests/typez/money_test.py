@@ -5,6 +5,7 @@
 """money unittest."""
 
 import unittest
+from decimal import Decimal
 
 from pyutils import unittest_utils
 from pyutils.typez.money import Money
@@ -97,9 +98,13 @@ class TestMoney(unittest.TestCase):
     def test_truncate_and_round(self):
         ten = Money(10.0)
         x = ten * 2 / 3
-        self.assertEqual(6.66, x.truncate_fractional_cents())
+        expected = Decimal(6.66)
+        expected = expected.quantize(Decimal('.01'))
+        self.assertEqual(expected, x.truncate_fractional_cents())
         x = ten * 2 / 3
-        self.assertEqual(6.67, x.round_fractional_cents())
+        expected = Decimal(6.67)
+        expected = expected.quantize(Decimal('.01'))
+        self.assertEqual(expected, x.round_fractional_cents())
 
 
 if __name__ == '__main__':

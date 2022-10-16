@@ -569,7 +569,7 @@ def number_string_to_integer(in_str: str) -> int:
     ValueError: Unknown word: xyzzy
     """
     if type(in_str) == int:
-        return in_str
+        return int(in_str)
 
     current = result = 0
     in_str = in_str.replace('-', ' ')

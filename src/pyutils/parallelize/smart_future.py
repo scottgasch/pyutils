@@ -2,10 +2,14 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A :class:`Future` that can be treated as a substutute for the result
+"""
+A :class:`Future` that can be treated as a substutute for the result
 that it contains and will not block until it is used.  At that point,
 if the underlying value is not yet available yet, it will block until
 the internal result actually becomes available.
+
+Results from :class:`parallelize.parallelize` are returned wrapped
+in :class:`SmartFuture` instances.
 """
 
 from __future__ import annotations
@@ -47,6 +51,10 @@ def wait_any(
             silently ignore then?
         timeout: invoke callback with a periodicity of timeout while
             awaiting futures
+
+    Returns:
+        A :class:`SmartFuture` from the futures list with a result
+        available without blocking.
     """
 
     real_futures = []
@@ -96,6 +104,10 @@ def wait_all(
         log_exceptions: Should we log (warning + exception) any
             underlying exceptions raised during future processing or
             silently ignore then?
+
+    Returns:
+        Only when all futures in the input list are ready.  Blocks
+        until such time.
     """
 
     real_futures = []
@@ -130,14 +142,28 @@ class SmartFuture(DeferredOperand):
     """
 
     def __init__(self, wrapped_future: fut.Future) -> None:
+        """
+        Args:
+            wrapped_future: a normal Python :class:`concurrent.Future`
+                object that we are wrapping.
+        """
         assert isinstance(wrapped_future, fut.Future)
         self.wrapped_future = wrapped_future
         self.id = id_generator.get("smart_future_id")
 
     def get_id(self) -> int:
+        """
+        Returns:
+            A unique identifier for this instance.
+        """
         return self.id
 
     def is_ready(self) -> bool:
+        """
+        Returns:
+            True if the wrapped future is ready without blocking, False
+            otherwise.
+        """
         return self.wrapped_future.done()
 
     # You shouldn't have to call this; instead, have a look at defining a

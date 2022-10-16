@@ -2,15 +2,23 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""This is a Trie class, see: https://en.wikipedia.org/wiki/Trie.
+"""This module contains the implementation of a Trie tree (or prefix
+tree).  See: https://en.wikipedia.org/wiki/Trie.
 
-It attempts to follow Pythonic container patterns.  See doctests
-for examples.
+It can be used with arbitrary sequences as keys and stores its values
+in a tree with paths determined by the sequence determined by each
+keys' sequences.  Thus, it can determine whether a given value is
+contained in the tree via a simple traversal in :math:`O(n)` where n
+is the number of steps in the item's sequence and can also check
+whether a key-prefix is present in the tree in :math:`O(n)` time.
+
+Given a node in the BST, it is easy to determine all items that are
+stored beneath that node.  See examples below.
 
 """
 
 import logging
-from typing import Any, Generator, Sequence
+from typing import Any, Dict, Generator, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +29,28 @@ class Trie(object):
 
     It attempts to follow Pythonic container patterns.  See doctests
     for examples.
-
     """
 
     def __init__(self):
+        """Create an empty trie."""
         self.root = {}
         self.end = "~END~"
         self.length = 0
         self.viz = ''
         self.content_generator: Generator[str] = None
 
-    def insert(self, item: Sequence[Any]):
+    def insert(self, item: Sequence[Any]) -> None:
         """
-        Insert an item.
+        Insert an item into the trie.  Items are represented by a :class:`Sequence`
+        where each item in the sequence describes a set in the path to the item.
+
+        Args:
+            item: the item to be inserted.
 
         >>> t = Trie()
         >>> t.insert('test')
         >>> t.__contains__('test')
         True
-
         """
         current = self.root
         for child in item:
@@ -49,7 +60,13 @@ class Trie(object):
 
     def __contains__(self, item: Sequence[Any]) -> bool:
         """
-        Check whether an item is in the Trie.
+        Checks whether an item is in the Trie.
+
+        Args:
+            item: the item whose presence is to be determined.
+
+        Returns:
+            True if `item` is present, False otherwise.
 
         >>> t = Trie()
         >>> t.insert('test')
@@ -59,7 +76,6 @@ class Trie(object):
         False
         >>> 'test' in t
         True
-
         """
         current = self.__traverse__(item)
         if current is None:
@@ -71,6 +87,12 @@ class Trie(object):
         """
         Check whether a prefix is in the Trie.  The prefix may or may not
         be a full item.
+
+        Args:
+            item: the item describing the prefix to be checked.
+
+        Returns:
+            True if the prefix described by `item` is present, False otherwise.
 
         >>> t = Trie()
         >>> t.insert('tricycle')
@@ -94,10 +116,23 @@ class Trie(object):
                 return None
         return current
 
-    def __getitem__(self, item: Sequence[Any]):
-        """Given an item, return its Trie node which contains all
+    def __getitem__(self, item: Sequence[Any]) -> Dict[Any, Any]:
+        """Given an item, return its trie node which contains all
         of the successor (child) node pointers.  If the item is not
         a node in the Trie, raise a KeyError.
+
+        Args:
+            item: the item whose node is to be retrieved
+
+        Returns:
+            A mapping that represents item in the trie.  If the
+            keyspace of the mapping includes '~END~' a valid item
+            ends at the node.  If the mapping contains other keys,
+            each key indicates the presence of one or more children
+            on the edge below the node.
+
+        Raises:
+            KeyError if item is not present in the trie.
 
         >>> t = Trie()
         >>> t.insert('test')
@@ -113,25 +148,41 @@ class Trie(object):
             raise KeyError(f"Node '{item}' is not in the trie")
         return ret
 
-    def delete_recursively(self, node, item: Sequence[Any]) -> bool:
+    def delete_recursively(self, node: Dict[Any, Any], item: Sequence[Any]) -> bool:
+        """
+        Deletes an item from the trie by walking the path from root to where it
+        ends.
+
+        Args:
+            root_node: root under which to search for item
+            item: item whose node is the root of the recursive deletion operation
+
+        Returns:
+            True if the item was not the prefix of another item such that there
+            is nothing below item remaining anymore post delete and False if the
+            deleted item was a proper prefix of another item in the tree such that
+            there is still data below item remaining in the tree.
+        """
         if len(item) == 1:
             del node[item]
             if len(node) == 0 and node is not self.root:
                 del node
                 return True
-            else:
-                return False
+            return False
         else:
             car = item[0]
             cdr = item[1:]
             lower = node[car]
-            if self.delete_recursively(lower, cdr):
-                return self.delete_recursively(node, car)
-            return False
+            ret = self.delete_recursively(lower, cdr)
+            ret = ret and self.delete_recursively(node, car)
+            return ret
 
     def __delitem__(self, item: Sequence[Any]):
         """
         Delete an item from the Trie.
+
+        Args:
+            item: the item to be deleted.
 
         >>> t = Trie()
         >>> t.insert('test')
@@ -161,12 +212,15 @@ class Trie(object):
         >>> t.__delitem__('tess')
         >>> len(t)
         0
+        >>> t.length
+        0
         >>> t.root
         {}
         >>> t.insert('testy')
+        >>> t.length
+        1
         >>> len(t)
         1
-
         """
         if item not in self:
             raise KeyError(f"Node '{item}' is not in the trie")
@@ -175,7 +229,8 @@ class Trie(object):
 
     def __len__(self):
         """
-        Returns a count of the Trie's item population.
+        Returns:
+            A count of the trie's item population.
 
         >>> t = Trie()
         >>> len(t)
@@ -183,10 +238,9 @@ class Trie(object):
         >>> t.insert('test')
         >>> len(t)
         1
-        >>> t.insert('testicle')
+        >>> t.insert('tree')
         >>> len(t)
         2
-
         """
         return self.length
 
@@ -196,7 +250,8 @@ class Trie(object):
 
     def generate_recursively(self, node, path: Sequence[Any]):
         """
-        Generate items in the trie one by one.
+        Returns:
+            A generator that yields the trie's items one at a time.
 
         >>> t = Trie()
         >>> t.insert('test')
@@ -233,7 +288,8 @@ class Trie(object):
 
     def successors(self, item: Sequence[Any]):
         """
-        Return a list of the successors of an item.
+        Returns:
+            A list of the successors of an item.
 
         >>> t = Trie()
         >>> t.insert('what')
@@ -248,7 +304,6 @@ class Trie(object):
         >>> u.insert(['this', 'is', 'a', 'walrus'])
         >>> u.successors(['this', 'is', 'a'])
         ['test', 'robbery', 'walrus']
-
         """
         node = self.__traverse__(item)
         if node is None:
@@ -263,7 +318,8 @@ class Trie(object):
         has_sibling: bool,
     ) -> str:
         """
-        Helper that return a fancy representation of the Trie:
+        Helper that return a fancy representation of the Trie, used by
+        :meth:`__repr__`.
         """
         if node is None:
             return ''
@@ -294,9 +350,16 @@ class Trie(object):
                 ret += self._repr_fancy(padding, pointer, node[child], has_sibling)
         return ret
 
-    def repr_brief(self, node, delimiter):
+    def repr_brief(self, node: Dict[Any, Any], delimiter: str):
         """
         A friendly string representation of the contents of the Trie.
+
+        Args:
+            node: the root of the trie to represent.
+            delimiter: character or string to stuff between edges.
+
+        Returns:
+            A brief string representation of the trie.  See example.
 
         >>> t = Trie()
         >>> t.insert([10, 0, 0, 1])
@@ -347,3 +410,9 @@ class Trie(object):
 
         """
         return self._repr_fancy('', '*', self.root, False)
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

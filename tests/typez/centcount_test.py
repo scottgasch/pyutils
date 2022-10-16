@@ -51,6 +51,8 @@ class TestCentCount(unittest.TestCase):
         amount = CentCount(10.00)
         x = amount / 5.0
         self.assertEqual(CentCount(2.00), x)
+        y = amount / 1.9999999999
+        self.assertEqual(CentCount(5.00), y)
         with self.assertRaises(TypeError):
             another = CentCount(1.33)
             amount /= another
@@ -93,12 +95,6 @@ class TestCentCount(unittest.TestCase):
         with self.assertRaises(TypeError):
             print(two > 1.0)
         self.assertTrue(two > one)
-
-    def test_truncate_and_round(self):
-        ten = CentCount(10.0)
-        x = ten * 2 / 3
-        x.truncate_fractional_cents()
-        self.assertEqual(CentCount(6.66), x)
 
 
 if __name__ == '__main__':

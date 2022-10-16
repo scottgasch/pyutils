@@ -2,7 +2,81 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""This module defines various flavors of Access Control Lists."""
+"""Right now this package only contains an implementation that allows you to
+define and evaluate Access Control Lists (ACLs) easily.  For example::
+
+        even = acl.SetBasedACL(
+            allow_set=set([2, 4, 6, 8, 10]),
+            deny_set=set([1, 3, 5, 7, 9]),
+            order_to_check_allow_deny=acl.Order.ALLOW_DENY,
+            default_answer=False,
+        )
+        self.assertTrue(even(2))
+        self.assertFalse(even(3))
+        self.assertFalse(even(-4))
+
+ACLs can also be defined based on other criteria, for example::
+
+        a_or_b = acl.StringWildcardBasedACL(
+            allowed_patterns=['a*', 'b*'],
+            order_to_check_allow_deny=acl.Order.ALLOW_DENY,
+            default_answer=False,
+        )
+        self.assertTrue(a_or_b('aardvark'))
+        self.assertTrue(a_or_b('baboon'))
+        self.assertFalse(a_or_b('cheetah'))
+
+Or::
+
+        weird = acl.StringREBasedACL(
+            denied_regexs=[re.compile('^a.*a$'), re.compile('^b.*b$')],
+            order_to_check_allow_deny=acl.Order.DENY_ALLOW,
+            default_answer=True,
+        )
+        self.assertTrue(weird('aardvark'))
+        self.assertFalse(weird('anaconda'))
+        self.assertFalse(weird('blackneb'))
+        self.assertTrue(weird('crow'))
+
+There are implementations for wildcards, sets, regular expressions,
+allow lists, deny lists, sequences of user defined predicates, etc...
+You can also just subclass the base :class:`SimpleACL` interface to
+define your own ACLs easily.  Its :meth:`__call__` simply needs to
+decide whether an item is allowed or denied.
+
+Once a :class:`SimpleACL` is defined, it can be used within a
+:class:`CompoundACL`::
+
+        a_b_c = acl.StringWildcardBasedACL(
+            allowed_patterns=['a*', 'b*', 'c*'],
+            order_to_check_allow_deny=acl.Order.ALLOW_DENY,
+            default_answer=False,
+        )
+        c_d_e = acl.StringWildcardBasedACL(
+            allowed_patterns=['c*', 'd*', 'e*'],
+            order_to_check_allow_deny=acl.Order.ALLOW_DENY,
+            default_answer=False,
+        )
+        conjunction = acl.AllCompoundACL(
+            subacls=[a_b_c, c_d_e],
+            order_to_check_allow_deny=acl.Order.ALLOW_DENY,
+            default_answer=False,
+        )
+        self.assertFalse(conjunction('aardvark'))
+        self.assertTrue(conjunction('caribou'))
+        self.assertTrue(conjunction('condor'))
+        self.assertFalse(conjunction('eagle'))
+        self.assertFalse(conjunction('newt'))
+
+A :class:`CompoundACL` can also be used inside another :class:`CompoundACL`
+so this should be a flexible framework when defining complex access control
+requirements:
+
+There are two flavors of :class:`CompoundACL`:
+:class:`AllCompoundACL` and :class:`AnyCompoundAcl`.  The former only
+admits an item if all of its sub-acls admit it and the latter will
+admit an item if any of its sub-acls admit it.:
+"""
 
 import enum
 import fnmatch
@@ -33,6 +107,23 @@ class SimpleACL(ABC):
     """A simple Access Control List interface."""
 
     def __init__(self, *, order_to_check_allow_deny: Order, default_answer: bool):
+        """
+        Args:
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         if order_to_check_allow_deny not in (
             Order.ALLOW_DENY,
             Order.DENY_ALLOW,
@@ -45,7 +136,10 @@ class SimpleACL(ABC):
         self.default_answer = default_answer
 
     def __call__(self, x: Any) -> bool:
-        """Returns True if x is allowed, False otherwise."""
+        """
+        Returns:
+            True if x is allowed, False otherwise.
+        """
         logger.debug('SimpleACL checking %s', x)
         if self.order_to_check_allow_deny == Order.ALLOW_DENY:
             logger.debug('Checking allowed first...')
@@ -73,12 +167,23 @@ class SimpleACL(ABC):
 
     @abstractmethod
     def check_allowed(self, x: Any) -> bool:
-        """Return True if x is explicitly allowed, False otherwise."""
+        """
+        Args:
+            x: the object being tested.
+
+        Returns:
+            True if x is explicitly allowed, False otherwise.
+        """
         pass
 
     @abstractmethod
     def check_denied(self, x: Any) -> bool:
-        """Return True if x is explicitly denied, False otherwise."""
+        """
+        Args:
+            x: the object being tested.
+
+        Returns:
+            True if x is explicitly denied, False otherwise."""
         pass
 
 
@@ -93,6 +198,25 @@ class SetBasedACL(SimpleACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            allow_set: the set of items that are allowed.
+            deny_set: the set of items that are denied.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         super().__init__(
             order_to_check_allow_deny=order_to_check_allow_deny,
             default_answer=default_answer,
@@ -119,6 +243,10 @@ class AllowListACL(SetBasedACL):
     """
 
     def __init__(self, *, allow_set: Optional[Set[Any]]) -> None:
+        """
+        Args:
+            allow_set: a set containing the items that are allowed.
+        """
         super().__init__(
             allow_set=allow_set,
             order_to_check_allow_deny=Order.ALLOW_DENY,
@@ -132,9 +260,13 @@ class DenyListACL(SetBasedACL):
     """
 
     def __init__(self, *, deny_set: Optional[Set[Any]]) -> None:
+        """
+        Args:
+            deny_set: a set containing the items that are denied.
+        """
         super().__init__(
             deny_set=deny_set,
-            order_to_check_allow_deny=Order.ALLOW_DENY,
+            order_to_check_allow_deny=Order.DENY_ALLOW,
             default_answer=True,
         )
 
@@ -145,9 +277,13 @@ class BlockListACL(SetBasedACL):
     """
 
     def __init__(self, *, deny_set: Optional[Set[Any]]) -> None:
+        """
+        Args:
+            deny_set: a set containing the items that are denied.
+        """
         super().__init__(
             deny_set=deny_set,
-            order_to_check_allow_deny=Order.ALLOW_DENY,
+            order_to_check_allow_deny=Order.DENY_ALLOW,
             default_answer=True,
         )
 
@@ -163,6 +299,27 @@ class PredicateListBasedACL(SimpleACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            allow_predicate_list: a list of callables that indicate that
+                an item should be allowed if they return True.
+            deny_predicate_list: a list of callables that indicate that an
+                item should be denied if they return True.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         super().__init__(
             order_to_check_allow_deny=order_to_check_allow_deny,
             default_answer=default_answer,
@@ -196,6 +353,29 @@ class StringWildcardBasedACL(PredicateListBasedACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            allowed_patterns: a list of string, optionally containing glob-style
+                wildcards, that, if they match an item, indicate it should be
+                allowed.
+            denied_patterns: a list of string, optionally containing glob-style
+                wildcards, that, if they match an item, indicate it should be
+                denied.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         allow_predicates = []
         if allowed_patterns is not None:
             for pattern in allowed_patterns:
@@ -229,6 +409,27 @@ class StringREBasedACL(PredicateListBasedACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            allowed_regexs: a list of regular expressions that, if they match an
+                item, indicate that the item should be allowed.
+            denied_regexs: a list of regular expressions that, if they match an
+                item, indicate that the item should be denied.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         allow_predicates = None
         if allowed_regexs is not None:
             allow_predicates = []
@@ -261,6 +462,25 @@ class AnyCompoundACL(SimpleACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            subacls: a list of sub-ACLs we will consult for each item.  If
+                *any* of these sub-ACLs allow the item we will also allow it.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         super().__init__(
             order_to_check_allow_deny=order_to_check_allow_deny,
             default_answer=default_answer,
@@ -290,6 +510,25 @@ class AllCompoundACL(SimpleACL):
         order_to_check_allow_deny: Order,
         default_answer: bool,
     ) -> None:
+        """
+        Args:
+            subacls: a list of sub-ACLs that we will consult for each item.  *All*
+                sub-ACLs must allow an item for us to also allow that item.
+            order_to_check_allow_deny: set this argument to indicate what
+                order to check items for allow and deny.  Pass either
+                `Order.ALLOW_DENY` to check allow first or `Order.DENY_ALLOW`
+                to check deny first.
+            default_answer: pass this argument to provide the ACL with a
+                default answer.
+
+        .. note::
+
+            By using `order_to_check_allow_deny` and `default_answer` you
+            can create both *allow lists* and *deny lists*.  The former
+            uses `Order.ALLOW_DENY` with a default anwser of False whereas
+            the latter uses `Order.DENY_ALLOW` with a default answer of
+            True.
+        """
         super().__init__(
             order_to_check_allow_deny=order_to_check_allow_deny,
             default_answer=default_answer,

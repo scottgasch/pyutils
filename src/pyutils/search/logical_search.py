@@ -4,6 +4,8 @@
 
 """This is a module concerned with the creation of and searching of a
 corpus of documents.  The corpus and index are held in memory.
+The query language contains AND, OR, NOT, and parenthesis to support
+flexible search semantics.
 """
 
 from __future__ import annotations

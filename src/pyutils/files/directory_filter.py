@@ -2,10 +2,19 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Two predicates that can help avoid unnecessary disk I/O by
-detecting if a particular file is identical to the contents about to
-be written or if a particular directory already contains a file that
-is identical to the one about to be written.  See examples below.
+"""This module contains two classes meant to help reduce unnecessary disk
+I/O operations:
+
+The first, :class:`DirectoryFileFilter`, determines when the contents
+of a file held in memory are identical to the file copy already on
+disk.
+
+The second, :class:`DirectoryAllFilesFilter`, is basically the same
+except for the caller need not indicate the name of the disk file
+because it will check the memory file's signature against *all file
+signatures* in a particular directory on disk.
+
+See examples below.
 """
 
 import hashlib
@@ -36,12 +45,10 @@ class DirectoryFileFilter(object):
     True
 
     >>> os.remove(testfile)
-
     """
 
     def __init__(self, directory: str):
-        """C'tor.
-
+        """
         Args:
             directory: the directory we're filtering accesses to
         """
@@ -117,11 +124,11 @@ class DirectoryAllFilesFilter(DirectoryFileFilter):
     directory (regardless of its name).
 
     i.e. this is the same as :class:`DirectoryFileFilter` except that
-    our apply() method will return true not only if the contents to be
-    written are identical to the contents of filename on the disk but
-    also it returns true if there exists some other file sitting in
-    the same directory which already contains those identical
-    contents.
+    our :meth:`apply` method will return true not only if the contents
+    to be written are identical to the contents of filename on the
+    disk but also it returns true if there exists some other file
+    sitting in the same directory which already contains those
+    identical contents.
 
     >>> testfile = '/tmp/directory_filter_text_f39e5b58-c260-40da-9448-ad1c3b2a69c3.txt'
 
@@ -143,8 +150,7 @@ class DirectoryAllFilesFilter(DirectoryFileFilter):
     """
 
     def __init__(self, directory: str):
-        """C'tor.
-
+        """
         Args:
             directory: the directory we're watching
         """

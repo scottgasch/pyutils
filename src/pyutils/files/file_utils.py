@@ -2,7 +2,12 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""Utilities for working with files."""
+"""
+This is a grab bag of file-related utilities.  It has code to, for example,
+read files transforming the text as its read, normalize pathnames, strip
+extensions, read and manipulate atimes/mtimes/ctimes, compute a signature
+based on a file's contents, traverse the file system recursively, etc...
+"""
 
 import contextlib
 import datetime
@@ -54,6 +59,9 @@ def slurp_file(
         filename: file to be read
         skip_blank_lines: should reading skip blank lines?
         line_transformers: little string->string transformations
+
+    Returns:
+        A list of lines from the read and transformed file contents.
     """
 
     ret = []
@@ -126,6 +134,8 @@ def without_extension(path: str) -> str:
     Returns:
         the path with one extension removed.
 
+    See also :meth:`without_all_extensions`.
+
     >>> without_extension('foobar.txt')
     'foobar'
 
@@ -158,6 +168,8 @@ def without_all_extensions(path: str) -> str:
     Returns:
         the path with all extensions removed.
 
+    See also :meth:`without_extension`
+
     >>> without_all_extensions('/home/scott/foobar.1.tar.gz')
     '/home/scott/foobar'
 
@@ -175,6 +187,9 @@ def get_extension(path: str) -> str:
 
     Returns:
         The last extension from the file path.
+
+    See also :meth:`without_extension`, :meth:`without_all_extensions`,
+    :meth:`get_all_extensions`.
 
     >>> get_extension('this_is_a_test.txt')
     '.txt'
@@ -197,6 +212,9 @@ def get_all_extensions(path: str) -> List[str]:
 
     Returns:
         a list containing each extension which may be empty.
+
+    See also :meth:`without_extension`, :meth:`without_all_extensions`,
+    :meth:`get_extension`.
 
     >>> get_all_extensions('/home/scott/foo.tar.gz.1')
     ['.tar', '.gz', '.1']
@@ -225,6 +243,8 @@ def without_path(filespec: str) -> str:
     Returns:
         filespec without leading dir components.
 
+    See also :meth:`get_path`, :meth:`get_canonical_path`.
+
     >>> without_path('/home/scott/foo.py')
     'foo.py'
 
@@ -245,6 +265,8 @@ def get_path(filespec: str) -> str:
     Returns:
         filespec with just the leading directory components and no
             filename or extension(s)
+
+    See also :meth:`without_path`, :meth:`get_canonical_path`.
 
     >>> get_path('/home/scott/foobar.py')
     '/home/scott'
@@ -268,6 +290,8 @@ def get_canonical_path(filespec: str) -> str:
     Returns:
         the canonicalized path
 
+    See also :meth:`get_path`, :meth:`without_path`.
+
     >>> get_canonical_path('/home/scott/../../home/lynn/../scott/foo.txt')
     '/usr/home/scott/foo.txt'
 
@@ -279,14 +303,16 @@ def create_path_if_not_exist(path, on_error=None) -> None:
     """
     Attempts to create path if it does not exist already.
 
-    .. warning::
-
-        Files are created with mode 0x0777 (i.e. world read/writeable).
-
     Args:
         path: the path to attempt to create
         on_error: If True, it's invoked on error conditions.  Otherwise
             any exceptions are raised.
+
+    See also :meth:`does_file_exist`.
+
+    .. warning::
+
+        Files are created with mode 0x0777 (i.e. world read/writeable).
 
     >>> import uuid
     >>> import os
@@ -321,6 +347,8 @@ def does_file_exist(filename: str) -> bool:
     Returns:
         True if filename exists and is a normal file.
 
+    See also :meth:`create_path_if_not_exist`, :meth:`file_is_readable`.
+
     >>> does_file_exist(__file__)
     True
     >>> does_file_exist('/tmp/2492043r9203r9230r9230r49230r42390r4230')
@@ -330,37 +358,62 @@ def does_file_exist(filename: str) -> bool:
 
 
 def file_is_readable(filename: str) -> bool:
-    """True if file exists, is a normal file and is readable by the
-    current process.  False otherwise.
+    """Is the file readable?
 
     Args:
         filename: the filename to check for read access
+
+    Returns:
+        True if the file exists, is a normal file, and is readable
+        by the current process.  False otherwise.
+
+    See also :meth:`does_file_exist`, :meth:`file_is_writable`,
+    :meth:`file_is_executable`.
     """
     return does_file_exist(filename) and os.access(filename, os.R_OK)
 
 
 def file_is_writable(filename: str) -> bool:
-    """True if file exists, is a normal file and is writable by the
-    current process.  False otherwise.
+    """Is the file writable?
 
     Args:
         filename: the file to check for write access.
+
+    Returns:
+        True if file exists, is a normal file and is writable by the
+        current process.  False otherwise.
+
+    See also :meth:`file_is_readable`, :meth:`does_file_exist`.
     """
     return does_file_exist(filename) and os.access(filename, os.W_OK)
 
 
 def file_is_executable(filename: str) -> bool:
-    """True if file exists, is a normal file and is executable by the
-    current process.  False otherwise.
+    """Is the file executable?
 
     Args:
         filename: the file to check for execute access.
+
+    Returns:
+        True if file exists, is a normal file and is executable by the
+        current process.  False otherwise.
+
+    See also :meth:`does_file_exist`, :meth:`file_is_readable`,
+    :meth:`file_is_writable`.
     """
     return does_file_exist(filename) and os.access(filename, os.X_OK)
 
 
 def does_directory_exist(dirname: str) -> bool:
-    """Returns True if a file exists and is a directory.
+    """Does the given directory exist?
+
+    Args:
+        dirname: the name of the directory to check
+
+    Returns:
+        True if a path exists and is a directory, not a regular file.
+
+    See also :meth:`does_file_exist`.
 
     >>> does_directory_exist('/tmp')
     True
@@ -388,7 +441,15 @@ def get_file_size(filename: str) -> int:
 
 
 def is_normal_file(filename: str) -> bool:
-    """Returns True if filename is a normal file.
+    """Is that file normal (not a directory or some special file?)
+
+    Args:
+        filename: the path of the file to check
+
+    Returns:
+        True if filename is a normal file.
+
+    See also :meth:`is_directory`, :meth:`does_file_exist`, :meth:`is_symlink`.
 
     >>> is_normal_file(__file__)
     True
@@ -397,7 +458,16 @@ def is_normal_file(filename: str) -> bool:
 
 
 def is_directory(filename: str) -> bool:
-    """Returns True if filename is a directory.
+    """Is that path a directory (not a normal file?)
+
+    Args:
+        filename: the path of the file to check
+
+    Returns:
+        True if filename is a directory
+
+    See also :meth:`does_directory_exist`, :meth:`is_normal_file`,
+    :meth:`is_symlink`.
 
     >>> is_directory('/tmp')
     True
@@ -406,39 +476,60 @@ def is_directory(filename: str) -> bool:
 
 
 def is_symlink(filename: str) -> bool:
-    """True if filename is a symlink, False otherwise.
+    """Is that path a symlink?
+
+    Args:
+        filename: the path of the file to check
+
+    Returns:
+        True if filename is a symlink, False otherwise.
+
+    See also :meth:`is_directory`, :meth:`is_normal_file`.
 
     >>> is_symlink('/tmp')
     False
 
     >>> is_symlink('/home')
     True
-
     """
     return os.path.islink(filename)
 
 
 def is_same_file(file1: str, file2: str) -> bool:
-    """Returns True if the two files are the same inode.
+    """Determine if two paths reference the same inode.
+
+    Args:
+        file1: the first file
+        file2: the second file
+
+    Returns:
+        True if the two files are the same file.
+
+    See also :meth:`is_symlink`, :meth:`is_normal_file`.
 
     >>> is_same_file('/tmp', '/tmp/../tmp')
     True
 
     >>> is_same_file('/tmp', '/home')
     False
-
     """
     return os.path.samefile(file1, file2)
 
 
 def get_file_raw_timestamps(filename: str) -> Optional[os.stat_result]:
-    """Stats the file and returns an os.stat_result or None on error.
+    """Stats the file and returns an `os.stat_result` or None on error.
 
     Args:
         filename: the file whose timestamps to fetch
 
     Returns:
         the os.stat_result or None to indicate an error occurred
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamp`
     """
     try:
         return os.stat(filename)
@@ -451,10 +542,7 @@ def get_file_raw_timestamp(
     filename: str, extractor: Callable[[os.stat_result], Optional[float]]
 ) -> Optional[float]:
     """Stat a file and, if successful, use extractor to fetch some
-    subset of the information in the os.stat_result.  See also
-    :meth:`get_file_raw_atime`, :meth:`get_file_raw_mtime`, and
-    :meth:`get_file_raw_ctime` which just call this with a lambda
-    extractor.
+    subset of the information in the `os.stat_result`.
 
     Args:
         filename: the filename to stat
@@ -463,6 +551,12 @@ def get_file_raw_timestamp(
 
     Returns:
         whatever the extractor produced or None on error.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
     tss = get_file_raw_timestamps(filename)
     if tss is not None:
@@ -471,31 +565,64 @@ def get_file_raw_timestamp(
 
 
 def get_file_raw_atime(filename: str) -> Optional[float]:
-    """Get a file's raw access time or None on error.
+    """Get a file's raw access time.
 
-    See also :meth:`get_file_atime_as_datetime`,
+    Args:
+        filename: the path to the file to stat
+
+    Returns:
+        The file's raw atime (seconds since the Epoch) or
+        None on error.
+
+    See also
+    :meth:`get_file_atime_age_seconds`,
+    :meth:`get_file_atime_as_datetime`,
     :meth:`get_file_atime_timedelta`,
-    and :meth:`get_file_atime_age_seconds`.
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
     return get_file_raw_timestamp(filename, lambda x: x.st_atime)
 
 
 def get_file_raw_mtime(filename: str) -> Optional[float]:
-    """Get a file's raw modification time or None on error.
+    """Get a file's raw modification time.
 
-    See also :meth:`get_file_mtime_as_datetime`,
+    Args:
+        filename: the path to the file to stat
+
+    Returns:
+        The file's raw mtime (seconds since the Epoch) or
+        None on error.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_mtime_age_seconds`,
+    :meth:`get_file_mtime_as_datetime`,
     :meth:`get_file_mtime_timedelta`,
-    and :meth:`get_file_mtime_age_seconds`.
+    :meth:`get_file_raw_timestamps`
     """
     return get_file_raw_timestamp(filename, lambda x: x.st_mtime)
 
 
 def get_file_raw_ctime(filename: str) -> Optional[float]:
-    """Get a file's raw creation time or None on error.
+    """Get a file's raw creation time.
 
-    See also :meth:`get_file_ctime_as_datetime`,
+    Args:
+        filename: the path to the file to stat
+
+    Returns:
+        The file's raw ctime (seconds since the Epoch) or
+        None on error.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_ctime_age_seconds`,
+    :meth:`get_file_ctime_as_datetime`,
     :meth:`get_file_ctime_timedelta`,
-    and :meth:`get_file_ctime_age_seconds`.
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
     return get_file_raw_timestamp(filename, lambda x: x.st_ctime)
 
@@ -507,7 +634,7 @@ def get_file_md5(filename: str) -> str:
         filename: the file whose contents to hash
 
     Returns:
-        the MD5 digest of the file's contents.  Raises on errors.
+        the MD5 digest of the file's contents.  Raises on error.
     """
     file_hash = hashlib.md5()
     with open(filename, "rb") as f:
@@ -518,13 +645,22 @@ def get_file_md5(filename: str) -> str:
     return file_hash.hexdigest()
 
 
-def set_file_raw_atime(filename: str, atime: float):
+def set_file_raw_atime(filename: str, atime: float) -> None:
     """Sets a file's raw access time.
 
-    See also :meth:`get_file_atime_as_datetime`,
-    :meth:`get_file_atime_timedelta`,
+    Args:
+        filename: the file whose atime should be set
+        atime: raw atime as number of seconds since the Epoch to set
+
+    See also
+    :meth:`get_file_raw_atime`,
     :meth:`get_file_atime_age_seconds`,
-    and :meth:`get_file_raw_atime`.
+    :meth:`get_file_atime_as_datetime`,
+    :meth:`get_file_atime_timedelta`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_mtime`,
+    :meth:`set_file_raw_atime_and_mtime`,
+    :meth:`touch_file`
     """
     mtime = get_file_raw_mtime(filename)
     assert mtime is not None
@@ -534,10 +670,19 @@ def set_file_raw_atime(filename: str, atime: float):
 def set_file_raw_mtime(filename: str, mtime: float):
     """Sets a file's raw modification time.
 
-    See also :meth:`get_file_mtime_as_datetime`,
-    :meth:`get_file_mtime_timedelta`,
+    Args:
+        filename: the file whose mtime should be set
+        mtime: the raw mtime as number of seconds since the Epoch to set
+
+    See also
+    :meth:`get_file_raw_mtime`,
     :meth:`get_file_mtime_age_seconds`,
-    and :meth:`get_file_raw_mtime`.
+    :meth:`get_file_mtime_as_datetime`,
+    :meth:`get_file_mtime_timedelta`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`,
+    :meth:`touch_file`
     """
     atime = get_file_raw_atime(filename)
     assert atime is not None
@@ -545,12 +690,19 @@ def set_file_raw_mtime(filename: str, mtime: float):
 
 
 def set_file_raw_atime_and_mtime(filename: str, ts: float = None):
-    """Sets both a file's raw modification and access times
+    """Sets both a file's raw modification and access times.
 
     Args:
         filename: the file whose times to set
         ts: the raw time to set or None to indicate time should be
             set to the current time.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_mtime`
     """
     if ts is not None:
         os.utime(filename, (ts, ts))
@@ -558,10 +710,19 @@ def set_file_raw_atime_and_mtime(filename: str, ts: float = None):
         os.utime(filename, None)
 
 
-def convert_file_timestamp_to_datetime(
+def _convert_file_timestamp_to_datetime(
     filename: str, producer
 ) -> Optional[datetime.datetime]:
-    """Convert a raw file timestamp into a python datetime."""
+    """
+    Converts a raw file timestamp into a Python datetime.
+
+    Args:
+        filename: file whose timestamps should be converted.
+        producer: source of the timestamp.
+
+    Returns:
+        The datetime.
+    """
     ts = producer(filename)
     if ts is not None:
         return datetime.datetime.fromtimestamp(ts)
@@ -569,40 +730,70 @@ def convert_file_timestamp_to_datetime(
 
 
 def get_file_atime_as_datetime(filename: str) -> Optional[datetime.datetime]:
-    """Fetch a file's access time as a python datetime.
+    """Fetch a file's access time as a Python datetime.
 
-    See also :meth:`get_file_atime_as_datetime`,
-    :meth:`get_file_atime_timedelta`,
+    Args:
+        filename: the file whose atime should be fetched.
+
+    Returns:
+        The file's atime as a Python :class:`datetime.datetime`.
+
+    See also
+    :meth:`get_file_raw_atime`,
     :meth:`get_file_atime_age_seconds`,
-    :meth:`describe_file_atime`,
-    and :meth:`get_file_raw_atime`.
+    :meth:`get_file_atime_timedelta`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return convert_file_timestamp_to_datetime(filename, get_file_raw_atime)
+    return _convert_file_timestamp_to_datetime(filename, get_file_raw_atime)
 
 
 def get_file_mtime_as_datetime(filename: str) -> Optional[datetime.datetime]:
-    """Fetches a file's modification time as a python datetime.
+    """Fetch a file's modification time as a Python datetime.
 
-    See also :meth:`get_file_mtime_as_datetime`,
-    :meth:`get_file_mtime_timedelta`,
+    Args:
+        filename: the file whose mtime should be fetched.
+
+    Returns:
+        The file's mtime as a Python :class:`datetime.datetime`.
+
+    See also
+    :meth:`get_file_raw_mtime`,
     :meth:`get_file_mtime_age_seconds`,
-    and :meth:`get_file_raw_mtime`.
+    :meth:`get_file_mtime_timedelta`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return convert_file_timestamp_to_datetime(filename, get_file_raw_mtime)
+    return _convert_file_timestamp_to_datetime(filename, get_file_raw_mtime)
 
 
 def get_file_ctime_as_datetime(filename: str) -> Optional[datetime.datetime]:
-    """Fetches a file's creation time as a python datetime.
+    """Fetches a file's creation time as a Python datetime.
 
-    See also :meth:`get_file_ctime_as_datetime`,
-    :meth:`get_file_ctime_timedelta`,
+    Args:
+        filename: the file whose ctime should be fetched.
+
+    Returns:
+        The file's ctime as a Python :class:`datetime.datetime`.
+
+    See also
+    :meth:`get_file_raw_ctime`,
     :meth:`get_file_ctime_age_seconds`,
-    and :meth:`get_file_raw_ctime`.
+    :meth:`get_file_ctime_timedelta`,
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
-    return convert_file_timestamp_to_datetime(filename, get_file_raw_ctime)
+    return _convert_file_timestamp_to_datetime(filename, get_file_raw_ctime)
 
 
-def get_file_timestamp_age_seconds(filename: str, extractor) -> Optional[int]:
+def _get_file_timestamp_age_seconds(filename: str, extractor) -> Optional[int]:
     """~Internal helper"""
     now = time.time()
     ts = get_file_raw_timestamps(filename)
@@ -615,42 +806,73 @@ def get_file_timestamp_age_seconds(filename: str, extractor) -> Optional[int]:
 def get_file_atime_age_seconds(filename: str) -> Optional[int]:
     """Gets a file's access time as an age in seconds (ago).
 
-    See also :meth:`get_file_atime_as_datetime`,
+    Args:
+        filename: file whose atime should be checked.
+
+    Returns:
+        The number of seconds ago that filename was last accessed.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_atime_as_datetime`,
     :meth:`get_file_atime_timedelta`,
-    :meth:`get_file_atime_age_seconds`,
-    :meth:`describe_file_atime`,
-    and :meth:`get_file_raw_atime`.
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return get_file_timestamp_age_seconds(filename, lambda x: x.st_atime)
+    return _get_file_timestamp_age_seconds(filename, lambda x: x.st_atime)
 
 
 def get_file_ctime_age_seconds(filename: str) -> Optional[int]:
     """Gets a file's creation time as an age in seconds (ago).
 
-    See also :meth:`get_file_ctime_as_datetime`,
-    :meth:`get_file_ctime_timedelta`,
+    Args:
+        filename: file whose ctime should be checked.
+
+    Returns:
+        The number of seconds ago that filename was created.
+
+    See also
+    :meth:`get_file_raw_ctime`,
     :meth:`get_file_ctime_age_seconds`,
-    and :meth:`get_file_raw_ctime`.
+    :meth:`get_file_ctime_as_datetime`,
+    :meth:`get_file_ctime_timedelta`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_timestamps`
     """
-    return get_file_timestamp_age_seconds(filename, lambda x: x.st_ctime)
+    return _get_file_timestamp_age_seconds(filename, lambda x: x.st_ctime)
 
 
 def get_file_mtime_age_seconds(filename: str) -> Optional[int]:
     """Gets a file's modification time as seconds (ago).
 
-    See also :meth:`get_file_mtime_as_datetime`,
+    Args:
+        filename: file whose mtime should be checked.
+
+    Returns:
+        The number of seconds ago that filename was last modified.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_mtime_as_datetime`,
     :meth:`get_file_mtime_timedelta`,
-    :meth:`get_file_mtime_age_seconds`,
-    and :meth:`get_file_raw_mtime`.
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return get_file_timestamp_age_seconds(filename, lambda x: x.st_mtime)
+    return _get_file_timestamp_age_seconds(filename, lambda x: x.st_mtime)
 
 
-def get_file_timestamp_timedelta(
+def _get_file_timestamp_timedelta(
     filename: str, extractor
 ) -> Optional[datetime.timedelta]:
     """~Internal helper"""
-    age = get_file_timestamp_age_seconds(filename, extractor)
+    age = _get_file_timestamp_age_seconds(filename, extractor)
     if age is not None:
         return datetime.timedelta(seconds=float(age))
     return None
@@ -659,36 +881,69 @@ def get_file_timestamp_timedelta(
 def get_file_atime_timedelta(filename: str) -> Optional[datetime.timedelta]:
     """How long ago was a file accessed as a timedelta?
 
-    See also :meth:`get_file_atime_as_datetime`,
-    :meth:`get_file_atime_timedelta`,
+    Args:
+        filename: the file whose atime should be checked.
+
+    Returns:
+        A Python :class:`datetime.timedelta` representing how long
+        ago filename was last accessed.
+
+    See also
+    :meth:`get_file_raw_atime`,
     :meth:`get_file_atime_age_seconds`,
-    :meth:`describe_file_atime`,
-    and :meth:`get_file_raw_atime`.
+    :meth:`get_file_atime_as_datetime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return get_file_timestamp_timedelta(filename, lambda x: x.st_atime)
+    return _get_file_timestamp_timedelta(filename, lambda x: x.st_atime)
 
 
 def get_file_ctime_timedelta(filename: str) -> Optional[datetime.timedelta]:
     """How long ago was a file created as a timedelta?
 
-    See also :meth:`get_file_ctime_as_datetime`,
-    :meth:`get_file_ctime_timedelta`,
+    Args:
+        filename: the file whose ctime should be checked.
+
+    Returns:
+        A Python :class:`datetime.timedelta` representing how long
+        ago filename was created.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
     :meth:`get_file_ctime_age_seconds`,
-    and :meth:`get_file_raw_ctime`.
+    :meth:`get_file_ctime_as_datetime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
-    return get_file_timestamp_timedelta(filename, lambda x: x.st_ctime)
+    return _get_file_timestamp_timedelta(filename, lambda x: x.st_ctime)
 
 
 def get_file_mtime_timedelta(filename: str) -> Optional[datetime.timedelta]:
     """
-    Gets a file's modification time as a python timedelta.
+    Gets a file's modification time as a Python timedelta.
 
-    See also :meth:`get_file_mtime_as_datetime`,
-    :meth:`get_file_mtime_timedelta`,
+    Args:
+        filename: the file whose mtime should be checked.
+
+    Returns:
+        A Python :class:`datetime.timedelta` representing how long
+        ago filename was last modified.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
     :meth:`get_file_mtime_age_seconds`,
-    and :meth:`get_file_raw_mtime`.
+    :meth:`get_file_mtime_as_datetime`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
-    return get_file_timestamp_timedelta(filename, lambda x: x.st_mtime)
+    return _get_file_timestamp_timedelta(filename, lambda x: x.st_mtime)
 
 
 def describe_file_timestamp(filename: str, extractor, *, brief=False) -> Optional[str]:
@@ -698,7 +953,7 @@ def describe_file_timestamp(filename: str, extractor, *, brief=False) -> Optiona
         describe_duration_briefly,
     )
 
-    age = get_file_timestamp_age_seconds(filename, extractor)
+    age = _get_file_timestamp_age_seconds(filename, extractor)
     if age is None:
         return None
     if brief:
@@ -711,11 +966,25 @@ def describe_file_atime(filename: str, *, brief=False) -> Optional[str]:
     """
     Describe how long ago a file was accessed.
 
-    See also :meth:`get_file_atime_as_datetime`,
-    :meth:`get_file_atime_timedelta`,
+    Args:
+        filename: the file whose atime should be described.
+        brief: if True, describe atime briefly.
+
+    Returns:
+        A string that represents how long ago filename was last
+        accessed.  The description will be verbose or brief depending
+        on the brief argument.
+
+    See also
+    :meth:`get_file_raw_atime`,
     :meth:`get_file_atime_age_seconds`,
-    :meth:`describe_file_atime`,
-    and :meth:`get_file_raw_atime`.
+    :meth:`get_file_atime_as_datetime`,
+    :meth:`get_file_atime_timedelta`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
     return describe_file_timestamp(filename, lambda x: x.st_atime, brief=brief)
 
@@ -723,22 +992,49 @@ def describe_file_atime(filename: str, *, brief=False) -> Optional[str]:
 def describe_file_ctime(filename: str, *, brief=False) -> Optional[str]:
     """Describes a file's creation time.
 
-    See also :meth:`get_file_ctime_as_datetime`,
-    :meth:`get_file_ctime_timedelta`,
+    Args:
+        filename: the file whose ctime should be described.
+        brief: if True, describe ctime briefly.
+
+    Returns:
+        A string that represents how long ago filename was created.
+        The description will be verbose or brief depending
+        on the brief argument.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
     :meth:`get_file_ctime_age_seconds`,
-    and :meth:`get_file_raw_ctime`.
+    :meth:`get_file_ctime_as_datetime`,
+    :meth:`get_file_ctime_timedelta`,
+    :meth:`get_file_raw_mtime`,
+    :meth:`get_file_raw_timestamps`
     """
     return describe_file_timestamp(filename, lambda x: x.st_ctime, brief=brief)
 
 
 def describe_file_mtime(filename: str, *, brief=False) -> Optional[str]:
-    """
-    Describes how long ago a file was modified.
+    """Describes how long ago a file was modified.
 
-    See also :meth:`get_file_mtime_as_datetime`,
-    :meth:`get_file_mtime_timedelta`,
+    Args:
+        filename: the file whose mtime should be described.
+        brief: if True, describe mtime briefly.
+
+    Returns:
+        A string that represents how long ago filename was last
+        modified.  The description will be verbose or brief depending
+        on the brief argument.
+
+    See also
+    :meth:`get_file_raw_atime`,
+    :meth:`get_file_raw_ctime`,
+    :meth:`get_file_raw_mtime`,
     :meth:`get_file_mtime_age_seconds`,
-    and :meth:`get_file_raw_mtime`.
+    :meth:`get_file_mtime_as_datetime`,
+    :meth:`get_file_mtime_timedelta`,
+    :meth:`get_file_raw_timestamps`,
+    :meth:`set_file_raw_atime`,
+    :meth:`set_file_raw_atime_and_mtime`
     """
     return describe_file_timestamp(filename, lambda x: x.st_mtime, brief=brief)
 
@@ -751,18 +1047,48 @@ def touch_file(filename: str, *, mode: Optional[int] = 0o666):
     Args:
         filename: the filename
         mode: the mode to create the file with
+
+    .. warning::
+
+        The default creation mode is 0x666 which is world readable
+        and writable.  Override this by passing in your own mode
+        parameter if desired.
+
+    See also :meth:`set_file_raw_atime`, :meth:`set_file_raw_atime_and_mtime`,
+    :meth:`set_file_raw_mtime`, :meth:`create_path_if_not_exist`
     """
     pathlib.Path(filename, mode=mode).touch()
 
 
 def expand_globs(in_filename: str):
-    """Expands shell globs (* and ? wildcards) to the matching files."""
+    """
+    Expands shell globs (* and ? wildcards) to the matching files.
+
+    Args:
+        in_filename: the filepath to be expanded.  May contain '*' and '?'
+            globbing characters.
+
+    Returns:
+        A Generator that yields filenames that match the input pattern.
+
+    See also :meth:`get_files`, :meth:`get_files_recursive`.
+    """
     for filename in glob.glob(in_filename):
         yield filename
 
 
 def get_files(directory: str):
-    """Returns the files in a directory as a generator."""
+    """Returns the files in a directory as a generator.
+
+    Args:
+        directory: the directory to list files under.
+
+    Returns:
+        A generator that yields all files in the input directory.
+
+    See also :meth:`expand_globs`, :meth:`get_files_recursive`,
+    :meth:`get_matching_files`.
+    """
     for filename in os.listdir(directory):
         full_path = join(directory, filename)
         if isfile(full_path) and exists(full_path):
@@ -770,14 +1096,38 @@ def get_files(directory: str):
 
 
 def get_matching_files(directory: str, glob: str):
-    """Returns the subset of files whose name matches a glob."""
+    """
+    Returns the subset of files whose name matches a glob.
+
+    Args:
+        directory: the directory to match files within.
+        glob: the globbing pattern (may include '*' and '?') to
+            use when matching files.
+
+    Returns:
+        A generator that yields filenames in directory that match
+        the given glob pattern.
+
+    See also :meth:`get_files`, :meth:`expand_globs`.
+    """
     for filename in get_files(directory):
         if fnmatch.fnmatch(filename, glob):
             yield filename
 
 
 def get_directories(directory: str):
-    """Returns the subdirectories in a directory as a generator."""
+    """
+    Returns the subdirectories in a directory as a generator.
+
+    Args:
+        directory: the directory to list subdirectories within.
+
+    Returns:
+        A generator that yields all subdirectories within the given
+        input directory.
+
+    See also :meth:`get_files`, :meth:`get_files_recursive`.
+    """
     for d in os.listdir(directory):
         full_path = join(directory, d)
         if not isfile(full_path) and exists(full_path):
@@ -785,7 +1135,20 @@ def get_directories(directory: str):
 
 
 def get_files_recursive(directory: str):
-    """Find the files and directories under a root recursively."""
+    """
+    Find the files and directories under a root recursively.
+
+    Args:
+        directory: the root directory under which to list subdirectories
+            and file contents.
+
+    Returns:
+        A generator that yields all directories and files beneath the input
+        root directory.
+
+    See also :meth:`get_files`, :meth:`get_matching_files`,
+    :meth:`get_matching_files_recursive`
+    """
     for filename in get_files(directory):
         yield filename
     for subdir in get_directories(directory):
@@ -794,18 +1157,50 @@ def get_files_recursive(directory: str):
 
 
 def get_matching_files_recursive(directory: str, glob: str):
-    """Returns the subset of files whose name matches a glob under a root recursively."""
+    """
+    Returns the subset of files whose name matches a glob under a root recursively.
+
+    Args:
+        directory: the root under which to search
+        glob: a globbing pattern that describes the subset of files and directories
+            to return.  May contain '?' and '*'.
+
+    Returns:
+        A generator that yields all files and directories under the given root
+        directory that match the given globbing pattern.
+
+    See also :meth:`get_files_recursive`.
+    """
     for filename in get_files_recursive(directory):
         if fnmatch.fnmatch(filename, glob):
             yield filename
 
 
 class FileWriter(contextlib.AbstractContextManager):
-    """A helper that writes a file to a temporary location and then moves
-    it atomically to its ultimate destination on close.
+    """A helper that writes a file to a temporary location and then
+    moves it atomically to its ultimate destination on close.
+
+    Example usage.  Creates a temporary file that is populated by the
+    print statements within the context.  Until the context is exited,
+    the true destination file does not exist so no reader of it can
+    see partial writes due to buffering or code timing.  Once the
+    context is exited, the file is moved from its temporary location
+    to its permanent location by a call to `/bin/mv` which should be
+    atomic::
+
+        with FileWriter('/home/bob/foobar.txt') as w:
+            print("This is a test!", file=w)
+            time.sleep(2)
+            print("This is only a test...", file=w)
+
     """
 
     def __init__(self, filename: str) -> None:
+        """
+        Args:
+            filename: the ultimate destination file we want to populate.
+                On exit, the file will be atomically created.
+        """
         self.filename = filename
         uuid = uuid4()
         self.tempfile = f'{filename}-{uuid}.tmp'

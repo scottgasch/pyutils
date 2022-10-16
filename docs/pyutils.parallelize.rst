@@ -1,28 +1,41 @@
 pyutils.parallelize package
 ===========================
 
+This package contains code related to parallelization including some
+utilities (:file:`thread_utils.py`) and a frameworks for simple
+parallelization (everything else).
+
 Submodules
 ----------
 
 pyutils.parallelize.deferred\_operand module
 --------------------------------------------
 
-DeferredOperand is the base class for SmartFuture.
-
 .. automodule:: pyutils.parallelize.deferred_operand
    :members:
    :undoc-members:
+   :exclude-members: __repr__,
+                     and_,
+                     bool,
+                     delitem,
+                     getitem,
+                     invert,
+                     is_,
+                     is_not,
+                     lshift,
+                     matmul,
+                     mod,
+                     neg,
+                     or_,
+                     pos,
+                     rshift,
+                     setitem,
+                     truth,
+                     xor
    :show-inheritance:
 
 pyutils.parallelize.executors module
 ------------------------------------
-
-This module defines three executors: one for threads in the same
-process, one for separate processes on the same machine and the third
-for separate processes on remote machines.  Each can be used via the
-@parallelize decorator.  These executor pools are automatically
-cleaned up at program exit.
-
 
 .. automodule:: pyutils.parallelize.executors
    :members:
@@ -31,8 +44,6 @@ cleaned up at program exit.
 
 pyutils.parallelize.parallelize module
 --------------------------------------
-
-This module defines a decorator that can be used for simple parallelization.
 
 .. automodule:: pyutils.parallelize.parallelize
    :members:
@@ -59,8 +70,6 @@ Also contains some utilility code for waiting for one/many futures.
 
 pyutils.parallelize.thread\_utils module
 ----------------------------------------
-
-Simple utils that deal with threads.
 
 .. automodule:: pyutils.parallelize.thread_utils
    :members:

@@ -19,14 +19,16 @@ logger = logging.getLogger(__name__)
 
 
 def is_timezone_aware(dt: datetime.datetime) -> bool:
-    """Returns true if the datetime argument is timezone aware or
-    False if not.
-
-    See: https://docs.python.org/3/library/datetime.html
-    #determining-if-an-object-is-aware-or-naive
+    """
+    Checks whether a datetime is timezone aware or naive.
+    See: https://docs.python.org/3/library/datetime.html#determining-if-an-object-is-aware-or-naive
 
     Args:
-        dt: The datetime object to check
+        dt: the datetime to check for timezone awareness
+
+    Returns:
+        True if the datetime argument is timezone aware or
+        False if not.
 
     >>> is_timezone_aware(datetime.datetime.now())
     False
@@ -39,14 +41,14 @@ def is_timezone_aware(dt: datetime.datetime) -> bool:
 
 
 def is_timezone_naive(dt: datetime.datetime) -> bool:
-    """Inverse of is_timezone_aware -- returns true if the dt argument
-    is timezone naive.
-
-    See: https://docs.python.org/3/library/datetime.html
-    #determining-if-an-object-is-aware-or-naive
+    """Inverse of :meth:`is_timezone_aware`.
+    See: https://docs.python.org/3/library/datetime.html#determining-if-an-object-is-aware-or-naive
 
     Args:
-        dt: The datetime object to check
+        dt: the datetime to check
+
+    Returns:
+        True if the dt argument is timezone naive, False otherwise
 
     >>> is_timezone_naive(datetime.datetime.now())
     True
@@ -59,18 +61,32 @@ def is_timezone_naive(dt: datetime.datetime) -> bool:
 
 
 def strip_timezone(dt: datetime.datetime) -> datetime.datetime:
-    """Remove the timezone from a datetime.
+    """
+    Remove the timezone from a datetime.  Silently ignores datetimes
+    which are already timezone naive.
+
+    Args:
+        dt: the datetime to remove timezone from
+
+    Returns:
+        A datetime identical to dt, the input argument, except for
+        that the timezone has been removed.
+
+    See also :meth:`add_timezone`, :meth:`replace_timezone`, :meth:`translate_timezone`.
 
     .. warning::
 
         This does not change the hours, minutes, seconds,
-        months, days, years, etc... Thus the instant to which this
-        timestamp refers will change.  Silently ignores datetimes
-        which are already timezone naive.
+        months, days, years, etc... Thus, the instant to which this
+        timestamp refers will change when the timezone is added.
+        See examples.
 
     >>> now = now_pacific()
     >>> now.tzinfo == None
     False
+
+    >>> "US/Pacific" in now.tzinfo.__repr__()
+    True
 
     >>> dt = strip_timezone(now)
     >>> dt == now
@@ -81,7 +97,6 @@ def strip_timezone(dt: datetime.datetime) -> datetime.datetime:
 
     >>> dt.hour == now.hour
     True
-
     """
     if is_timezone_naive(dt):
         return dt
@@ -90,9 +105,24 @@ def strip_timezone(dt: datetime.datetime) -> datetime.datetime:
 
 def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetime:
     """
-    Adds a timezone to a timezone naive datetime.  This does not
-    change the instant to which the timestamp refers.  See also:
-    replace_timezone.
+    Adds a timezone to a timezone naive datetime.
+
+    Args:
+        dt: the datetime to insert a timezone onto
+        tz: the timezone to insert
+
+    See also :meth:`replace_timezone`, :meth:`strip_timezone`, :meth:`translate_timezone`.
+
+    Returns:
+        A datetime identical to dt, the input datetime, except for
+        that a timezone has been added.
+
+    .. warning::
+
+        This doesn't change the hour, minute, second, day, month, etc...
+        of the input timezone.  It simply adds a timezone to it.  Adding
+        a timezone this way will likely change the instant to which the
+        datetime refers.  See examples.
 
     >>> now = datetime.datetime.now()
     >>> is_timezone_aware(now)
@@ -100,6 +130,9 @@ def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetim
 
     >>> now_pacific = add_timezone(now, pytz.timezone('US/Pacific'))
     >>> is_timezone_aware(now_pacific)
+    True
+
+    >>> "US/Pacific" in now_pacific.tzinfo.__repr__()
     True
 
     >>> now.hour == now_pacific.hour
@@ -129,18 +162,36 @@ def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetim
 def replace_timezone(
     dt: datetime.datetime, tz: Optional[datetime.tzinfo]
 ) -> datetime.datetime:
-    """Replaces the timezone on a timezone aware datetime object directly
+    """
+    Replaces the timezone on a timezone aware datetime object directly
     (leaving the year, month, day, hour, minute, second, micro,
-    etc... alone).
+    etc... alone).  The same as calling :meth:`strip_timezone` followed
+    by :meth:`add_timezone`.
 
     Works with timezone aware and timezone naive dts but for the
-    latter it is probably better to use add_timezone or just create it
-    with a tz parameter.  Using this can have weird side effects like
-    UTC offsets that are not an even multiple of an hour, etc...
+    latter it is probably better to use :meth:`add_timezone` or just
+    create it with a `tz` parameter.  Using this can have weird side
+    effects like UTC offsets that are not an even multiple of an hour,
+    etc...
+
+    Args:
+        dt: the datetime whose timezone should be changed
+        tz: the new timezone
+
+    Returns:
+        The resulting datetime.  Hour, minute, second, etc... are unmodified.
+        See warning below.
+
+    See also :meth:`add_timezone`, :meth:`strip_timezone`, :meth:`translate_timezone`.
 
     .. warning::
 
-        This changes the instant to which this dt refers.
+        This code isn't changing the hour, minute, second, day, month, etc...
+        of the datetime.  It's just messing with the timezone.  Changing
+        the timezone without changing the time causes the instant to which
+        the datetime refers to change.  For example, if passed 7:01pm PST
+        and asked to make it EST, the result will be 7:01pm EST.  See
+        examples.
 
     >>> from pytz import UTC
     >>> d = now_pacific()
@@ -152,7 +203,6 @@ def replace_timezone(
     'UTC'
     >>> o.hour == h
     True
-
     """
     if is_timezone_aware(dt):
         logger.warning(
@@ -180,10 +230,22 @@ def replace_time_timezone(t: datetime.time, tz: datetime.tzinfo) -> datetime.tim
     """Replaces the timezone on a datetime.time directly without performing
     any translation.
 
+    Args:
+        t: the time to change the timezone on
+        tz: the new timezone desired
+
+    Returns:
+        A time with hour, minute, second, etc... identical to the input
+        time but with timezone replaced.
+
     .. warning::
 
-        Note that, as above, this will change the instant to
-        which the time refers.
+        This code isn't changing the hour, minute, second, etc...
+        of the time.  It's just messing with the timezone.  Changing
+        the timezone without changing the time causes the instant to which
+        the datetime refers to change.  For example, if passed 7:01pm PST
+        and asked to make it EST, the result will be 7:01pm EST.  See
+        examples.
 
     >>> t = datetime.time(8, 15, 12, 0, pytz.UTC)
     >>> t.tzname()
@@ -201,6 +263,20 @@ def translate_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.d
     Translates dt into a different timezone by adjusting the year, month,
     day, hour, minute, second, micro, etc... appropriately.  The returned
     dt is the same instant in another timezone.
+
+    Args:
+        dt: the datetime whose timezone should be translated.
+        tz: the desired timezone
+
+    Returns:
+        A new datetime object that represents the same instant as the
+        input datetime but in the desired timezone.  Modifies hour, minute,
+        seconds, day, etc... as necessary for the instant to be preserved.
+        For example, if you pass 11:01pm PST in and ask for it to be
+        translated to EST you would get 2:01am the next day EST back
+        out.
+
+    See also :meth:`replace_timezone`, :meth:`strip_timezone`.
 
     >>> import pytz
     >>> d = now_pacific()
@@ -238,10 +314,16 @@ def date_to_datetime(date: datetime.date) -> datetime.datetime:
     """
     Given a date, return a datetime with hour/min/sec zero (midnight)
 
+    Arg:
+        date: the date desired
+
+    Returns:
+        A datetime with the same month, day, and year as the input
+        date and hours, minutes, seconds set to 12:00:00am.
+
     >>> import datetime
     >>> date_to_datetime(datetime.date(2021, 12, 25))
     datetime.datetime(2021, 12, 25, 0, 0)
-
     """
     return datetime.datetime(date.year, date.month, date.day, 0, 0, 0, 0)
 
@@ -252,6 +334,13 @@ def time_to_datetime_today(time: datetime.time) -> datetime.datetime:
     set based on the current date.  If the time passed is timezone aware,
     the resulting datetime will also be (and will use the same tzinfo).
     If the time is timezone naive, the datetime returned will be too.
+
+    Args:
+        time: the time desired
+
+    Returns:
+        datetime with hour, minute, second, timezone set to time and
+        day, month, year set to "today".
 
     >>> t = datetime.time(13, 14, 0)
     >>> d = now_pacific().date()
@@ -287,12 +376,19 @@ def date_and_time_to_datetime(
     """
     Given a date and time, merge them and return a datetime.
 
+    Args:
+        date: the date component
+        time: the time component
+
+    Returns:
+        A datetime with the time component set from time and the date
+        component set from date.
+
     >>> import datetime
     >>> d = datetime.date(2021, 12, 25)
     >>> t = datetime.time(12, 30, 0, 0)
     >>> date_and_time_to_datetime(d, t)
     datetime.datetime(2021, 12, 25, 12, 30)
-
     """
     return datetime.datetime(
         date.year,
@@ -311,6 +407,15 @@ def datetime_to_date_and_time(
     """Return the component date and time objects of a datetime in a
     Tuple given a datetime.
 
+    Args:
+        dt: the datetime to decompose
+
+    Returns:
+        A tuple whose first element contains a datetime.date that holds
+        the day, month, year, etc... from the input dt and whose second
+        element contains a datetime.time with hour, minute, second, micros,
+        and timezone set from the input dt.
+
     >>> import datetime
     >>> dt = datetime.datetime(2021, 12, 25, 12, 30)
     >>> (d, t) = datetime_to_date_and_time(dt)
@@ -318,7 +423,6 @@ def datetime_to_date_and_time(
     datetime.date(2021, 12, 25)
     >>> t
     datetime.time(12, 30)
-
     """
     return (dt.date(), dt.timetz())
 
@@ -326,11 +430,16 @@ def datetime_to_date_and_time(
 def datetime_to_date(dt: datetime.datetime) -> datetime.date:
     """Return just the date part of a datetime.
 
+    Args:
+        dt: the datetime
+
+    Returns:
+        A datetime.date with month, day and year set from input dt.
+
     >>> import datetime
     >>> dt = datetime.datetime(2021, 12, 25, 12, 30)
     >>> datetime_to_date(dt)
     datetime.date(2021, 12, 25)
-
     """
     return datetime_to_date_and_time(dt)[0]
 
@@ -338,11 +447,17 @@ def datetime_to_date(dt: datetime.datetime) -> datetime.date:
 def datetime_to_time(dt: datetime.datetime) -> datetime.time:
     """Return just the time part of a datetime.
 
+    Args:
+        dt: the datetime
+
+    Returns:
+        A datetime.time with hour, minute, second, micros, and
+        timezone set from the input dt.
+
     >>> import datetime
     >>> dt = datetime.datetime(2021, 12, 25, 12, 30)
     >>> datetime_to_time(dt)
     datetime.time(12, 30)
-
     """
     return datetime_to_date_and_time(dt)[1]
 
@@ -368,6 +483,13 @@ class TimeUnit(enum.IntEnum):
 
     @classmethod
     def is_valid(cls, value: Any):
+        """
+        Args:
+            value: a value to be checked
+
+        Returns:
+            True is input value is a valid TimeUnit, False otherwise.
+        """
         if isinstance(value, int):
             return cls(value) is not None
         elif isinstance(value, TimeUnit):
@@ -383,10 +505,26 @@ def n_timeunits_from_base(
     count: int, unit: TimeUnit, base: datetime.datetime
 ) -> datetime.datetime:
     """Return a datetime that is N units before/after a base datetime.
-    e.g.  3 Wednesdays from base datetime, 2 weeks from base date, 10
-    years before base datetime, 13 minutes after base datetime, etc...
-    Note: to indicate before/after the base date, use a positive or
-    negative count.
+    For example:
+
+        - 3 Wednesdays from base datetime,
+        - 2 weeks from base date,
+        - 10 years before base datetime,
+        - 13 minutes after base datetime, etc...
+
+    Args:
+        count: signed number that indicates N units before/after the base.
+        unit: the timeunit that we are counting by.
+        base: a datetime representing the base date the result should be
+            relative to.
+
+    Returns:
+        A datetime that is count units before of after the base datetime.
+
+    .. note::
+
+        To indicate before/after the base date, use a positive or
+        negative count.
 
     >>> base = string_to_datetime("2021/09/10 11:24:51AM-0700")[0]
 
@@ -442,7 +580,6 @@ def n_timeunits_from_base(
     >>> base = string_to_datetime("2022/03/31 11:24:51AM-0700")[0]
     >>> n_timeunits_from_base(-1, TimeUnit.MONTHS, base)
     datetime.datetime(2022, 2, 28, 11, 24, 51, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=61200)))
-
     """
     assert TimeUnit.is_valid(unit)
     if count == 0:
@@ -576,6 +713,22 @@ def get_format_string(
     Helper to return a format string without looking up the documentation
     for strftime.
 
+    Args:
+        date_time_separator: character or string to use between the date
+            and time outputs.
+        include_timezone: whether or not the result should include a timezone
+        include_dayname: whether or not the result should incude the dayname
+            (e.g. Monday, Wednesday, etc...)
+        use_month_abbrevs: whether or not to abbreviate (e.g. Jan) or spell out
+            (e.g. January) month names.
+        include_seconds: whether or not to include seconds in time.
+        include_fractional: whether or not to include micros in time output.
+        twelve_hour: use twelve hour (with am/pm) or twenty four hour time format?
+
+    Returns:
+        The format string for use with strftime that follows the given
+        requirements.
+
     >>> get_format_string()
     '%Y/%m/%d %I:%M:%S%p%z'
 
@@ -628,6 +781,19 @@ def datetime_to_string(
     A nice way to convert a datetime into a string; arguably better than
     just printing it and relying on it __repr__().
 
+    Args:
+        dt: the datetime to represent
+        date_time_separator: the character or string to separate the date and time
+            pieces of the representation.
+        include_timezone: should we include a timezone in the representation?
+        include_dayname: should we include the dayname (e.g. Mon) in
+            the representation or omit it?
+        use_month_abbrevs: should we name the month briefly (e.g. Jan) or spell
+            it out fully (e.g. January) in the representation?
+        include_seconds: should we include seconds in the time?
+        include_fractional: should we include micros in the time?
+        twelve_hour: should we use twelve or twenty-four hour time format?
+
     >>> d = string_to_datetime(
     ...                        "2021/09/10 11:24:51AM-0700",
     ...                       )[0]
@@ -637,7 +803,6 @@ def datetime_to_string(
     '2021/09/10 11:24:51AM-0700'
     >>> datetime_to_string(d, include_dayname=True, include_seconds=False)
     'Fri/2021/09/10 11:24AM-0700'
-
     """
     fstring = get_format_string(
         date_time_separator=date_time_separator,
@@ -664,7 +829,23 @@ def string_to_datetime(
 ) -> Tuple[datetime.datetime, str]:
     """A nice way to convert a string into a datetime.  Returns both the
     datetime and the format string used to parse it.  Also consider
-    dateparse.dateparse_utils for a full parser alternative.
+    :mod:`pyutils.datetimez.dateparse_utils` for a full parser alternative.
+
+    Args:
+        txt: the string to be converted into a datetime
+        date_time_separator: the character or string between the time and date
+            portions.
+        include_timezone: does the string include a timezone?
+        include_dayname: does the string include a dayname?
+        use_month_abbrevs: is the month abbreviated in the string (e.g. Feb)
+            or spelled out completely (e.g. February)?
+        include_seconds: does the string's time include seconds?
+        include_fractional: does the string's time include micros?
+        twelve_hour: is the string's time in twelve or twenty-four hour format?
+
+    Returns:
+        A tuple containing the datetime parsed from string and the formatting
+        string used to parse it.
 
     >>> d = string_to_datetime(
     ...                        "2021/09/10 11:24:51AM-0700",
@@ -686,7 +867,10 @@ def string_to_datetime(
 
 
 def timestamp() -> str:
-    """Return a timestamp for right now in Pacific timezone."""
+    """
+    Returns:
+        A timestamp for right now in Pacific timezone.
+    """
     ts = datetime.datetime.now(tz=pytz.timezone("US/Pacific"))
     return datetime_to_string(ts, include_timezone=True)
 
@@ -700,7 +884,17 @@ def time_to_string(
     twelve_hour=True,
 ) -> str:
     """A nice way to convert a datetime into a time (only) string.
-    This ignores the date part of the datetime.
+    This ignores the date part of the datetime completely.
+
+    Args:
+        dt: the datetime whose time to represent
+        include_seconds: should seconds be included in the output?
+        include_fractional: should micros be included in the output?
+        include_timezone: should timezone be included in the output?
+        twelve_hour: use twelve or twenty-four hour format?
+
+    Returns:
+        A string representing the time of the input datetime.
 
     >>> d = string_to_datetime(
     ...                        "2021/09/10 11:24:51AM-0700",
@@ -736,7 +930,13 @@ def time_to_string(
 
 
 def seconds_to_timedelta(seconds: int) -> datetime.timedelta:
-    """Convert a delta in seconds into a timedelta."""
+    """
+    Args:
+        seconds: a count of seconds
+
+    Returns:
+        A datetime.timedelta representing that count of seconds.
+    """
     return datetime.timedelta(seconds=seconds)
 
 
@@ -745,7 +945,16 @@ MinuteOfDay = NewType("MinuteOfDay", int)
 
 def minute_number(hour: int, minute: int) -> MinuteOfDay:
     """
-    Convert hour:minute into minute number from start of day.
+    Convert hour:minute into minute number from start of day.  That is,
+    if you imagine a day as a sequence of minutes from minute #0 up
+    to minute #1439, what minute number is, e.g., 6:52am?
+
+    Args:
+        hour: the hour to convert (0 <= hour <= 23)
+        minute: the minute to convert (0 <= minute <= 59)
+
+    Returns:
+        The minute number requested.  Raises `ValueError` on bad input.
 
     >>> minute_number(0, 0)
     0
@@ -755,16 +964,26 @@ def minute_number(hour: int, minute: int) -> MinuteOfDay:
 
     >>> minute_number(23, 59)
     1439
-
     """
+    if hour < 0 or hour > 23:
+        raise ValueError(f'Bad hour: {hour}.  Expected 0 <= hour <= 23')
+    if minute < 0 or minute > 59:
+        raise ValueError(f'Bad minute: {minute}.  Expected 0 <= minute <= 59')
     return MinuteOfDay(hour * 60 + minute)
 
 
 def datetime_to_minute_number(dt: datetime.datetime) -> MinuteOfDay:
     """
-    Convert a datetime into a minute number (of the day).  Note that
-    this ignores the date part of the datetime and only uses the time
-    part.
+    Convert a datetime's time component into a minute number (of
+    the day).  Note that this ignores the date part of the datetime
+    and only uses the time part.
+
+    Args:
+        dt: the datetime whose time is to be converted
+
+    Returns:
+        The minute number (of the day) that represents the input datetime's
+        time.
 
     >>> d = string_to_datetime(
     ...                        "2021/09/10 11:24:51AM-0700",
@@ -772,7 +991,6 @@ def datetime_to_minute_number(dt: datetime.datetime) -> MinuteOfDay:
 
     >>> datetime_to_minute_number(d)
     684
-
     """
     return minute_number(dt.hour, dt.minute)
 
@@ -781,10 +999,15 @@ def time_to_minute_number(t: datetime.time) -> MinuteOfDay:
     """
     Convert a datetime.time into a minute number.
 
+    Args:
+        t: a datetime.time to convert into a minute number.
+
+    Returns:
+        The minute number (of the day) of the input time.
+
     >>> t = datetime.time(5, 15)
     >>> time_to_minute_number(t)
     315
-
     """
     return minute_number(t.hour, t.minute)
 
@@ -794,12 +1017,18 @@ def minute_number_to_time_string(minute_num: MinuteOfDay) -> str:
     Convert minute number from start of day into hour:minute am/pm
     string.
 
+    Args:
+        minute_num: the minute number to convert into a string
+
+    Returns:
+        A string of the format "HH:MM[a|p]" that represents the time
+        that the input minute_num refers to.
+
     >>> minute_number_to_time_string(315)
     ' 5:15a'
 
     >>> minute_number_to_time_string(684)
     '11:24a'
-
     """
     hour = minute_num // 60
     minute = minute_num % 60
@@ -817,6 +1046,14 @@ def minute_number_to_time_string(minute_num: MinuteOfDay) -> str:
 def parse_duration(duration: str, raise_on_error=False) -> int:
     """
     Parse a duration in string form into a delta seconds.
+
+    Args:
+        duration: a string form duration, see examples.
+        raise_on_error: should we raise on invalid input or just
+            return a zero duration?
+
+    Returns:
+        A count of seconds represented by the input string.
 
     >>> parse_duration('15 days, 2 hours')
     1303200
@@ -837,7 +1074,6 @@ def parse_duration(duration: str, raise_on_error=False) -> int:
     Traceback (most recent call last):
     ...
     ValueError: recent is not a valid duration.
-
     """
     if duration.isdigit():
         return int(duration)
@@ -869,6 +1105,16 @@ def describe_duration(seconds: int, *, include_seconds=False) -> str:
     """
     Describe a duration represented as a count of seconds nicely.
 
+    Args:
+        seconds: the number of seconds in the duration to be represented.
+        include_seconds: should we include or drop the seconds part in
+            the representation?
+
+    .. note::
+
+        Of course if we drop the seconds part the result is not precise.
+        See examples.
+
     >>> describe_duration(182)
     '3 minutes'
 
@@ -880,7 +1126,6 @@ def describe_duration(seconds: int, *, include_seconds=False) -> str:
 
     describe_duration(1303200)
     '15 days, 2 hours'
-
     """
     days = divmod(seconds, constants.SECONDS_PER_DAY)
     hours = divmod(days[1], constants.SECONDS_PER_HOUR)
@@ -921,10 +1166,22 @@ def describe_timedelta(delta: datetime.timedelta) -> str:
     """
     Describe a duration represented by a timedelta object.
 
+    Args:
+        delta: the timedelta object that represents the duration to describe.
+
+    Returns:
+        A string representation of the input duration.
+
+    .. warning::
+
+        Milliseconds are never included in the string representation of
+        durations even through they may be represented by an input
+        `datetime.timedelta`.  Not for use when this level of precision
+        is needed.
+
     >>> d = datetime.timedelta(1, 600)
     >>> describe_timedelta(d)
     '1 day, and 10 minutes'
-
     """
     return describe_duration(int(delta.total_seconds()))  # Note: drops milliseconds
 
@@ -932,6 +1189,18 @@ def describe_timedelta(delta: datetime.timedelta) -> str:
 def describe_duration_briefly(seconds: int, *, include_seconds=False) -> str:
     """
     Describe a duration briefly.
+
+    Args:
+        seconds: the number of seconds in the duration to describe.
+        include_seconds: should we include seconds in our description or omit?
+
+    Returns:
+        A string describing the duration represented by the input seconds briefly.
+
+    .. note::
+
+        Of course if we drop the seconds part the result is not precise.
+        See examples.
 
     >>> describe_duration_briefly(182)
     '3m'
@@ -962,17 +1231,32 @@ def describe_duration_briefly(seconds: int, *, include_seconds=False) -> str:
     return descr.strip()
 
 
-def describe_timedelta_briefly(delta: datetime.timedelta) -> str:
+def describe_timedelta_briefly(
+    delta: datetime.timedelta, *, include_seconds=False
+) -> str:
     """
     Describe a duration represented by a timedelta object.
+
+    Args:
+        delta: the timedelta to describe briefly
+
+    Returns:
+        A string description of the input timedelta object.
+
+    .. warning::
+
+        Milliseconds are never included in the string representation of
+        durations even through they may be represented by an input
+        `datetime.timedelta`.  Not for use when this level of precision
+        is needed.
 
     >>> d = datetime.timedelta(1, 600)
     >>> describe_timedelta_briefly(d)
     '1d 10m'
-
     """
     return describe_duration_briefly(
-        int(delta.total_seconds())
+        int(delta.total_seconds()),
+        include_seconds=include_seconds,
     )  # Note: drops milliseconds
 
 

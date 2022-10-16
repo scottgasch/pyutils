@@ -2,16 +2,20 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A binary search tree."""
+"""A binary search tree implementation."""
 
 from typing import Any, Generator, List, Optional
 
 
 class Node(object):
     def __init__(self, value: Any) -> None:
-        """Note that value can be anything as long as it is
-        comparable.  Check out @functools.total_ordering.
+        """
+        A BST node.  Note that value can be anything as long as it
+        is comparable.  Check out :meth:`functools.total_ordering`
+        (https://docs.python.org/3/library/functools.html#functools.total_ordering)
 
+        Args:
+            value: a reference to the value of the node.
         """
         self.left: Optional[Node] = None
         self.right: Optional[Node] = None
@@ -25,13 +29,19 @@ class BinarySearchTree(object):
         self.traverse = None
 
     def get_root(self) -> Optional[Node]:
-        """:returns the root of the BST."""
+        """
+        Returns:
+            The root of the BST
+        """
 
         return self.root
 
-    def insert(self, value: Any):
+    def insert(self, value: Any) -> None:
         """
         Insert something into the tree.
+
+        Args:
+            value: the value to be inserted.
 
         >>> t = BinarySearchTree()
         >>> t.insert(10)
@@ -99,6 +109,7 @@ class BinarySearchTree(object):
     def _parent_path(
         self, current: Optional[Node], target: Node
     ) -> List[Optional[Node]]:
+        """Internal helper"""
         if current is None:
             return [None]
         ret: List[Optional[Node]] = [current]
@@ -113,11 +124,20 @@ class BinarySearchTree(object):
             return ret
 
     def parent_path(self, node: Node) -> List[Optional[Node]]:
-        """Return a list of nodes representing the path from
-        the tree's root to the node argument.  If the node does
-        not exist in the tree for some reason, the last element
-        on the path will be None but the path will indicate the
-        ancestor path of that node were it inserted.
+        """Get a node's parent path.
+
+        Args:
+            node: the node to check
+
+        Returns:
+            a list of nodes representing the path from
+            the tree's root to the node.
+
+        .. note::
+
+            If the node does not exist in the tree, the last element
+            on the path will be None but the path will indicate the
+            ancestor path of that node were it to be inserted.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -161,6 +181,13 @@ class BinarySearchTree(object):
     def __delitem__(self, value: Any) -> bool:
         """
         Delete an item from the tree and preserve the BST property.
+
+        Args:
+            value: the value of the node to be deleted.
+
+        Returns:
+            True if the value was found and its associated node was
+            successfully deleted and False otherwise.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -288,7 +315,8 @@ class BinarySearchTree(object):
 
     def __len__(self):
         """
-        Returns the count of items in the tree.
+        Returns:
+            The count of items in the tree.
 
         >>> t = BinarySearchTree()
         >>> len(t)
@@ -314,7 +342,8 @@ class BinarySearchTree(object):
 
     def __contains__(self, value: Any) -> bool:
         """
-        Returns True if the item is in the tree; False otherwise.
+        Returns:
+            True if the item is in the tree; False otherwise.
         """
         return self.__getitem__(value) is not None
 
@@ -341,7 +370,9 @@ class BinarySearchTree(object):
 
     def iterate_preorder(self):
         """
-        Yield the tree's items in a preorder traversal sequence.
+        Returns:
+            A Generator that yields the tree's items in a
+            preorder traversal sequence.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -366,7 +397,9 @@ class BinarySearchTree(object):
 
     def iterate_inorder(self):
         """
-        Yield the tree's items in a preorder traversal sequence.
+        Returns:
+            A Generator that yield the tree's items in a preorder
+            traversal sequence.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -401,7 +434,9 @@ class BinarySearchTree(object):
 
     def iterate_postorder(self):
         """
-        Yield the tree's items in a preorder traversal sequence.
+        Returns:
+            A Generator that yield the tree's items in a preorder
+            traversal sequence.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -434,7 +469,9 @@ class BinarySearchTree(object):
 
     def iterate_leaves(self):
         """
-        Iterate only the leaf nodes in the tree.
+        Returns:
+            A Gemerator that yielde only the leaf nodes in the
+            tree.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -465,7 +502,12 @@ class BinarySearchTree(object):
 
     def iterate_nodes_by_depth(self, depth: int) -> Generator[Node, None, None]:
         """
-        Iterate only the leaf nodes in the tree.
+        Args:
+            depth: the desired depth
+
+        Returns:
+            A Generator that yields nodes at the prescribed depth in
+            the tree.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -490,7 +532,11 @@ class BinarySearchTree(object):
 
     def get_next_node(self, node: Node) -> Node:
         """
-        Given a tree node, get the next greater node in the tree.
+        Args:
+            node: the node whose next greater successor is desired
+
+        Returns:
+            Given a tree node, returns the next greater node in the tree.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -547,8 +593,9 @@ class BinarySearchTree(object):
 
     def depth(self) -> int:
         """
-        Returns the max height (depth) of the tree in plies (edge distance
-        from root).
+        Returns:
+            The max height (depth) of the tree in plies (edge distance
+            from root).
 
         >>> t = BinarySearchTree()
         >>> t.depth()
@@ -609,7 +656,8 @@ class BinarySearchTree(object):
 
     def __repr__(self):
         """
-        Draw the tree in ASCII.
+        Returns:
+            An ASCII string representation of the tree.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -643,3 +691,9 @@ class BinarySearchTree(object):
         )
         ret += self.repr_traverse('', pointer_right, self.root.right, False)
         return ret
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

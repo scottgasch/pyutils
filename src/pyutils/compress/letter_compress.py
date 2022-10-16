@@ -2,7 +2,12 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""A simple toy compression helper for lowercase ascii text."""
+"""
+This is a simple, honestly, toy compression scheme that uses a custom
+alphabet of 32 characters which can each be represented in six bits
+instead of eight.  It therefore reduces the size of data composed of
+only those letters by 25% without loss.
+"""
 
 import bitstring
 
@@ -23,6 +28,12 @@ def compress(uncompressed: str) -> bytes:
     """Compress a word sequence into a stream of bytes.  The compressed
     form will be 5/8th the size of the original.  Words can be lower
     case letters or special_characters (above).
+
+    Args:
+        uncompressed: the uncompressed string to be compressed
+
+    Returns:
+        the compressed bytes
 
     >>> import binascii
     >>> binascii.hexlify(compress('this is a test'))
@@ -51,10 +62,16 @@ def compress(uncompressed: str) -> bytes:
     return compressed.bytes
 
 
-def decompress(kompressed: bytes) -> str:
+def decompress(compressed: bytes) -> str:
     """
     Decompress a previously compressed stream of bytes back into
     its original form.
+
+    Args:
+        compressed: the compressed data to decompress
+
+    Returns:
+        The decompressed string
 
     >>> import binascii
     >>> decompress(binascii.unhexlify(b'a2133da67b0ee859d0'))
@@ -65,7 +82,7 @@ def decompress(kompressed: bytes) -> str:
 
     """
     decompressed = ''
-    compressed = bitstring.BitArray(kompressed)
+    kompressed = bitstring.BitArray(compressed)
 
     # There are compressed messages that legitimately end with the
     # byte 0x00.  The message "scott" is an example; compressed it is
@@ -90,9 +107,9 @@ def decompress(kompressed: bytes) -> str:
     # if the compressed message didn't end in 0x00), adding an extra
     # 0x00 is a no op because the codepoint 0b00000 is a "stop" message
     # so we'll ignore the extras.
-    compressed.append("uint:8=0")
+    kompressed.append("uint:8=0")
 
-    for chunk in compressed.cut(5):
+    for chunk in kompressed.cut(5):
         chunk = chunk.uint
         if chunk == 0:
             break

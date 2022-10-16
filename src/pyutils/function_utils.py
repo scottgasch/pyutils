@@ -38,3 +38,9 @@ def function_identifier(f: Callable) -> str:
         return f'{module}:{f.__name__}'
     else:
         return f'{f.__module__}:{f.__name__}'
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

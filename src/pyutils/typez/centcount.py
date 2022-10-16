@@ -2,13 +2,52 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""An amount of money (USD) represented as an integral count of
-cents."""
+"""An amount of money represented as an integral count of cents so as
+to avoid floating point artifacts.  Multiplication and division are
+performed using floating point arithmetic but the quotient is cast
+back to an integer number thus truncating the result and
+avoiding floating point arithmetic artifacts.  See details below.
+
+The type guards against inadvertent aggregation of instances with
+non-matching currencies, the division of one CentCount by another, and
+has a strict mode which disallows comparison or aggregation with
+non-CentCount operands (i.e. no comparison or aggregation with literal
+numbers).
+
+.. note::
+
+    Multiplication and division are performed by converting the
+    `CentCount` into a float and operating on two floating point
+    numbers.  The result is then cast back to an int which loses
+    precision beyond the 1-cent granularity in order to avoid floating
+    point representation artifacts.
+
+    This can cause "problems" such as the one illustrated
+    below::
+
+        >>> c = CentCount(100.00)
+        >>> c
+        100.00 USD
+        >>> c = c * 2
+        >>> c
+        200.00 USD
+        >>> c = c / 3
+        >>> c
+        66.66 USD
+
+    Two-thirds of $100.00 is $66.66666... which might be
+    expected to round upwards to $66.67 but it does not
+    because the `int` cast truncates the result.  Be aware
+    of this and decide whether it's suitable for your
+    application.
+
+See also the :class:`pyutils.typez.Money` class which uses Python
+Decimals (see: https://docs.python.org/3/library/decimal.html) to
+represent monetary amounts.
+"""
 
 import re
-from typing import Optional, Tuple
-
-from pyutils import math_utils
+from typing import Optional, Tuple, Union
 
 
 class CentCount(object):
@@ -17,7 +56,25 @@ class CentCount(object):
     issues by treating amount as a simple integral count of cents.
     """
 
-    def __init__(self, centcount, currency: str = 'USD', *, strict_mode=False):
+    def __init__(
+        self,
+        centcount: Union[int, float, str, 'CentCount'] = 0,
+        currency: str = 'USD',
+        *,
+        strict_mode=False,
+    ):
+        """
+        Args:
+            centcount: the amount of money being represented; this can be
+                a float, int, CentCount or str.
+            currency: optionally declare the currency being represented by
+                this instance.  If provided it will guard against operations
+                such as attempting to add it to non-matching currencies.
+            strict_mode: if True, the instance created will object if you
+                compare or aggregate it with non-CentCount objects; that is,
+                strict_mode disallows comparison with literal numbers or
+                aggregation with literal numbers.
+        """
         self.strict_mode = strict_mode
         if isinstance(centcount, str):
             ret = CentCount._parse(centcount)
@@ -36,10 +93,9 @@ class CentCount(object):
             self.currency = currency
 
     def __repr__(self):
-        a = float(self.centcount)
-        a /= 100
-        a = round(a, 2)
-        s = f'{a:,.2f}'
+        w = self.centcount // 100
+        p = self.centcount % 100
+        s = f'{w}.{p:02d}'
         if self.currency is not None:
             return f'{s} {self.currency}'
         else:
@@ -82,6 +138,30 @@ class CentCount(object):
                 return self.__sub__(CentCount(other, self.currency))
 
     def __mul__(self, other):
+        """
+        .. note::
+
+            Multiplication and division are performed by converting the
+            CentCount into a float and operating on two floating point
+            numbers.  But the result is then cast back to an int which
+            loses precision beyond the 1-cent granularity in order to
+            avoid floating point representation artifacts.
+
+            This can cause "problems" such as the one illustrated
+            below::
+
+                >>> c = CentCount(100.00)
+                >>> c = c * 2
+                >>> c = c / 3
+                >>> c
+                66.66 USD
+
+            Two-thirds of $100.00 is $66.66666... which might be
+            expected to round upwards to $66.67 but it does not
+            because the int cast truncates the result.  Be aware
+            of this and decide whether it's suitable for your
+            application.
+        """
         if isinstance(other, CentCount):
             raise TypeError('can not multiply monetary quantities')
         else:
@@ -91,6 +171,30 @@ class CentCount(object):
             )
 
     def __truediv__(self, other):
+        """
+        .. note::
+
+            Multiplication and division are performed by converting the
+            CentCount into a float and operating on two floating point
+            numbers.  But the result is then cast back to an int which
+            loses precision beyond the 1-cent granularity in order to
+            avoid floating point representation artifacts.
+
+            This can cause "problems" such as the one illustrated
+            below::
+
+                >>> c = CentCount(100.00)
+                >>> c = c * 2
+                >>> c = c / 3
+                >>> c
+                66.66 USD
+
+            Two-thirds of $100.00 is $66.66666... which might be
+            expected to round upwards to $66.67 but it does not
+            because the int cast truncates the result.  Be aware
+            of this and decide whether it's suitable for your
+            application.
+        """
         if isinstance(other, CentCount):
             raise TypeError('can not divide monetary quantities')
         else:
@@ -104,16 +208,6 @@ class CentCount(object):
 
     def __float__(self):
         return self.centcount.__float__() / 100.0
-
-    def truncate_fractional_cents(self):
-        x = int(self)
-        self.centcount = int(math_utils.truncate_float(x))
-        return self.centcount
-
-    def round_fractional_cents(self):
-        x = int(self)
-        self.centcount = int(round(x, 2))
-        return self.centcount
 
     __radd__ = __add__
 
@@ -214,7 +308,19 @@ class CentCount(object):
 
     @classmethod
     def parse(cls, s: str) -> 'CentCount':
+        """Parses a string format monetary amount and returns a CentCount
+        if possible.
+
+        Args:
+            s: the string to be parsed
+        """
         chunks = CentCount._parse(s)
         if chunks is not None:
             return CentCount(chunks[0], chunks[1])
         raise Exception(f'Unable to parse money string "{s}"')
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

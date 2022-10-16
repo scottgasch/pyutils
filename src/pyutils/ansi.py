@@ -15,7 +15,7 @@ import logging
 import re
 import sys
 from abc import abstractmethod
-from typing import Any, Callable, Dict, Iterable, Literal, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional, Tuple
 
 from overrides import overrides
 
@@ -2255,10 +2255,9 @@ class _StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
         sys.stdout = self
         return self
 
-    def __exit__(self, *args) -> Literal[False]:
+    def __exit__(self, *args) -> None:
         sys.stdout = self.saved_stdout
         print(self.buf)
-        return False
 
 
 class ProgrammableColorizer(_StdoutInterceptor):
@@ -2270,10 +2269,10 @@ class ProgrammableColorizer(_StdoutInterceptor):
     could just as easily insert escape sequences returned from
     :py:meth:`fg`, :py:meth:`bg`, and :py:meth:`reset`.
 
-    >>> def red(match: re.Match) -> str:
+    >>> def red(match: re.Match, s: str) -> str:
     ...     return '[RED]'
 
-    >>> def reset(match: re.Match) -> str:
+    >>> def reset(match: re.Match, s: str) -> str:
     ...     return '[RESET]'
 
     >>> with ProgrammableColorizer( [ (re.compile('^[^ ]+'), red),
@@ -2285,7 +2284,7 @@ class ProgrammableColorizer(_StdoutInterceptor):
 
     def __init__(
         self,
-        patterns: Iterable[Tuple[re.Pattern, Callable[[Any, re.Pattern], str]]],
+        patterns: Iterable[Tuple[re.Pattern, Callable[[re.Match[str], str], str]]],
     ):
         """
         Setup the programmable colorizing context; tell it how to operate.

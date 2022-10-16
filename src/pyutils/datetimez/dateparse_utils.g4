@@ -1,4 +1,4 @@
-// © Copyright 2021-2022, Scott Gasch
+//  © Copyright 2021-2022, Scott Gasch
 //
 // antlr4 -Dlanguage=Python3 ./dateparse_utils.g4
 //
@@ -6,7 +6,7 @@
 // for the lexer and those for the parser.  The former begin with a CAPITAL
 // whereas the latter begin with lowercase.  The order of the lexer symbols
 // is the order that the lexer will recognize them in.  There's a good tutorial
-// on this shit at:
+// on this stuff at:
 //
 //    https://tomassetti.me/antlr-mega-tutorial/
 //

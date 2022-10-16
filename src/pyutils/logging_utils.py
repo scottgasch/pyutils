@@ -621,9 +621,10 @@ def initialize_logging(logger=None) -> logging.Logger:
 
     # Global default logging level (--logging_level); messages below
     # this level will be silenced.
-    default_logging_level = getattr(
-        logging, config.config['logging_level'].upper(), None
-    )
+    logging_level = config.config['logging_level']
+    assert logging_level
+    logging_level = logging_level.upper()
+    default_logging_level = getattr(logging, logging_level, None)
     if not isinstance(default_logging_level, int):
         raise ValueError(f'Invalid level: {config.config["logging_level"]}')
 
@@ -667,10 +668,14 @@ def initialize_logging(logger=None) -> logging.Logger:
     # --logging_filename_maxsize) set up logging to a file on the
     # filesystem with automatic rotation when it gets too big.
     if config.config['logging_filename']:
+        max_bytes = config.config['logging_filename_maxsize']
+        assert max_bytes and type(max_bytes) == int
+        backup_count = config.config['logging_filename_count']
+        assert backup_count and type(backup_count) == int
         handler = RotatingFileHandler(
             config.config['logging_filename'],
-            maxBytes=config.config['logging_filename_maxsize'],
-            backupCount=config.config['logging_filename_count'],
+            maxBytes=max_bytes,
+            backupCount=backup_count,
         )
         handler.setFormatter(
             MillisecondAwareFormatter(
