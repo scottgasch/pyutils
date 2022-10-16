@@ -25,7 +25,7 @@ import re
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Literal, Optional, Tuple
+from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
 
 from pyutils import string_utils
 from pyutils.ansi import fg, reset
@@ -52,8 +52,8 @@ def get_console_rows_columns() -> RowsColumns:
     """
     from pyutils.exec_utils import cmd
 
-    rows: Optional[str] = os.environ.get('LINES', None)
-    cols: Optional[str] = os.environ.get('COLUMNS', None)
+    rows: Union[Optional[str], int] = os.environ.get('LINES', None)
+    cols: Union[Optional[str], int] = os.environ.get('COLUMNS', None)
     if not rows or not cols:
         logger.debug('Rows: %s, cols: %s, trying stty.', rows, cols)
         try:
@@ -65,25 +65,10 @@ def get_console_rows_columns() -> RowsColumns:
             rows = None
             cols = None
 
-    if rows is None:
-        logger.debug('Rows: %s, cols: %s, tput rows.', rows, cols)
-        try:
-            rows = cmd(
-                "tput rows",
-                timeout_seconds=1.0,
-            )
-        except Exception:
-            rows = None
-
-    if cols is None:
-        logger.debug('Rows: %s, cols: %s, tput cols.', rows, cols)
-        try:
-            cols = cmd(
-                "tput cols",
-                timeout_seconds=1.0,
-            )
-        except Exception:
-            cols = None
+    if not rows or not cols:
+        size = os.get_terminal_size()
+        rows = size.lines
+        cols = size.columns
 
     if not rows or not cols:
         raise Exception('Can\'t determine console size?!')
