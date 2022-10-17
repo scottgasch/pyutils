@@ -678,8 +678,8 @@ def thunkify(func):
 # Licensee hereby agrees to include in any such work a brief summary
 # of the changes made to Python.
 
-# (N.B. See NOTICE file in the root of this module for a list of
-# changes)
+# (N.B. See `NOTICE <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`__ file in the root of this module for a list
+# of changes)
 
 # 4. PSF is making Python available to Licensee on an "AS IS"
 # basis. PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR

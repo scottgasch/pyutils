@@ -44,9 +44,9 @@ development happened in a different git repo:
     https://wannabe.guru.org/gitweb/?p=python_utils.git;a=summary
 
 The `LICENSE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`_
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`__
 and `NOTICE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`__
 files at the root of the project describe reusing this code and where
 everything came from.  Drop me a line if you are using this, find a
 bug, have a question, or have a suggestion:
