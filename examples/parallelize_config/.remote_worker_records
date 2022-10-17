@@ -1,16 +1,61 @@
-# This file is a record of remote workers that @parallelize(method=Method.REMOTE)
-# may send work to.  Each must have the same version of python installed and the
-# cloudpickle package available.  "username" (see below) must be able to ssh into
-# each machine non-interactively (e.g. with a public/private trusted key, see ssh
-# documentation).  "weight" should be used to indicate the speed of a CPU on the
-# target machine and "count" should be used to indicate how many parallel jobs
-# (max) to schedule on that machine.
+# This file is a record of remote workers that
+# @parallelize(method=Method.REMOTE) may send work to.  Each must have
+# the same version of python installed and the cloudpickle package
+# available, ideally in a virtual environment.  See setup instructions
+# at: https://wannabe.guru.org/pydocs/pyutils/pyutils.parallelize.html.
+#
+# "username" must be able to ssh into each machine non-interactively
+# (e.g. with a public/private trusted key, see ssh documentation).
+#
+# "weight" should be used to indicate the speed of a CPU on the target
+# machine relative to other cpus in the pool.  It doesn't matter what
+# number you pick but if one pool machine is roughly twice as fast as
+# another its weight should be twice as high than the other's weight.
+#
+# Finally "count" should be used to indicate how many parallel jobs
+# (max) to schedule on that machine.  This is usually the CPU count of
+# the remote machine.
+#
+# The parallelize code looks for this file to be named
+# .remote_worker_records and live in your $HOME directory but its
+# name and path can be overridden via the --remote_worker_records_file
+# commandline argument.
+#
+# This file is parsed by a JSON parser so spacing doesn't matter
+# but proper bracing does.  A hacky(?) regular expression removes all
+# comment lines (like this one) before parsing so beware of #'s where
+# they shouldn't be.
 {
     "remote_worker_records": [
-        {"username": "scott", "machine": "machine_one", "weight": 24, "count": 5},
-        {"username": "scott", "machine": "machine_two", "weight": 10, "count": 2},
-        {"username": "scott", "machine": "machine_three", "weight": 14, "count": 1},
-        {"username": "scott", "machine": "machine_four", "weight": 9, "count": 2},
-        {"username": "scott", "machine": "machine_five", "weight": 9, "count": 2},
+        {
+            "username": "pyworker",
+            "machine": "machine_one",
+            "weight": 24,
+            "count": 5
+        },
+        {
+            "username": "pyworker",
+            "machine": "machine_two",
+            "weight": 10,
+            "count": 2
+        },
+        {
+            "username": "pyworker",
+            "machine": "machine_three",
+            "weight": 14,
+            "count": 1
+        },
+        {
+            "username": "pyworker",
+            "machine": "machine_four",
+            "weight": 9,
+            "count": 2
+        },
+        {
+            "username": "pyworker",
+            "machine": "machine_five",
+            "weight": 9,
+            "count": 2
+        },
     ]
 }
