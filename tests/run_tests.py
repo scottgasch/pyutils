@@ -48,7 +48,7 @@ HOME = os.environ['HOME']
 # they pay attention to code performance which is adversely affected
 # by coverage.
 PERF_SENSATIVE_TESTS = set(['string_utils_test.py'])
-TESTS_TO_SKIP = set(['zookeeper_test.py', 'run_tests.py'])
+TESTS_TO_SKIP = set(['zookeeper_test.py', 'zookeeper.py', 'run_tests.py'])
 
 ROOT = ".."
 
@@ -175,18 +175,17 @@ class TemplatedTestRunner(TestRunner, ABC):
         """Run a single test and return its TestResults."""
         pass
 
-    def check_for_abort(self):
+    def check_for_abort(self) -> bool:
         """Periodically caled to check to see if we need to stop."""
 
         if self.params.halt_event.is_set():
             logger.debug('Thread %s saw halt event; exiting.', self.get_name())
-            raise Exception("Kill myself!")
-        if self.params.halt_on_error:
-            if len(self.test_results.tests_failed) > 0:
-                logger.error(
-                    'Thread %s saw abnormal results; exiting.', self.get_name()
-                )
-                raise Exception("Kill myself!")
+            return True
+
+        if self.params.halt_on_error and len(self.test_results.tests_failed) > 0:
+            logger.error('Thread %s saw abnormal results; exiting.', self.get_name())
+            return True
+        return False
 
     def persist_output(self, test: TestToRun, message: str, output: str) -> None:
         """Called to save the output of a test run."""
@@ -210,6 +209,18 @@ class TemplatedTestRunner(TestRunner, ABC):
                 test.cmdline,
                 timeout_seconds=timeout,
             )
+            if "***Test Failed***" in output:
+                msg = f'{self.get_name()}: {test.name} ({test.cmdline}) failed; doctest failure message detected'
+                logger.error(msg)
+                self.persist_output(test, msg, output)
+                return TestResults(
+                    test.name,
+                    [test.name],
+                    [],
+                    [test.name],
+                    [],
+                )
+
             self.persist_output(
                 test, f'{test.name} ({test.cmdline}) succeeded.', output
             )
@@ -272,13 +283,17 @@ class TemplatedTestRunner(TestRunner, ABC):
             )
             self.tests_started += 1
 
-        for future in smart_future.wait_any(running):
-            self.check_for_abort()
+        for future in smart_future.wait_any(running, log_exceptions=False):
             result = future._resolve()
             logger.debug('Test %s finished.', result.name)
             self.test_results += result
+            if self.check_for_abort():
+                logger.debug(
+                    '%s: check_for_abort told us to exit early.', self.get_name()
+                )
+                return self.test_results
 
-        logger.debug('Thread %s finished.', self.get_name())
+        logger.debug('Thread %s finished running all tests', self.get_name())
         return self.test_results
 
 
@@ -417,13 +432,17 @@ class IntegrationTestRunner(TemplatedTestRunner):
         return self.execute_commandline(test)
 
 
-def test_results_report(results: Dict[str, TestResults]) -> int:
+def test_results_report(results: Dict[str, Optional[TestResults]]) -> int:
     """Give a final report about the tests that were run."""
     total_problems = 0
     for result in results.values():
-        print(result, end='')
-        total_problems += len(result.tests_failed)
-        total_problems += len(result.tests_timed_out)
+        if result is None:
+            print('Unexpected unhandled exception in test runner!!!')
+            total_problems += 1
+        else:
+            print(result, end='')
+            total_problems += len(result.tests_failed)
+            total_problems += len(result.tests_timed_out)
 
     if total_problems > 0:
         print('Reminder: look in ./test_output to view test output logs')
@@ -485,7 +504,7 @@ def main() -> Optional[int]:
     for thread in threads:
         thread.start()
 
-    results: Dict[str, TestResults] = {}
+    results: Dict[str, Optional[TestResults]] = {}
     while len(results) != len(threads):
         started = 0
         done = 0
@@ -508,6 +527,13 @@ def main() -> Optional[int]:
                                 tid,
                             )
                             halt_event.set()
+                    else:
+                        logger.error(
+                            'Thread %s took an unhandled exception... bug in run_tests.py?!  Aborting.',
+                            tid,
+                        )
+                        halt_event.set()
+                        results[tid] = None
 
         if started > 0:
             percent_done = done / started
