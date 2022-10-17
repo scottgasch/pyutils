@@ -6,14 +6,13 @@
 (see https://docs.python.org/3/library/decimal.html) internally.
 
 The type guards against inadvertent aggregation of instances with
-non-matching currencies, the division of one Money by another, and has
-a strict mode which disallows comparison or aggregation with
-non-CentCount operands (i.e. no comparison or aggregation with literal
-numbers).
+non-matching currencies, the division of one :class:`Money` by
+another, and has a strict mode which disallows comparison or
+aggregation with non-:class:`Money` operands (i.e. no comparison or
+aggregation with literal numbers).
 
-See also :class:`pyutils.typez.CentCount` which represents monetary
-amounts as an integral number of cents.
-
+See also :class:`pyutils.typez.centcount.CentCount` which represents
+monetary amounts as an integral number of cents.
 """
 
 import re
@@ -40,7 +39,7 @@ class Money(object):
             currency: if provided, indicates what currency this amount is
                 units of and guards against operations such as attempting
                 to aggregate Money instances with non-matching currencies
-                directly.
+                directly.  If not provided defaults to "USD".
             strict_mode: if True, disallows comparison or arithmetic operations
                 between Money instances and any non-Money types (e.g. literal
                 numbers).
@@ -305,7 +304,8 @@ class Money(object):
 
     @classmethod
     def parse(cls, s: str) -> 'Money':
-        """Parses a string an attempts to create a Money instance.
+        """Parses a string an attempts to create a :class:`Money`
+        instance.
 
         Args:
             s: the string to parse

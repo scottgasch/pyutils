@@ -10,6 +10,8 @@ the internal result actually becomes available.
 
 Results from :class:`parallelize.parallelize` are returned wrapped
 in :class:`SmartFuture` instances.
+
+Also contains some utilility code for waiting for one/many futures.
 """
 
 from __future__ import annotations

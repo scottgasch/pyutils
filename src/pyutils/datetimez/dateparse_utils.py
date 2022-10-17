@@ -81,9 +81,13 @@ Parse dates / datetimes in a variety of formats.  Some examples:
     |    2021/04/15 at 21:30:44.55EST
     |    13 days after last memorial day at 12 seconds before 4pm
 
-This code is used by other code in the pyutils library; for example,
-when using :file:`argparse_utils.py` to pass an argument of type
-datetime it allows the user to use free form English expressions.
+This code is used by other code in the pyutils library such as
+:meth:`pyutils.argparse_utils.valid_datetime`,
+:meth:`pyutils.argparse_utils.valid_date`,
+:meth:`pyutils.string_utils.to_datetime`
+and
+:meth:`pyutils.string_utils.to_date`.  This means any of these are
+also able to accept and recognize this larger set of date expressions.
 
 See the `unittest <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/datetimez/dateparse_utils_test.py;h=93c7b96e4c19af217fbafcf1ed5dbde13ec599c5;hb=HEAD>`_ for more examples and the `grammar <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=src/pyutils/datetimez/dateparse_utils.g4;hb=HEAD>`_ for more details.
 """

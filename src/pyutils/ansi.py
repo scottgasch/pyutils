@@ -2269,10 +2269,10 @@ class ProgrammableColorizer(_StdoutInterceptor):
     could just as easily insert escape sequences returned from
     :py:meth:`fg`, :py:meth:`bg`, and :py:meth:`reset`.
 
-    >>> def red(match: re.Match, s: str) -> str:
+    >>> def red(match: re.Match) -> str:
     ...     return '[RED]'
 
-    >>> def reset(match: re.Match, s: str) -> str:
+    >>> def reset(match: re.Match) -> str:
     ...     return '[RESET]'
 
     >>> with ProgrammableColorizer( [ (re.compile('^[^ ]+'), red),

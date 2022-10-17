@@ -372,7 +372,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
     .. note::
         Because this code uses an English date-expression parsing grammar
         internally, much more complex datetimes can be expressed in free form.
-        See: `tests/datetimez/dateparse_utils_test.py` for examples.  These
+        See :mod:`pyutils.datetimez.dateparse_utils` for details.  These
         are not included in here because they are hard to write valid doctests
         for!
 

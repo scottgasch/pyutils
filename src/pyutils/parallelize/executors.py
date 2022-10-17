@@ -654,7 +654,7 @@ class RemoteExecutorStatus:
 
 
 class RemoteWorkerSelectionPolicy(ABC):
-    """A policy for selecting a remote worker base class."""
+    """An interface definition of a policy for selecting a remote worker."""
 
     def __init__(self):
         self.workers: Optional[List[RemoteWorkerRecord]] = None
@@ -754,38 +754,78 @@ class RoundRobinRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
 
 
 class RemoteExecutor(BaseExecutor):
-    """An executor that uses processes on remote machines to do work.  This
-    works by creating "bundles" of work with pickled code in each to be
-    executed.  Each bundle is assigned a remote worker based on some policy
-    heuristics.  Once assigned to a remote worker, a local subprocess is
-    created.  It copies the pickled code to the remote machine via ssh/scp
-    and then starts up work on the remote machine again using ssh to invoke
-    the :file:`remote_worker.py` (`--remote_worker_helper_path`).  When
-    the work is complete, the local subprocess copies the results back to
-    the local machine via ssh/scp.
+    """An executor that uses processes on remote machines to do work.
+    To do so, it requires that a pool of remote workers to be properly
+    configured.  See instructions in
+    :class:`pyutils.parallelize.parallelize`.
 
-    So there is essentially one "controller" machine (which may also be
-    in the remote executor pool and therefore do task work in addition to
-    controlling) and N worker machines.  This code runs on the controller
-    whereas on the worker machines we invoke pickled user code via a
-    shim in :file:`remote_worker.py`.
+    Each machine in a worker pool has a *weight* and a *count*.  A
+    *weight* captures the relative speed of a processor on that worker
+    and a *count* captures the number of synchronous tasks the worker
+    can accept (i.e. the number of cpus on the machine).
 
-    Some redundancy and safety provisions are made; e.g. slower than
-    expected tasks have redundant backups created and if a task fails
-    repeatedly we consider it poisoned and give up on it.
+    To dispatch work to a remote machine, this class pickles the code
+    to be executed remotely using `cloudpickle`.  For that to work,
+    the remote machine should be running the same version of Python as
+    this machine, ideally in a virtual environment with the same
+    import libraries installed.  Differences in operating system
+    and/or processor architecture don't seem to matter for most code,
+    though.
 
     .. warning::
 
-        The network overhead / latency of copying work from the
-        controller machine to the remote workers is relatively high.
+        Mismatches in Python version or in the version numbers of
+        third-party libraries between machines can cause problems
+        when trying to unpickle and run code remotely.
+
+    Work to be dispatched is represented in this code by creating a
+    "bundle".  Each bundle is assigned to a remote worker based on
+    heuristics captured in a :class:`RemoteWorkerSelectionPolicy`.  In
+    general, it attempts to load all workers in the pool and maximize
+    throughput.  Once assigned to a remote worker, pickled code is
+    copied to that worker via `scp` and a remote command is issued via
+    `ssh` to execute a :file:`remote_worker.py` process on the remote
+    machine.  This process unpickles the code, runs it, and produces a
+    result which is then copied back to the local machine (again via
+    `scp`) where it can be processed by local code.
+
+    You can and probably must override the path of
+    :file:`remote_worker.py` on your pool machines using the
+    `--remote_worker_helper_path` commandline argument (or by just
+    changing the default in code, see above in this file's code).
+
+    During remote work execution, this local machine acts as a
+    controller dispatching all work to the network, copying pickled
+    tasks out, and copying results back in.  It may also be a worker
+    in the pool but do not underestimate the cost of being a
+    controller -- it takes some cpu and a lot of network bandwidth.
+    The work dispatcher logic attempts to detect when a controller is
+    also a worker and reduce its load.
+
+    Some redundancy and safety provisions are made when scheduling
+    tasks to the worker pool; e.g. slower than expected tasks have
+    redundant backups tasks created, especially if there are otherwise
+    idle workers.  If a task fails repeatedly, the dispatcher consider
+    it poisoned and give up on it.
+
+    .. warning::
+
         This executor probably only makes sense to use with
         computationally expensive tasks such as jobs that will execute
         for ~30 seconds or longer.
+
+        The network overhead and latency of copying work from the
+        controller (local) machine to the remote workers and copying
+        results back again is relatively high.  Especially at startup,
+        the network can become a bottleneck.  Future versions of this
+        code may attempt to split the responsibility of being a
+        controller (distributing work to pool machines).
 
     Instructions for how to set this up are provided in
     :class:`pyutils.parallelize.parallelize`.
 
     See also :class:`ProcessExecutor` and :class:`ThreadExecutor`.
+
     """
 
     def __init__(

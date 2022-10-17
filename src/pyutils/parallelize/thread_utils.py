@@ -126,7 +126,21 @@ def background_thread(
 
 class ThreadWithReturnValue(threading.Thread):
     """A thread whose return value is plumbed back out as the return
-    value of :meth:`join`.
+    value of :meth:`join`.  Use like a normal thread::
+
+        def thread_entry_point(args):
+            # do something interesting...
+            return result
+
+        if __name__ == "__main__":
+            thread = ThreadWithReturnValue(
+                target=thread_entry_point,
+                args=(whatever)
+            )
+            thread.start()
+            result = thread.join()
+            print(f"thread finished and returned {result}")
+
     """
 
     def __init__(
@@ -138,11 +152,35 @@ class ThreadWithReturnValue(threading.Thread):
         self._target = target
         self._return = None
 
-    def run(self):
+    def run(self) -> None:
+        """Create a little wrapper around invoking the real thread entry
+        point so we can pay attention to its return value."""
         if self._target is not None:
             self._return = self._target(*self._args, **self._kwargs)
 
-    def join(self, *args):
+    def join(self, *args) -> Any:
+        """Wait until the thread terminates and return the value it terminated with
+        as the result of join.
+
+        Like normal :meth:`join`, this blocks the calling thread until
+        the thread whose :meth:`join` is called terminates – either
+        normally or through an unhandled exception or until the
+        optional timeout occurs.
+
+        When the timeout argument is present and not None, it should
+        be a floating point number specifying a timeout for the
+        operation in seconds (or fractions thereof).
+
+        When the timeout argument is not present or None, the
+        operation will block until the thread terminates.
+
+        A thread can be joined many times.
+
+        :meth:`join` raises a RuntimeError if an attempt is made to join the
+        current thread as that would cause a deadlock. It is also an
+        error to join a thread before it has been started and
+        attempts to do so raises the same exception.
+        """
         threading.Thread.join(self, *args)
         return self._return
 
@@ -152,7 +190,7 @@ def periodically_invoke(
     stop_after: Optional[int],
 ):
     """
-    Periodically invoke the decorated function.
+    Periodically invoke the decorated function on a background thread.
 
     Args:
         period_sec: the delay period in seconds between invocations
@@ -170,13 +208,30 @@ def periodically_invoke(
 
     Usage::
 
+        @periodically_invoke(period_sec=1.0, stop_after=3)
+        def hello(name: str) -> None:
+            print(f"Hello, {name}")
+
         @periodically_invoke(period_sec=0.5, stop_after=None)
         def there(name: str, age: int) -> None:
             print(f"   ...there {name}, {age}")
 
-        @periodically_invoke(period_sec=1.0, stop_after=3)
-        def hello(name: str) -> None:
-            print(f"Hello, {name}")
+    Usage as a decorator doesn't give you access to the returned stop event or
+    thread object.  To get those, wrap your periodic function manually::
+
+        import pyutils.parallelize.thread_utils as tu
+
+        def periodic(m: str) -> None:
+            print(m)
+
+        f = tu.periodically_invoke(period_sec=5.0, stop_after=None)(periodic)
+        thread, event = f("testing")
+        ...
+        event.set()
+        thread.join()
+
+    See also :mod:`pyutils.state_tracker`.
+
     """
 
     def decorator_repeat(func):

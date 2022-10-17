@@ -17,6 +17,25 @@ class Rate(object):
         percentage: Optional[float] = None,
         percent_change: Optional[float] = None,
     ):
+        """Constructs a new :class:`Rate` from a multiplier, percentage, or
+        percent change.  One and only one of these may be passed.  These are
+        a little confusing so here's an example...
+
+        .. note::
+
+            A multiplier of 1.5x is the same as a percentage of 150% and
+            is also the same as a 50% change.  Let's examine an original
+            amount of 100.  Multiplying it by a 1.5x multiplier yields 150.
+            Multiplying it by 150% yields 150.  Increasing it by 50% also
+            yields 150.
+
+        Args:
+            multiplier: provides the number that you would multiply a base
+                amount by to modify it
+            percentage: provides the multiplier as a percentage
+            percent_change: provides the multiplier as a percent change to
+                the base amount
+        """
         count = 0
         if multiplier is not None:
             if isinstance(multiplier, str):
@@ -39,9 +58,25 @@ class Rate(object):
             )
 
     def apply_to(self, other):
+        """Applies the rate to a base number.
+
+        Args:
+            other: the base to apply the change rate to.
+
+        Returns:
+            The result after the change.
+        """
         return self.__mul__(other)
 
     def of(self, other):
+        """Applies the rate to a base number.
+
+        Args:
+            other: the base to apply the change rate to.
+
+        Returns:
+            The result after the change.
+        """
         return self.__mul__(other)
 
     def __float__(self):

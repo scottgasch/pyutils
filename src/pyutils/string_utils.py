@@ -27,7 +27,7 @@ SOFTWARE.
 
 This class is based on:
 https://github.com/daveoncode/python-string-utils.  See `NOTICE
-<[https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`_
 in the root of this module for a detailed enumeration of what work is
 Davide's and what work was added by Scott.
 

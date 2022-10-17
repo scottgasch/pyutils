@@ -10,6 +10,8 @@ and represent some state that dynamically changes and must be updated
 periodically.  These classes update their state (either automatically
 or when invoked to poll) and allow their callers to wait on state
 changes.
+
+See also :class:`pyutils.parallelize.thread_utils.periodically_invoke`
 """
 
 import datetime
