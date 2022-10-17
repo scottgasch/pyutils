@@ -56,3 +56,19 @@ This version -------- 0.0.1b3
 Previous version ---- 
 Total commits -------       13
 ```
+# 🎁 Release notes (`0.0.1b4`)
+
+## Changes
+- Update sphinx links to anonymous references to work around a warning message at docs build time.
+- More documentation improvements.
+- Fix run_tests.py to detect doctest failures and tear itself down more quickly when a test has failed.
+- Update remote worker records to be more instructive.
+- Hacky code to sort the colors on the sphinx webpage. :P
+- Cut version 0.0.1b3
+
+## Metadata
+```
+This version -------- 0.0.1b4
+Previous version ---- 
+Total commits -------        6
+```
