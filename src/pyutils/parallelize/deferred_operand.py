@@ -36,6 +36,16 @@ class DeferredOperand(ABC, Generic[T]):
     """
 
     def __init__(self, local_attributes: Set[str] = None):
+        """
+        Args:
+            local_attributes: because this class attempts to act as a
+                transparent wrapper around a normal Future, it needs
+                to be able to differentiate between attempts to set a
+                property of it/its subclasses or the wrapped object.
+                The local_attributes argument is a set of names that,
+                if we intercept a set operation for, refer to an
+                attribute in the wrapper and not the wrapped class.
+        """
         self.__dict__['local_attributes'] = local_attributes
 
     @abstractmethod
