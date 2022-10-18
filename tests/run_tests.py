@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from overrides import overrides
 
-from pyutils import ansi, bootstrap, config, exec_utils, text_utils
+from pyutils import ansi, bootstrap, config, dict_utils, exec_utils, text_utils
 from pyutils.files import file_utils
 from pyutils.parallelize import parallelize as par
 from pyutils.parallelize import smart_future, thread_utils
@@ -81,7 +81,7 @@ class TestResults:
     name: str
     """The name of this test / set of tests."""
 
-    tests_executed: List[str]
+    tests_executed: Dict[str, float]
     """Tests that were executed."""
 
     tests_succeeded: List[str]
@@ -94,7 +94,11 @@ class TestResults:
     """Tests that timed out."""
 
     def __add__(self, other):
-        self.tests_executed.extend(other.tests_executed)
+        merged = dict_utils.coalesce(
+            [self.tests_executed, other.tests_executed],
+            aggregation_function=dict_utils.raise_on_duplicated_keys,
+        )
+        self.tests_executed = merged
         self.tests_succeeded.extend(other.tests_succeeded)
         self.tests_failed.extend(other.tests_failed)
         self.tests_timed_out.extend(other.tests_timed_out)
@@ -140,7 +144,7 @@ class TestRunner(ABC, thread_utils.ThreadWithReturnValue):
         self.params = params
         self.test_results = TestResults(
             name=self.get_name(),
-            tests_executed=[],
+            tests_executed={},
             tests_succeeded=[],
             tests_failed=[],
             tests_timed_out=[],
@@ -216,7 +220,7 @@ class TemplatedTestRunner(TestRunner, ABC):
                 self.persist_output(test, msg, output)
                 return TestResults(
                     test.name,
-                    [],
+                    {},
                     [],
                     [test.name],
                     [],
@@ -228,7 +232,7 @@ class TemplatedTestRunner(TestRunner, ABC):
             logger.debug(
                 '%s: %s (%s) succeeded', self.get_name(), test.name, test.cmdline
             )
-            return TestResults(test.name, [], [test.name], [], [])
+            return TestResults(test.name, {}, [test.name], [], [])
         except subprocess.TimeoutExpired as e:
             msg = f'{self.get_name()}: {test.name} ({test.cmdline}) timed out after {e.timeout:.1f} seconds.'
             logger.error(msg)
@@ -241,7 +245,7 @@ class TemplatedTestRunner(TestRunner, ABC):
             self.persist_output(test, msg, e.output.decode('utf-8'))
             return TestResults(
                 test.name,
-                [],
+                {},
                 [],
                 [],
                 [test.name],
@@ -255,7 +259,7 @@ class TemplatedTestRunner(TestRunner, ABC):
             self.persist_output(test, msg, e.output.decode('utf-8'))
             return TestResults(
                 test.name,
-                [],
+                {},
                 [],
                 [test.name],
                 [],
@@ -282,7 +286,7 @@ class TemplatedTestRunner(TestRunner, ABC):
                 self.get_name(),
                 test_to_run.name,
             )
-            self.test_results.tests_executed.append(test_to_run.name)
+            self.test_results.tests_executed[test_to_run.name] = time.time()
 
         for future in smart_future.wait_any(running, log_exceptions=False):
             result = future._resolve()
@@ -521,22 +525,29 @@ def main() -> Optional[int]:
             started += len(tr.tests_executed)
             failed += len(tr.tests_failed) + len(tr.tests_timed_out)
             done += failed + len(tr.tests_succeeded)
-            running = set(tr.tests_executed)
+            running = set(tr.tests_executed.keys())
             running -= set(tr.tests_failed)
             running -= set(tr.tests_succeeded)
             running -= set(tr.tests_timed_out)
-            still_running[tid] = running
+            running_with_start_time = {
+                test: tr.tests_executed[test] for test in running
+            }
+            still_running[tid] = running_with_start_time
 
-            if time.time() - start_time > 5.0:
-                if time.time() - last_update > 3.0:
-                    last_update = time.time()
+            now = time.time()
+            if now - start_time > 5.0:
+                if now - last_update > 3.0:
+                    last_update = now
                     update = []
-                    for _, running_set in still_running.items():
-                        for test_name in running_set:
-                            update.append(test_name)
+                    for _, running_dict in still_running.items():
+                        for test_name, start_time in running_dict.items():
+                            if now - start_time > 10.0:
+                                update.append(f'{test_name}@{now-start_time:.1f}s')
+                            else:
+                                update.append(test_name)
                     print(f'\r{ansi.clear_line()}')
-                    if len(update) < 5:
-                        print(f'Still running: {" ".join(update)}')
+                    if len(update) < 4:
+                        print(f'Still running: {",".join(update)}')
                     else:
                         print(f'Still running: {len(update)} tests.')
 
