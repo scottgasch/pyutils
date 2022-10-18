@@ -181,5 +181,20 @@ class DeferredOperand(ABC, Generic[T]):
     def __float__(self) -> float:
         return float(DeferredOperand.resolve(self))
 
-    def __getattr__(self, method_name):
-        return getattr(DeferredOperand.resolve(self), method_name)
+    def __getattr__(self, name):
+        return getattr(DeferredOperand.resolve(self), name)
+
+    def __setattr__(self, name, value):
+        # subclass setting its own properties
+        if name in set(['id', 'wrapped_future']):
+            object.__setattr__(self, name, value)
+            return
+
+        # otherwise operate on the wrapped result
+        DeferredOperand.resolve(self).__setattr__(name, value)
+
+    def __delattr__(self, name):
+        return delattr(DeferredOperand.resolve(self), name)
+
+    def __dir__(self):
+        return dir(DeferredOperand.resolve(self))
