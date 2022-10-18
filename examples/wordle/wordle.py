@@ -90,19 +90,19 @@ For example:
 args.add_argument(
     '--solutions_file',
     type=str,
-    default='/home/scott/bin/wordle_solutions.txt',
+    default='wordle_solutions.txt',
     help='Where can I find a valid word list for solutions?',
 )
 args.add_argument(
     '--guesses_file',
     type=str,
-    default='/home/scott/bin/wordle_guesses.txt',
+    default='wordle_guesses.txt',
     help='Where can I find a valid word list for guesses?',
 )
 args.add_argument(
     '--hash_file',
     type=str,
-    default='/home/scott/bin/wordle_hash.txt',
+    default='wordle_hash.txt',
     help='Where can I find my precomputed hash file?',
 )
 
