@@ -121,7 +121,7 @@ class TestResults:
             out += '\n'
 
         if len(self.tests_timed_out) > 0:
-            out += f'  ..{ansi.fg("yellow")}'
+            out += f'  ..{ansi.fg("lightning yellow")}'
             out += f'{len(self.tests_timed_out)} tests timed out'
             out += f'{ansi.reset()}:\n'
             for test in self.tests_failed:
@@ -588,13 +588,14 @@ def main() -> Optional[int]:
                     done,
                     started,
                     text=text_utils.BarGraphText.FRACTION,
-                    width=80,
+                    width=72,
                     fgcolor=color,
                 ),
-                end='\r',
+                end='',
                 flush=True,
             )
-        time.sleep(0.5)
+            print(f'  {color}{now - start_time:.1f}s{ansi.reset()}', end='\r')
+        time.sleep(0.1)
 
     print(f'{ansi.clear_line()}Final Report:')
     if config.config['coverage']:
