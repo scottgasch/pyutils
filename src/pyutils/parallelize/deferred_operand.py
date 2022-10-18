@@ -182,7 +182,4 @@ class DeferredOperand(ABC, Generic[T]):
         return float(DeferredOperand.resolve(self))
 
     def __getattr__(self, method_name):
-        def method(*args, **kwargs):
-            return getattr(DeferredOperand.resolve(self), method_name)(*args, **kwargs)
-
-        return method
+        return getattr(DeferredOperand.resolve(self), method_name)
