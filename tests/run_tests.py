@@ -597,9 +597,10 @@ def main() -> Optional[int]:
             print(f'  {color}{now - start_time:.1f}s{ansi.reset()}', end='\r')
         time.sleep(0.1)
 
-    print(f'{ansi.clear_line()}Final Report:')
+    print(f'{ansi.clear_line()}{ansi.underline()}Final Report:{ansi.reset()}')
     if config.config['coverage']:
         code_coverage_report()
+    print(f'Test suite runtime: {time.time() - start_time:.1f}s')
     total_problems = test_results_report(results)
     if total_problems > 0:
         logging.error(
