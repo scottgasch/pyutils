@@ -601,6 +601,10 @@ def main() -> Optional[int]:
     if config.config['coverage']:
         code_coverage_report()
     total_problems = test_results_report(results)
+    if total_problems > 0:
+        logging.error(
+            'Exiting with non-zero return code %d due to problems.', total_problems
+        )
     return total_problems
 
 
