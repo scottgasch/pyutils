@@ -702,6 +702,15 @@ def parse(entry_module: Optional[str]) -> Dict[str, Any]:
     return CONFIG.parse(entry_module)
 
 
+def error(message: str, exit_code: int = 1) -> None:
+    """
+    Convenience method for indicating a configuration error.
+    """
+    logging.error(message)
+    print(message, file=sys.stderr)
+    sys.exit(exit_code)
+
+
 def has_been_parsed() -> bool:
     """Returns True iff the global config has already been parsed"""
     return CONFIG.has_been_parsed()
