@@ -153,6 +153,9 @@ class SmartFuture(DeferredOperand):
         self.wrapped_future = wrapped_future
         self.id = id_generator.get("smart_future_id")
 
+        # Note: if you are adding any settable properties to this
+        # class, go add them to the set in DeferredOperand.__setattr__()
+
     def get_id(self) -> int:
         """
         Returns:
