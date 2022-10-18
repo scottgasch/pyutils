@@ -291,6 +291,9 @@ class TemplatedTestRunner(TestRunner, ABC):
         for future in smart_future.wait_any(running, log_exceptions=False):
             result = future._resolve()
             logger.debug('Test %s finished.', result.name)
+
+            # We sometimes run the same test more than once.  Do not allow
+            # one run's results to klobber the other's.
             self.test_results += result
             if self.check_for_abort():
                 logger.debug(
@@ -327,7 +330,7 @@ class UnittestTestRunner(TemplatedTestRunner):
                 if basename in PERF_SENSATIVE_TESTS:
                     ret.append(
                         TestToRun(
-                            name=basename,
+                            name=f'{basename}_no_coverage',
                             kind='unittest w/o coverage to record perf',
                             cmdline=f'{test} 2>&1',
                         )
@@ -374,7 +377,7 @@ class DoctestTestRunner(TemplatedTestRunner):
                     if basename in PERF_SENSATIVE_TESTS:
                         ret.append(
                             TestToRun(
-                                name=basename,
+                                name=f'{basename}_no_coverage',
                                 kind='doctest w/o coverage to record perf',
                                 cmdline=f'python3 {test} 2>&1',
                             )
@@ -419,7 +422,7 @@ class IntegrationTestRunner(TemplatedTestRunner):
                 if basename in PERF_SENSATIVE_TESTS:
                     ret.append(
                         TestToRun(
-                            name=basename,
+                            name=f'{basename}_no_coverage',
                             kind='integration test w/o coverage to capture perf',
                             cmdline=f'{test} 2>&1',
                         )
@@ -570,15 +573,15 @@ def main() -> Optional[int]:
                         halt_event.set()
                         results[tid] = None
 
-        if started > 0:
-            percent_done = done / started
-        else:
-            percent_done = 0.0
-
         if failed == 0:
             color = ansi.fg('green')
         else:
             color = ansi.fg('red')
+
+        if started > 0:
+            percent_done = done / started * 100.0
+        else:
+            percent_done = 0.0
 
         if percent_done < 100.0:
             print(
