@@ -20,7 +20,7 @@ information.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Set, TypeVar
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
@@ -33,8 +33,10 @@ class DeferredOperand(ABC, Generic[T]):
     needed (i.e. accessed).  See the subclass
     :class:`pyutils.parallelize.smart_future.SmartFuture` for an
     example usage and/or a more useful patten.
-
     """
+
+    def __init__(self, local_attributes: Set[str] = None):
+        self.__dict__['local_attributes'] = local_attributes
 
     @abstractmethod
     def _resolve(self, timeout=None) -> T:
@@ -186,7 +188,7 @@ class DeferredOperand(ABC, Generic[T]):
 
     def __setattr__(self, name, value):
         # subclass setting its own properties
-        if name in set(['id', 'wrapped_future']):
+        if name in self.local_attributes:
             object.__setattr__(self, name, value)
             return
 

@@ -149,6 +149,7 @@ class SmartFuture(DeferredOperand):
             wrapped_future: a normal Python :class:`concurrent.Future`
                 object that we are wrapping.
         """
+        super().__init__(set(['id', 'wrapped_future', 'get_id', 'is_ready']))
         assert isinstance(wrapped_future, fut.Future)
         self.wrapped_future = wrapped_future
         self.id = id_generator.get("smart_future_id")
