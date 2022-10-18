@@ -18,6 +18,7 @@ from overrides import overrides
 
 from pyutils import ansi, bootstrap, config, dict_utils, exec_utils, text_utils
 from pyutils.files import file_utils
+from pyutils.parallelize import deferred_operand
 from pyutils.parallelize import parallelize as par
 from pyutils.parallelize import smart_future, thread_utils
 
@@ -289,7 +290,7 @@ class TemplatedTestRunner(TestRunner, ABC):
             self.test_results.tests_executed[test_to_run.name] = time.time()
 
         for future in smart_future.wait_any(running, log_exceptions=False):
-            result = future._resolve()
+            result = deferred_operand.DeferredOperand.resolve(future)
             logger.debug('Test %s finished.', result.name)
 
             # We sometimes run the same test more than once.  Do not allow
