@@ -224,6 +224,7 @@ GROUP.add_argument(
 GROUP.add_argument(
     '--config_allow_dynamic_updates',
     default=False,
+    action='store_true',
     help='If enabled, allow config flags with the string "dynamic" in their names to change at runtime when a new Zookeeper based configuration is created.  See the --config_savefile help message for more information about this option.',
 )
 GROUP.add_argument(
