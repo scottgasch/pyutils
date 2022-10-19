@@ -25,8 +25,9 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
-## "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
+homepage = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
+repository = "https://wannabe.guru.org/git/pyutils.git"
+documentation = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
 
 [project.optional-dependencies]
 dev = [
