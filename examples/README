@@ -13,6 +13,13 @@ dedup_files:
     are duplicates of each other then optionally deletes duplicates or
     symlinks duplicates back to an original.
 
+fff:
+    Find f'ed fstrings... not so much an example but rather a
+    development tool.  Identifies places where I meant to use an
+    f-string (used braces in a string) but didn't make the string an
+    f-string.  I run this as a pre-commit hook and thought it would be
+    good to include.
+
 parallelize_config:
     This is a sample config file (place in ~/.remote_worker_records or
     override with --remote_worker_records_file) for the @parallelize
