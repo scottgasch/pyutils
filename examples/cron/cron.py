@@ -27,6 +27,12 @@ cfg.add_argument(
     help='Path to the lockfile to use to ensure that two instances of a command do not execute contemporaneously.',
 )
 cfg.add_argument(
+    '--lockfile_audit_record',
+    default=None,
+    metavar='LOCKFILE_AUDIT_RECORD_FILENAME',
+    help='Path to a record of when the logfile was held/released and for what reason',
+)
+cfg.add_argument(
     '--timeout',
     type=str,
     metavar='TIMEOUT',
@@ -147,8 +153,22 @@ def main() -> int:
                 do_signal_cleanup=True,
                 override_command=' '.join(config.config['command']),
                 expiration_timestamp=lockfile_expiration,
-            ):
-                return run_command(timeout, timestamp_file)
+            ) as lf:
+                record = config.config['lockfile_audit_record']
+                cmd = ' '.join(config.config['command'])
+                if record:
+                    with open(record, 'a') as wf:
+                        print(
+                            f'{lockfile_path}, ACQUIRE, {lf.locktime}, {cmd}', file=wf
+                        )
+                retval = run_command(timeout, timestamp_file)
+                if record:
+                    with open(record, 'a') as wf:
+                        print(
+                            f'{lockfile_path}, RELEASE, {datetime.datetime.now().timestamp()}, {cmd}',
+                            file=wf,
+                        )
+                return retval
         except lockfile.LockFileException as e:
             logger.exception(e)
             msg = f'Failed to acquire {lockfile_path}, giving up.'

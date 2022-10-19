@@ -91,7 +91,7 @@ class LockFile(contextlib.AbstractContextManager):
         """
         self.is_locked: bool = False
         self.lockfile: str = lockfile_path
-        self.locktime: Optional[int] = None
+        self.locktime: Optional[float] = None
         self.override_command: Optional[str] = override_command
         if do_signal_cleanup:
             signal.signal(signal.SIGINT, self._signal)
@@ -122,6 +122,7 @@ class LockFile(contextlib.AbstractContextManager):
                 contents = self._get_lockfile_contents()
                 logger.debug(contents)
                 f.write(contents)
+            self.locktime = datetime.datetime.now().timestamp()
             logger.debug('Success; I own %s.', self.lockfile)
             self.is_locked = True
             return True
@@ -174,7 +175,6 @@ class LockFile(contextlib.AbstractContextManager):
 
     def __enter__(self):
         if self.acquire_with_retries():
-            self.locktime = datetime.datetime.now().timestamp()
             return self
         msg = f"Couldn't acquire {self.lockfile}; giving up."
         logger.warning(msg)
