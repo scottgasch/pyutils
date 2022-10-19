@@ -42,6 +42,9 @@ if [ $# -ne 1 ]; then
 fi
 
 VERSION=$1
+PREVIOUS_VERSION=$(git tag --sort=-creatordate | head -1)
+echo "PREVIOUS_VERSION=${PREVIOUS_VERSION}"
+echo
 if ! ask_y_n "About to cut (build, test, package, give you the command to upload) $VERSION, ok?" "N"; then
     echo "Ok, exiting instead."
     exit 0
