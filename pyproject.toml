@@ -1,12 +1,12 @@
 [project]
 name = "pyutils"
-version = "0.0.1b4"
+version = "0.0.1b5"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
 description = "Python Utilities"
 readme = "README.md"
-license = "Apache-2.0"
+license = { file="LICENSE" }
 requires-python = ">=3.7"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -15,6 +15,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "antlr4-python3-runtime",
     "bitstring",
     "cloudpickle",
     "holidays",
@@ -24,9 +25,8 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
-repository = "https://wannabe.guru.org/git/pyutils.git"
-documentation = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
+"Homepage" = "https://wannabe.guru.org/pydocs/pyutils/pyutils.html"
+## "Bug Tracker" = "https://github.com/pypa/sampleproject/issues"
 
 [project.optional-dependencies]
 dev = [

@@ -72,3 +72,39 @@ This version -------- 0.0.1b4
 Previous version ---- 
 Total commits -------        6
 ```
+# 🎁 Release notes (`0.0.1b5`)
+
+## Changes
+- Add missing dependency on ANTLR runtime.
+- Lift easter() function from dateutils and remove that dependency from this project.  Original copyright and attribution in the code and the root NOTICE file.
+- Make sure lockfile always sets locktime.  Use locktime in cron.py to optionally create a record of lockfile contention for future analysis.
+- Improve cut_version.sh understanding of old versions.
+- Teach cut_version.sh about PREVIOUS_VERSION...
+- Add a blurb about fff.py in README.
+- Add fff.py as an example but it's really a devtool that I used in the pre-commit hook.
+- Clean up run_tests.py
+- More messing with the project file.
+- Update license to try to make the PyPi page look nicer...
+- Make it clear that --config_allow_dynamic_updates doesn't take any argument.
+- Add some more examples and a convenience method in config.py for terminating the program due to bad flags.
+- Reference local files in wordle example.
+- Better explain what the heck is going on in deferred_operand.py.
+- Add an overall runtime line to the final report in run_tests.py.
+- Adds timer next to progress bar in run_tests.py.
+- Remove hardcoded properties list from DeferredOperand; use a c'tor param instead.
+- Add a comment for future fields in SmartFuture.
+- Make DeferredOperand handle sets, dirs, dels transparently by passing them along to the wrapped result.
+- Make DeferredOperand work more transparently.
+- Stop calling internal method _resolve in run_tests.py.
+- Log an error message when something went wrong in run_tests.py.
+- Do not let test names in results collide when we run one to capture coverage and another instance of the same test w/o coverage to check perf.
+- Make run_tests.py keep track of test runtimes.
+- Make run_tests.py tell you what's still running.
+- Cut version 0.0.1b4
+
+## Metadata
+```
+This version -------- 0.0.1b5
+Previous version ---- 0.0.1b4
+Total commits -------       26
+```
