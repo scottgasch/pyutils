@@ -15,6 +15,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "antlr4-python3-runtime",
     "bitstring",
     "cloudpickle",
     "holidays",
