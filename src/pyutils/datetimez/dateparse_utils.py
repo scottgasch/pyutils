@@ -100,8 +100,6 @@ import sys
 from typing import Any, Callable, Dict, Optional
 
 import antlr4  # type: ignore
-import dateutil.easter
-import dateutil.tz
 import holidays  # type: ignore
 import pytz
 
@@ -117,6 +115,7 @@ from pyutils.datetimez.datetime_utils import (
     TimeUnit,
     date_to_datetime,
     datetime_to_date,
+    easter,
     n_timeunits_from_base,
 )
 from pyutils.security import acl
@@ -457,7 +456,7 @@ class DateParser(dateparse_utilsListener):
 
         # Holiday names
         if name == 'easte':
-            return dateutil.easter.easter(year=year)
+            return easter(year=year)
         elif name == 'hallo':
             return datetime.date(year=year, month=10, day=31)
 
@@ -537,14 +536,6 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             pass
 
-        # Try dateutil
-        try:
-            tz2 = dateutil.tz.gettz(txt)
-            if tz2 is not None:
-                return tz2
-        except Exception:
-            pass
-
         # Try constructing an offset in seconds
         try:
             txt_sign = txt[0]
@@ -553,7 +544,7 @@ class DateParser(dateparse_utilsListener):
                 hour = int(txt[1:3])
                 minute = int(txt[-2:])
                 offset = sign * (hour * 60 * 60) + sign * (minute * 60)
-                tzoffset = dateutil.tz.tzoffset(txt, offset)
+                tzoffset = datetime.timezone(datetime.timedelta(seconds=offset))
                 return tzoffset
         except Exception:
             pass

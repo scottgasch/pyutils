@@ -1260,6 +1260,146 @@ def describe_timedelta_briefly(
     )  # Note: drops milliseconds
 
 
+# The code to compute easter on a given year was copied from dateutil (pip
+# install python-dateutil) and dumped in here to avoid a dependency.  Dateutil
+# is an Apache 2.0 LICENSE open source project:
+
+# Copyright 2017- Paul Ganssle <paul@ganssle.io>
+# Copyright 2017- dateutil contributors (see AUTHORS file)
+
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+
+#        http://www.apache.org/licenses/LICENSE-2.0
+
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+# The above license applies to all contributions after 2017-12-01, as well as
+# all contributions that have been re-licensed (see AUTHORS file for the list of
+# contributors who have re-licensed their code).
+# --------------------------------------------------------------------------------
+# dateutil - Extensions to the standard Python datetime module.
+
+# Copyright (c) 2003-2011 - Gustavo Niemeyer <gustavo@niemeyer.net>
+# Copyright (c) 2012-2014 - Tomi Pieviläinen <tomi.pievilainen@iki.fi>
+# Copyright (c) 2014-2016 - Yaron de Leeuw <me@jarondl.net>
+# Copyright (c) 2015-     - Paul Ganssle <paul@ganssle.io>
+# Copyright (c) 2015-     - dateutil contributors (see AUTHORS file)
+
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+#     * Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright notice,
+#       this list of conditions and the following disclaimer in the documentation
+#       and/or other materials provided with the distribution.
+#     * Neither the name of the copyright holder nor the names of its
+#       contributors may be used to endorse or promote products derived from
+#       this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# The above BSD License Applies to all code, even that also covered by Apache 2.0.
+
+EASTER_JULIAN = 1
+EASTER_ORTHODOX = 2
+EASTER_WESTERN = 3
+
+
+def easter(year, method=EASTER_WESTERN):
+    """
+    This method was ported from the work done by GM Arts,
+    on top of the algorithm by Claus Tondering, which was
+    based in part on the algorithm of Ouding (1940), as
+    quoted in "Explanatory Supplement to the Astronomical
+    Almanac", P.  Kenneth Seidelmann, editor.
+
+    This algorithm implements three different Easter
+    calculation methods:
+
+    1. Original calculation in Julian calendar, valid in
+       dates after 326 AD
+    2. Original method, with date converted to Gregorian
+       calendar, valid in years 1583 to 4099
+    3. Revised method, in Gregorian calendar, valid in
+       years 1583 to 4099 as well
+
+    These methods are represented by the constants:
+
+    * ``EASTER_JULIAN   = 1``
+    * ``EASTER_ORTHODOX = 2``
+    * ``EASTER_WESTERN  = 3``
+
+    The default method is method 3.
+
+    More about the algorithm may be found at:
+
+    `GM Arts: Easter Algorithms <http://www.gmarts.org/index.php?go=415>`_
+
+    and
+
+    `The Calendar FAQ: Easter <https://www.tondering.dk/claus/cal/easter.php>`_
+
+    """
+
+    if not (1 <= method <= 3):
+        raise ValueError("invalid method")
+
+    # g - Golden year - 1
+    # c - Century
+    # h - (23 - Epact) mod 30
+    # i - Number of days from March 21 to Paschal Full Moon
+    # j - Weekday for PFM (0=Sunday, etc)
+    # p - Number of days from March 21 to Sunday on or before PFM
+    #     (-6 to 28 methods 1 & 3, to 56 for method 2)
+    # e - Extra days to add for method 2 (converting Julian
+    #     date to Gregorian date)
+
+    y = year
+    g = y % 19
+    e = 0
+    if method < 3:
+        # Old method
+        i = (19 * g + 15) % 30
+        j = (y + y // 4 + i) % 7
+        if method == 2:
+            # Extra dates to convert Julian to Gregorian date
+            e = 10
+            if y > 1600:
+                e = e + y // 100 - 16 - (y // 100 - 16) // 4
+    else:
+        # New method
+        c = y // 100
+        h = (c - c // 4 - (8 * c + 13) // 25 + 19 * g + 15) % 30
+        i = h - (h // 28) * (1 - (h // 28) * (29 // (h + 1)) * ((21 - g) // 11))
+        j = (y + y // 4 + i + 2 - c + c // 4) % 7
+
+    # p can be from -6 to 56 corresponding to dates 22 March to 23 May
+    # (later dates apply to method 2, although 23 May never actually occurs)
+    p = i - j + e
+    d = 1 + (p + 27 + (p + 6) // 40) % 31
+    m = 3 + (p + 26) // 30
+    return datetime.date(int(y), int(m), int(d))
+
+
 if __name__ == '__main__':
     import doctest
 

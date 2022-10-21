@@ -19,6 +19,14 @@ parsable_expressions = [
     ('tomorrow', datetime.datetime(2021, 7, 3)),
     ('yesterday', datetime.datetime(2021, 7, 1)),
     ('21:30', datetime.datetime(2021, 7, 2, 21, 30, 0, 0)),
+    (
+        '21:30 EST',
+        datetime.datetime(2021, 7, 2, 21, 30, 0, 0, tzinfo=pytz.timezone('EST')),
+    ),
+    (
+        '21:30 -0500',
+        datetime.datetime(2021, 7, 2, 21, 30, 0, 0, tzinfo=pytz.timezone('EST')),
+    ),
     ('12:01am', datetime.datetime(2021, 7, 2, 0, 1, 0, 0)),
     ('12:02p', datetime.datetime(2021, 7, 2, 12, 2, 0, 0)),
     ('0:03', datetime.datetime(2021, 7, 2, 0, 3, 0, 0)),

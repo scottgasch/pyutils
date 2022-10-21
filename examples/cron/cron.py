@@ -157,15 +157,16 @@ def main() -> int:
                 record = config.config['lockfile_audit_record']
                 cmd = ' '.join(config.config['command'])
                 if record:
+                    start = lf.locktime
                     with open(record, 'a') as wf:
-                        print(
-                            f'{lockfile_path}, ACQUIRE, {lf.locktime}, {cmd}', file=wf
-                        )
+                        print(f'{lockfile_path}, ACQUIRE, {start}, {cmd}', file=wf)
                 retval = run_command(timeout, timestamp_file)
                 if record:
+                    end = datetime.datetime.now().timestamp()
+                    duration = datetime_utils.describe_duration_briefly(end - start)
                     with open(record, 'a') as wf:
                         print(
-                            f'{lockfile_path}, RELEASE, {datetime.datetime.now().timestamp()}, {cmd}',
+                            f'{lockfile_path}, RELEASE({duration}), {end}, {cmd}',
                             file=wf,
                         )
                 return retval

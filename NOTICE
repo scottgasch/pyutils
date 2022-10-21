@@ -64,6 +64,15 @@ source of all forked code.
     + Minor cleanup and style tweaks,
     + Added type hints.
 
+  4. The Easter calculation (function easter() in dateutilz.datetime_utils.py)
+  was copied directly with from the dateutil (pip install python-dateutil)
+  project in order to remove that dependency from this project.
+
+  Dateutil is an Apache 2.0 licensed open source project.  The original
+  copyright for that code is reproduced above the stolen function.
+
+  Scott didn't do anything to this logic other than minor formatting changes.
+
 Thank you to everyone who makes their code available for reuse by
 others and contributes to the open source ecosystem.  Scott is
 especially grateful to the authors of the projects above.  Thank you.
