@@ -2,7 +2,7 @@
 This directory contains the (non-doctest) testcode for pyutils (i.e. unit tests
 and integration tests).  It also contains a couple of helpers to run the tests.
 
-The easiest way to run the tests is, from within this tests/ directory, run:
+The easiest way to run the tests is, from within this tests/ directory, to run:
 
     ./run_tests_serially.sh -a
 
@@ -19,11 +19,12 @@ Or:
 
     ./run_tests.py -d
 
-Both of these runners store test output under ./test_output.
+Both of these runners store test output under tests/test_output.
 
 Both of them can optionally use coverage (pip install coverage) to generate a
-code coverage report:
+code coverage report at the end of testing:
 
     ./run_tests.py --all --coverage
 
-I use ./run_tests.py --all --coverage as a .git/hooks/pre-commit-hook.
+I use ./run_tests.py --all --coverage as a .git/hooks/pre-commit-hook during
+development.

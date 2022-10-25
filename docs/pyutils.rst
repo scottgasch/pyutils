@@ -1,35 +1,71 @@
 pyutils package
 ===============
 
+Introduction
+------------
+
 When I was writing little tools in Python and found myself implementing
 a generally useful pattern I stuffed it into a local library.  That
 library grew into pyutils: a set of collections, helpers and utilities
 that I find useful and hope you will too.
 
-Code is under `src/pyutils/
+The `LICENSE
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`__
+and `NOTICE
+<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`__
+files at the root of the project describe reusing this code and where
+everything came from.  Drop me a line if you are using this, find a
+bug, have a question, or have a suggestion:
+
+  --Scott Gasch (scott.gasch@gmail.com)
+
+Installation
+------------
+
+This project is now *pyutils* in PyPi, the default Python project index.  To install
+with pip::
+
+    pip install pyutils
+
+You'll get a few dependencies and this library.  The dependencies are high quality and
+stable:
+
+    - antlr4-python3-runtime: ANTLR grammer/parser runtime dependencies for the date
+      parsing grammar.
+    - bitstring: easy bitwise operations on long operands
+    - cloudpickle: a better version of Python's built in pickle used in the parallelize
+      code.
+    - holidays: a list of US and international holidays, used in the date parser.
+    - kazoo: a client side library with recipes for working with Apache Zookeeper, used
+      if and only if you enable Zookeeper-based configs.
+    - overrides: code decorator to mark and enforce method overrides.
+    - pytz: Python timezones, used in date parser and utils.
+
+Development
+-----------
+
+All of the project's code is located under `src/pyutils/
 <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=src/pyutils;h=e716e14b7a895e5c6206af90f4628bf756f040fe;hb=HEAD>`_.
-Most code includes inlint documentation and doctests.  I've tried to
+Most code includes inline documentation and doctests.  I've tried to
 organize it into logical packages based on the code's functionality.
-Note that when words would collide with a Python library or reserved
-word I've used a 'z' at the end, e.g. 'collectionz' instead of
-'collections', 'typez' instead of 'type', etc...
+Note that when words would collide with a Python standard library or
+reserved keyword I've used a 'z' at the end, e.g. 'collectionz'
+instead of 'collections', 'typez' instead of 'type', etc...
 
 There's some example code that uses various features of this project checked
-in under `examples/ <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=examples;h=d9744bf2b171ba7a9ff21ae1d3862b673647fff4;hb=HEAD>`_ that you can check out.
+in under `examples/ <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=examples;h=d9744bf2b171ba7a9ff21ae1d3862b673647fff4;hb=HEAD>`_ that you can check out.  See the `README <http://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=examples/README;hb=HEAD>`__ in that directory for more information
+about what's there.
 
 Unit and integration tests are under `tests/
 <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=tests;h=8c303f23cd89b6d2e4fbf214a5c7dcc0941151b4;hb=HEAD>`_.
+
 To run all tests::
 
     cd tests/
     ./run_tests.py --all [--coverage]
 
-See the `README <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/README;hb=HEAD>`_ under `tests/` and the code of `run_tests.py` for more
-options / information about running tests.
-
-This package generates Sphinx docs which are available at:
-
-    https://wannabe.guru.org/pydocs/pyutils/pyutils.html
+See the `README <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/README;hb=HEAD>`__
+under `tests/` and the code of `run_tests.py` for more options / information about running tests.
 
 Package code is checked into a local git server and available to clone
 from git at https://wannabe.guru.org/git/pyutils.git or to view in a
@@ -43,16 +79,30 @@ development happened in a different git repo:
 
     https://wannabe.guru.org/gitweb/?p=python_utils.git;a=summary
 
-The `LICENSE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`__
-and `NOTICE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`__
-files at the root of the project describe reusing this code and where
-everything came from.  Drop me a line if you are using this, find a
-bug, have a question, or have a suggestion:
+To actually build the code (by which I mean type check it, lint it, package it, format
+it, etc...) you need some other dependencies installed:
 
-  --Scott Gasch (scott.gasch@gmail.com)
+    - black: I use black to auto-format the code
+    - coverage: used by the --coverage option of `run_tests.py`.
+    - flake8: a Python linter
+    - pylint: another Python linter
+    - sphinx: documenation generator
+    - setuptools: to build the project artifacts
+    - twine: to package and upload packages
 
+Documentation
+-------------
+
+The documentation you're browsing was created by Sphinx based largely on extracted code comments.
+It's available at:
+
+    https://wannabe.guru.org/pydocs/pyutils/pyutils.html
+
+Support
+-------
+
+If you find a bug or have a question, please email me (scott.gasch@gmail.com).  I have not
+yet set up any more official bug tracker because there's no need yet.
 
 Subpackages
 -----------
