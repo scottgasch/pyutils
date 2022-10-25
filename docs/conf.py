@@ -74,4 +74,8 @@ def setup(app):
     app.connect("autodoc-skip-member", skip)
 
 
+doctest_global_setup = '''
+import pyutils
+'''
+
 autoclass_content = 'both'

@@ -19,18 +19,21 @@ logger = logging.getLogger(__name__)
 def current_thread_id() -> str:
     """
     Returns:
-        a string composed of the parent process' id, the current
-        process' id and the current thread identifier.  The former two are
-        numbers (pids) whereas the latter is a thread id passed during thread
-        creation time.
+        A string composed of the parent process' id, the
+        current process' id and the current thread name that can be used
+        as a unique identifier for the current thread.  The former two are
+        numbers (pids) whereas the latter is a thread id passed during
+        thread creation time.
 
-    >>> ret = current_thread_id()
+    >>> from pyutils.parallelize import thread_utils
+    >>> ret = thread_utils.current_thread_id()
+    >>> ret  # doctest: +SKIP
+    '76891/84444/MainThread:'
     >>> (ppid, pid, tid) = ret.split('/')
     >>> ppid.isnumeric()
     True
     >>> pid.isnumeric()
     True
-
     """
     ppid = os.getppid()
     pid = os.getpid()
@@ -44,25 +47,25 @@ def is_current_thread_main_thread() -> bool:
         True is the current (calling) thread is the process' main
         thread and False otherwise.
 
-    >>> is_current_thread_main_thread()
+    >>> from pyutils.parallelize import thread_utils
+    >>> thread_utils.is_current_thread_main_thread()
     True
 
     >>> result = None
-    >>> def thunk():
+    >>> def am_i_the_main_thread():
     ...     global result
-    ...     result = is_current_thread_main_thread()
+    ...     result = thread_utils.is_current_thread_main_thread()
 
-    >>> thunk()
+    >>> am_i_the_main_thread()
     >>> result
     True
 
     >>> import threading
-    >>> thread = threading.Thread(target=thunk)
+    >>> thread = threading.Thread(target=am_i_the_main_thread)
     >>> thread.start()
     >>> thread.join()
     >>> result
     False
-
     """
     return threading.current_thread() is threading.main_thread()
 
@@ -78,7 +81,12 @@ def background_thread(
 
     Example usage::
 
-        @background_thread
+        import threading
+        import time
+
+        from pyutils.parallelize import thread_utils
+
+        @thread_utils.background_thread
         def random(a: int, b: str, stop_event: threading.Event) -> None:
             while True:
                 print(f"Hi there {b}: {a}!")
@@ -128,12 +136,16 @@ class ThreadWithReturnValue(threading.Thread):
     """A thread whose return value is plumbed back out as the return
     value of :meth:`join`.  Use like a normal thread::
 
+        import threading
+
+        from pyutils.parallelize import thread_utils
+
         def thread_entry_point(args):
             # do something interesting...
             return result
 
         if __name__ == "__main__":
-            thread = ThreadWithReturnValue(
+            thread = thread_utils.ThreadWithReturnValue(
                 target=thread_entry_point,
                 args=(whatever)
             )
@@ -208,30 +220,31 @@ def periodically_invoke(
 
     Usage::
 
-        @periodically_invoke(period_sec=1.0, stop_after=3)
+        from pyutils.parallelize import thread_utils
+
+        @thread_utils.periodically_invoke(period_sec=1.0, stop_after=3)
         def hello(name: str) -> None:
             print(f"Hello, {name}")
 
-        @periodically_invoke(period_sec=0.5, stop_after=None)
+        @thread_utils.periodically_invoke(period_sec=0.5, stop_after=None)
         def there(name: str, age: int) -> None:
             print(f"   ...there {name}, {age}")
 
     Usage as a decorator doesn't give you access to the returned stop event or
     thread object.  To get those, wrap your periodic function manually::
 
-        import pyutils.parallelize.thread_utils as tu
+        from pyutils.parallelize import thread_utils
 
         def periodic(m: str) -> None:
             print(m)
 
-        f = tu.periodically_invoke(period_sec=5.0, stop_after=None)(periodic)
+        f = thread_utils.periodically_invoke(period_sec=5.0, stop_after=None)(periodic)
         thread, event = f("testing")
         ...
         event.set()
         thread.join()
 
     See also :mod:`pyutils.state_tracker`.
-
     """
 
     def decorator_repeat(func):
