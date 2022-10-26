@@ -7,6 +7,8 @@
 from itertools import islice
 from typing import Any, Callable, Dict, Iterator, List, Tuple
 
+from pyutils import dataclass_utils
+
 
 def init_or_inc(
     d: Dict[Any, Any],
@@ -359,6 +361,11 @@ def dict_to_key_value_lists(d: Dict[Any, Any]) -> Tuple[List[Any], List[Any]]:
         r[0].append(k)
         r[1].append(v)
     return r
+
+
+dict_to_dataclass = dataclass_utils.dataclass_from_dict
+
+dict_from_dataclass = dataclass_utils.dataclass_to_dict
 
 
 if __name__ == '__main__':

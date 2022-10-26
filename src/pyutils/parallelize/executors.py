@@ -49,18 +49,26 @@ import time
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Set
 
 import cloudpickle  # type: ignore
 from overrides import overrides
 
 import pyutils.typez.histogram as hist
-from pyutils import argparse_utils, config, math_utils, persistent, string_utils
+from pyutils import (
+    argparse_utils,
+    config,
+    dataclass_utils,
+    math_utils,
+    persistent,
+    string_utils,
+)
 from pyutils.ansi import bg, fg, reset, underline
 from pyutils.decorator_utils import singleton
 from pyutils.exec_utils import cmd_exitcode, cmd_in_background, run_silently
 from pyutils.parallelize.thread_utils import background_thread
+from pyutils.typez import type_utils
 
 logger = logging.getLogger(__name__)
 
@@ -1527,15 +1535,9 @@ class ConfigRemoteWorkerPoolProvider(
         self.remote_worker_pool = []
         for record in json_remote_worker_pool['remote_worker_records']:
             self.remote_worker_pool.append(
-                self.dataclassFromDict(RemoteWorkerRecord, record)
+                dataclass_utils.dataclass_from_dict(RemoteWorkerRecord, record)
             )
         assert len(self.remote_worker_pool) > 0
-
-    @staticmethod
-    def dataclassFromDict(clsName, argDict: Dict[str, Any]) -> Any:
-        fieldSet = {f.name for f in fields(clsName) if f.init}
-        filteredArgDict = {k: v for k, v in argDict.items() if k in fieldSet}
-        return clsName(**filteredArgDict)
 
     @overrides
     def get_remote_workers(self) -> List[RemoteWorkerRecord]:
@@ -1548,7 +1550,7 @@ class ConfigRemoteWorkerPoolProvider(
     @staticmethod
     @overrides
     def get_filename() -> str:
-        return config.config['remote_worker_records_file']
+        return type_utils.unwrap_optional(config.config['remote_worker_records_file'])
 
     @staticmethod
     @overrides
