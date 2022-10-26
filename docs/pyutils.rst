@@ -2270,6 +2270,14 @@ during runtime) via Zookeeper (which is disabled by default).
    :undoc-members:
    :show-inheritance:
 
+pyutils.dataclass\_utils module
+-------------------------------
+
+.. automodule:: pyutils.dataclass_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.decorator\_utils module
 -------------------------------
 
