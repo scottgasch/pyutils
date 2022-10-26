@@ -6,6 +6,7 @@ Reminders for upcoming important dates.
 
 import datetime
 import logging
+import os
 import re
 import sys
 from collections import defaultdict
@@ -30,7 +31,7 @@ cfg.add_argument(
 cfg.add_argument(
     '--reminder_cache_file',
     type=str,
-    default='.reminder_cache',
+    default=f'{os.environ["HOME"]}/.reminder_cache',
     metavar='FILENAME',
     help='Override the .reminder cache location',
 )
