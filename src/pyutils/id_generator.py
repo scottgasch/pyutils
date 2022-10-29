@@ -5,6 +5,11 @@
 """
 A helper class for generating thread safe monotonically increasing
 id numbers.
+
+.. note::
+
+    This code is thread safe but not process safe; for use only
+    within one python process.
 """
 
 import itertools
@@ -47,7 +52,7 @@ def get(name: str, *, start=0) -> int:
     return x
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
