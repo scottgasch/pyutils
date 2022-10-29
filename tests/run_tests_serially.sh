@@ -125,6 +125,10 @@ if [ ${UNITTEST} -eq 1 ]; then
     for test in $(find ${ROOT} -name "*_test.py" -print); do
         BASE=$(basename ${test})
         HDR="${BASE} (unittest)"
+        if [ "${BASE}" == "zookeeper_test.py" ]; then
+            echo "(skipping zookeeper_test.py; if you have a zookeeper instance, fixme)"
+            continue
+        fi
         make_header "${HDR}" "${GREEN}"
         if [ ${COVERAGE} -eq 1 ]; then
             coverage run --source ../src ${test} --unittests_ignore_perf >./test_output/${BASE}-output.txt 2>&1
