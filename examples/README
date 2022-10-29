@@ -41,4 +41,8 @@ wordle:
     the @parallelize framework and shared_dict which it uses to
     precompute the solution space on several processes at once.
 
+../tests/run_tests.py:
+    Though not under examples/ this is still a stand alone program that
+    uses pyutils concepts like @parallelize and smart_futures that might
+    be helpful to look at.
 
