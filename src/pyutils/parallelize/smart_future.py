@@ -30,7 +30,7 @@ from pyutils.parallelize.deferred_operand import DeferredOperand
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def wait_any(
@@ -80,13 +80,13 @@ def wait_any(
                     exception = f.exception()
                     if exception is not None:
                         logger.warning(
-                            'Future 0x%x raised an unhandled exception and exited.',
+                            "Future 0x%x raised an unhandled exception and exited.",
                             id(f),
                         )
                         logger.exception(exception)
                         raise exception
                 yield smart_future_by_real_future[f]
-        except TimeoutError:
+        except concurrent.futures.TimeoutError:
             if callback is not None:
                 callback()
     if callback is not None:
@@ -126,7 +126,8 @@ def wait_all(
                 exception = f.exception()
                 if exception is not None:
                     logger.warning(
-                        'Future 0x%x raised an unhandled exception and exited.', id(f)
+                        "Future 0x%x raised an unhandled exception and exited.",
+                        id(f),
                     )
                     logger.exception(exception)
                     raise exception
@@ -149,7 +150,7 @@ class SmartFuture(DeferredOperand):
             wrapped_future: a normal Python :class:`concurrent.Future`
                 object that we are wrapping.
         """
-        super().__init__(set(['id', 'wrapped_future', 'get_id', 'is_ready']))
+        super().__init__(set(["id", "wrapped_future", "get_id", "is_ready"]))
         assert isinstance(wrapped_future, fut.Future)
         self.wrapped_future = wrapped_future
         self.id = id_generator.get("smart_future_id")
