@@ -1,4 +1,4 @@
-pyutils.datetimez package
+pyutils.datetimes package
 =========================
 
 This subpackage contains code for parsing and manipulating dates, times and datetimes.
@@ -6,18 +6,18 @@ This subpackage contains code for parsing and manipulating dates, times and date
 Submodules
 ----------
 
-pyutils.datetimez.constants module
+pyutils.datetimes.constants module
 ----------------------------------
 
-.. automodule:: pyutils.datetimez.constants
+.. automodule:: pyutils.datetimes.constants
    :members:
    :undoc-members:
    :show-inheritance:
 
-pyutils.datetimez.dateparse\_utils module
+pyutils.datetimes.dateparse\_utils module
 -----------------------------------------
 
-.. automodule:: pyutils.datetimez.dateparse_utils
+.. automodule:: pyutils.datetimes.dateparse_utils
    :members:
    :undoc-members:
    :exclude-members: PARSE_TYPE_BASE_AND_OFFSET_EXPR,
@@ -143,10 +143,10 @@ pyutils.datetimez.dateparse\_utils module
                      visitErrorNode,
                      visitTerminal
 
-pyutils.datetimez.datetime\_utils module
+pyutils.datetimes.datetime\_utils module
 ----------------------------------------
 
-.. automodule:: pyutils.datetimez.datetime_utils
+.. automodule:: pyutils.datetimes.datetime_utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -154,7 +154,7 @@ pyutils.datetimez.datetime\_utils module
 Module contents
 ---------------
 
-.. automodule:: pyutils.datetimez
+.. automodule:: pyutils.datetimes
    :members:
    :undoc-members:
    :show-inheritance:
