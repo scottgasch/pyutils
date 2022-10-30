@@ -73,14 +73,81 @@ class PickleSerializer:
 
 class SharedDict(object):
     """This class emulates the dict container but uses a
-    Multiprocessing.SharedMemory region to back the dict such that it
+    `Multiprocessing.SharedMemory` region to back the dict such that it
     can be read and written by multiple independent processes at the
     same time.  Because it constantly de/re-serializes the dict, it is
     much slower than a normal dict.
 
+    Example usage... one process should set up the shared memory::
+
+        from pyutils.collectionz.shared_dict import SharedDict
+
+        shared_memory_id = 'SharedDictIdentifier'
+        shared_memory_size_bytes = 4096
+        shared_memory = SharedDict(shared_memory_id, shared_memory_size_bytes)
+
+    Other processes can then attach to the shared memory by
+    referencing its name.  Don't try to pass the :class:`SharedDict` itself to
+    a child process.  Rather, just pass its name string.  You can create
+    child processes any way that Python supports.  The
+    `wordle example <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=examples/wordle/wordle.py;h=df9874ee0b309e7a70a5a7c8900629869def3928;hb=HEAD>`__ uses the
+    parallelize framework with `SharedDict` but a simple `subprocess.run`,
+    `exec_utils`, `ProcessExecutor`, whatever::
+
+        from pyutils import exec_utils
+
+        processes = []
+        for i in range(10):
+            processes.append(
+                exec_utils.cmd_in_background(
+                    f'myhelper.py --number {i} --shared_memory={shared_memory_id}'
+                )
+            )
+
+    In the child process, attach the already created :class:`SharedDict`
+    using its name.  A size is not necessary when attaching to an
+    already created shared memory region -- it cannot be resized after
+    creation.  The name must be the same exact name that was used to
+    create it originally::
+
+        from pyutils.collectionz.shared_dict import SharedDict
+
+        shared_memory_id = config.config['shared_memory']
+        shared_memory = SharedDict(shared_memory_id)
+
+    The children processes (and parent process, also) can now just use
+    the shared memory like a normal `dict`::
+
+        if shared_memory[work_id] is None:
+            result = do_expensive_work(work_id)
+            shared_memory[work_id] = result
+
+    .. note::
+
+        It's pretty slow to mutate data in the shared memory.  First,
+        it needs to acquire an exclusive lock.  Second, it essentially
+        pickles an entire dict into the shared memory region.  So this
+        is not a data structure that is going to win awards for speed.
+        But it is a very convenient way to have a shared cache, for
+        example.  See the wordle example for a real life program using
+        `SharedDict` this way.  It basically saves the result of large
+        computations in a `SharedDict` thereby allowing all threads to
+        avoid recomputing that same expensive computation.  In this
+        scenario the slowness of the dict writes are more than paid
+        for by the avoidence of duplicated, expensive work.
+
+    Finally, someone (likely the main process) should call the :meth:`cleanup`
+    method when the shared memory region is no longer needed::
+
+        shared_memory.cleanup()
+
+    See also the `shared_dict_test.py <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/collectionz/shared_dict_test.py;h=0a684f4835554553018cefbc114034c2dc405794;hb=HEAD>`__ for an
+    example of using this class.
+
+    ---
     """
 
-    NULL_BYTE = b'\x00'
+    NULL_BYTE = b"\x00"
     LOCK = RLock()
 
     def __init__(
@@ -88,17 +155,23 @@ class SharedDict(object):
         name: Optional[str] = None,
         size_bytes: Optional[int] = None,
     ) -> None:
-        """
-        Creates or attaches a shared dictionary back by a SharedMemory buffer.
-        For create semantics, a unique name (string) and a max dictionary size
-        (expressed in bytes) must be provided.  For attach semantics, these are
-        ignored.
+        """Creates or attaches a shared dictionary back by a
+        :class:`SharedMemory` buffer.  For create semantics, a unique
+        name (string) and a max dictionary size (expressed in bytes)
+        must be provided.  For attach semantics size is ignored.
 
-        The first process that creates the SharedDict is responsible for
-        (optionally) naming it and deciding the max size (in bytes) that
-        it may be.  It does this via args to the c'tor.
+        .. warning::
 
-        Subsequent processes may safely omit name and size args.
+            Size is ignored on attach operations.  The size of the
+            shared memory region cannot be changed once it has been
+            created.
+
+        The first process that creates the :class:`SharedDict` is
+        responsible for (optionally) naming it and deciding the max
+        size (in bytes) that it may be.  It does this via args to the
+        c'tor.
+
+        Subsequent processes may safely the size arg.
 
         Args:
             name: the name of the shared dict, only required for initial caller
@@ -135,7 +208,7 @@ class SharedDict(object):
         """Internal helper."""
         with SharedDict.LOCK:
             memory_is_empty = (
-                bytes(self.shared_memory.buf).split(SharedDict.NULL_BYTE, 1)[0] == b''
+                bytes(self.shared_memory.buf).split(SharedDict.NULL_BYTE, 1)[0] == b""
             )
             if memory_is_empty:
                 self.clear()
@@ -166,14 +239,14 @@ class SharedDict(object):
         """Unmap the shared dict and memory behind it from this
         process.  Called by automatically :meth:`__del__`.
         """
-        if not hasattr(self, 'shared_memory'):
+        if not hasattr(self, "shared_memory"):
             return
         self.shared_memory.close()
 
     def cleanup(self) -> None:
         """Unlink the shared dict and memory behind it.  Only the last process
         should invoke this.  Not called automatically."""
-        if not hasattr(self, 'shared_memory'):
+        if not hasattr(self, "shared_memory"):
             return
         with SharedDict.LOCK:
             self.shared_memory.unlink()
