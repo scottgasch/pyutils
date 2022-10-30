@@ -24,7 +24,7 @@ from pyutils.files import file_utils
 from pyutils.parallelize import executors
 from pyutils.parallelize import parallelize as par
 from pyutils.parallelize import smart_future
-from pyutils.typez import histogram
+from pyutils.types import histogram
 
 logger = logging.getLogger(__name__)
 args = config.add_commandline_args(

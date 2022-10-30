@@ -8,7 +8,7 @@ import unittest
 from decimal import Decimal
 
 from pyutils import unittest_utils
-from pyutils.typez.money import Money
+from pyutils.types.money import Money
 
 
 class TestMoney(unittest.TestCase):
@@ -57,10 +57,10 @@ class TestMoney(unittest.TestCase):
             amount /= another
 
     def test_equality(self):
-        usa = Money(1.0, 'USD')
-        can = Money(1.0, 'CAD')
+        usa = Money(1.0, "USD")
+        can = Money(1.0, "CAD")
         self.assertNotEqual(usa, can)
-        eh = Money(1.0, 'CAD')
+        eh = Money(1.0, "CAD")
         self.assertEqual(can, eh)
 
     def test_comparison(self):
@@ -72,7 +72,7 @@ class TestMoney(unittest.TestCase):
         self.assertLess(neg_one, one)
         self.assertGreater(one, neg_one)
         self.assertGreater(three, one)
-        looney = Money(1.0, 'CAD')
+        looney = Money(1.0, "CAD")
         with self.assertRaises(TypeError):
             print(looney < one)
 
@@ -99,13 +99,13 @@ class TestMoney(unittest.TestCase):
         ten = Money(10.0)
         x = ten * 2 / 3
         expected = Decimal(6.66)
-        expected = expected.quantize(Decimal('.01'))
+        expected = expected.quantize(Decimal(".01"))
         self.assertEqual(expected, x.truncate_fractional_cents())
         x = ten * 2 / 3
         expected = Decimal(6.67)
-        expected = expected.quantize(Decimal('.01'))
+        expected = expected.quantize(Decimal(".01"))
         self.assertEqual(expected, x.round_fractional_cents())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -11,7 +11,7 @@ another, and has a strict mode which disallows comparison or
 aggregation with non-:class:`Money` operands (i.e. no comparison or
 aggregation with literal numbers).
 
-See also :class:`pyutils.typez.centcount.CentCount` which represents
+See also :class:`pyutils.types.centcount.CentCount` which represents
 monetary amounts as an integral number of cents.
 """
 
@@ -27,8 +27,8 @@ class Money(object):
 
     def __init__(
         self,
-        amount: Union[Decimal, str, float, int, 'Money'] = Decimal("0"),
-        currency: str = 'USD',
+        amount: Union[Decimal, str, float, int, "Money"] = Decimal("0"),
+        currency: str = "USD",
         *,
         strict_mode=False,
     ):
@@ -66,10 +66,10 @@ class Money(object):
         digits = list(map(str, digits))
         build, next = result.append, digits.pop
         for i in range(2):
-            build(next() if digits else '0')
-        build('.')
+            build(next() if digits else "0")
+        build(".")
         if not digits:
-            build('0')
+            build("0")
         i = 0
         while digits:
             build(next())
@@ -77,11 +77,11 @@ class Money(object):
             if i == 3 and digits:
                 i = 0
         if sign:
-            build('-')
+            build("-")
         if self.currency:
-            return ''.join(reversed(result)) + ' ' + self.currency
+            return "".join(reversed(result)) + " " + self.currency
         else:
-            return '$' + ''.join(reversed(result))
+            return "$" + "".join(reversed(result))
 
     def __pos__(self):
         return Money(amount=self.amount, currency=self.currency)
@@ -94,10 +94,10 @@ class Money(object):
             if self.currency == other.currency:
                 return Money(amount=self.amount + other.amount, currency=self.currency)
             else:
-                raise TypeError('Incompatible currencies in add expression')
+                raise TypeError("Incompatible currencies in add expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return Money(
                     amount=self.amount + Decimal(float(other)),
@@ -109,10 +109,10 @@ class Money(object):
             if self.currency == other.currency:
                 return Money(amount=self.amount - other.amount, currency=self.currency)
             else:
-                raise TypeError('Incompatible currencies in add expression')
+                raise TypeError("Incompatible currencies in add expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return Money(
                     amount=self.amount - Decimal(float(other)),
@@ -121,7 +121,7 @@ class Money(object):
 
     def __mul__(self, other):
         if isinstance(other, Money):
-            raise TypeError('can not multiply monetary quantities')
+            raise TypeError("can not multiply monetary quantities")
         else:
             return Money(
                 amount=self.amount * Decimal(float(other)),
@@ -130,7 +130,7 @@ class Money(object):
 
     def __truediv__(self, other):
         if isinstance(other, Money):
-            raise TypeError('can not divide monetary quantities')
+            raise TypeError("can not divide monetary quantities")
         else:
             return Money(
                 amount=self.amount / Decimal(float(other)),
@@ -171,7 +171,7 @@ class Money(object):
 
         See also :meth:`round_fractional_cents`
         """
-        self.amount = self.amount.quantize(Decimal('.01'), rounding=ROUND_FLOOR)
+        self.amount = self.amount.quantize(Decimal(".01"), rounding=ROUND_FLOOR)
         return self.amount
 
     def round_fractional_cents(self):
@@ -205,7 +205,7 @@ class Money(object):
 
         See also :meth:`truncate_fractional_cents`
         """
-        self.amount = self.amount.quantize(Decimal('.01'), rounding=ROUND_HALF_DOWN)
+        self.amount = self.amount.quantize(Decimal(".01"), rounding=ROUND_HALF_DOWN)
         return self.amount
 
     __radd__ = __add__
@@ -215,10 +215,10 @@ class Money(object):
             if self.currency == other.currency:
                 return Money(amount=other.amount - self.amount, currency=self.currency)
             else:
-                raise TypeError('Incompatible currencies in sub expression')
+                raise TypeError("Incompatible currencies in sub expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return Money(
                     amount=Decimal(float(other)) - self.amount,
@@ -251,10 +251,10 @@ class Money(object):
             if self.currency == other.currency:
                 return self.amount < other.amount
             else:
-                raise TypeError('can not directly compare different currencies')
+                raise TypeError("can not directly compare different currencies")
         else:
             if self.strict_mode:
-                raise TypeError('In strict mode, only two Moneys can be compated')
+                raise TypeError("In strict mode, only two Moneys can be compated")
             else:
                 return self.amount < Decimal(float(other))
 
@@ -263,10 +263,10 @@ class Money(object):
             if self.currency == other.currency:
                 return self.amount > other.amount
             else:
-                raise TypeError('can not directly compare different currencies')
+                raise TypeError("can not directly compare different currencies")
         else:
             if self.strict_mode:
-                raise TypeError('In strict mode, only two Moneys can be compated')
+                raise TypeError("In strict mode, only two Moneys can be compated")
             else:
                 return self.amount > Decimal(float(other))
 
@@ -287,7 +287,7 @@ class Money(object):
         amount = None
         currency = None
         s = s.strip()
-        chunks = s.split(' ')
+        chunks = s.split(" ")
         try:
             for chunk in chunks:
                 if Money.AMOUNT_RE.match(chunk) is not None:
@@ -299,11 +299,11 @@ class Money(object):
         if amount is not None and currency is not None:
             return (amount, currency)
         elif amount is not None:
-            return (amount, 'USD')
+            return (amount, "USD")
         return None
 
     @classmethod
-    def parse(cls, s: str) -> 'Money':
+    def parse(cls, s: str) -> "Money":
         """Parses a string an attempts to create a :class:`Money`
         instance.
 
@@ -316,7 +316,7 @@ class Money(object):
         raise Exception(f'Unable to parse money string "{s}"')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

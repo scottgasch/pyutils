@@ -41,7 +41,7 @@ numbers).
     of this and decide whether it's suitable for your
     application.
 
-See also the :class:`pyutils.typez.Money` class which uses Python
+See also the :class:`pyutils.types.Money` class which uses Python
 Decimals (see: https://docs.python.org/3/library/decimal.html) to
 represent monetary amounts.
 """
@@ -58,8 +58,8 @@ class CentCount(object):
 
     def __init__(
         self,
-        centcount: Union[int, float, str, 'CentCount'] = 0,
-        currency: str = 'USD',
+        centcount: Union[int, float, str, "CentCount"] = 0,
+        currency: str = "USD",
         *,
         strict_mode=False,
     ):
@@ -95,11 +95,11 @@ class CentCount(object):
     def __repr__(self):
         w = self.centcount // 100
         p = self.centcount % 100
-        s = f'{w}.{p:02d}'
+        s = f"{w}.{p:02d}"
         if self.currency is not None:
-            return f'{s} {self.currency}'
+            return f"{s} {self.currency}"
         else:
-            return f'${s}'
+            return f"${s}"
 
     def __pos__(self):
         return CentCount(centcount=self.centcount, currency=self.currency)
@@ -115,10 +115,10 @@ class CentCount(object):
                     currency=self.currency,
                 )
             else:
-                raise TypeError('Incompatible currencies in add expression')
+                raise TypeError("Incompatible currencies in add expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return self.__add__(CentCount(other, self.currency))
 
@@ -130,10 +130,10 @@ class CentCount(object):
                     currency=self.currency,
                 )
             else:
-                raise TypeError('Incompatible currencies in add expression')
+                raise TypeError("Incompatible currencies in add expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return self.__sub__(CentCount(other, self.currency))
 
@@ -163,7 +163,7 @@ class CentCount(object):
             application.
         """
         if isinstance(other, CentCount):
-            raise TypeError('can not multiply monetary quantities')
+            raise TypeError("can not multiply monetary quantities")
         else:
             return CentCount(
                 centcount=int(self.centcount * float(other)),
@@ -196,7 +196,7 @@ class CentCount(object):
             application.
         """
         if isinstance(other, CentCount):
-            raise TypeError('can not divide monetary quantities')
+            raise TypeError("can not divide monetary quantities")
         else:
             return CentCount(
                 centcount=int(float(self.centcount) / float(other)),
@@ -219,10 +219,10 @@ class CentCount(object):
                     currency=self.currency,
                 )
             else:
-                raise TypeError('Incompatible currencies in sub expression')
+                raise TypeError("Incompatible currencies in sub expression")
         else:
             if self.strict_mode:
-                raise TypeError('In strict_mode only two moneys can be added')
+                raise TypeError("In strict_mode only two moneys can be added")
             else:
                 return CentCount(
                     centcount=int(other) - self.centcount,
@@ -255,10 +255,10 @@ class CentCount(object):
             if self.currency == other.currency:
                 return self.centcount < other.centcount
             else:
-                raise TypeError('can not directly compare different currencies')
+                raise TypeError("can not directly compare different currencies")
         else:
             if self.strict_mode:
-                raise TypeError('In strict mode, only two CentCounts can be compated')
+                raise TypeError("In strict mode, only two CentCounts can be compated")
             else:
                 return self.centcount < int(other)
 
@@ -267,10 +267,10 @@ class CentCount(object):
             if self.currency == other.currency:
                 return self.centcount > other.centcount
             else:
-                raise TypeError('can not directly compare different currencies')
+                raise TypeError("can not directly compare different currencies")
         else:
             if self.strict_mode:
-                raise TypeError('In strict mode, only two CentCounts can be compated')
+                raise TypeError("In strict mode, only two CentCounts can be compated")
             else:
                 return self.centcount > int(other)
 
@@ -291,7 +291,7 @@ class CentCount(object):
         centcount = None
         currency = None
         s = s.strip()
-        chunks = s.split(' ')
+        chunks = s.split(" ")
         try:
             for chunk in chunks:
                 if CentCount.CENTCOUNT_RE.match(chunk) is not None:
@@ -303,11 +303,11 @@ class CentCount(object):
         if centcount is not None and currency is not None:
             return (centcount, currency)
         elif centcount is not None:
-            return (centcount, 'USD')
+            return (centcount, "USD")
         return None
 
     @classmethod
-    def parse(cls, s: str) -> 'CentCount':
+    def parse(cls, s: str) -> "CentCount":
         """Parses a string format monetary amount and returns a CentCount
         if possible.
 
@@ -320,7 +320,7 @@ class CentCount(object):
         raise Exception(f'Unable to parse money string "{s}"')
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

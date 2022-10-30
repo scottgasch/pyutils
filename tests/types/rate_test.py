@@ -7,8 +7,8 @@
 import unittest
 
 from pyutils import unittest_utils
-from pyutils.typez.money import Money
-from pyutils.typez.rate import Rate
+from pyutils.types.money import Money
+from pyutils.types.rate import Rate
 
 
 class TestRate(unittest.TestCase):
@@ -67,5 +67,5 @@ class TestRate(unittest.TestCase):
         self.assertEqual("+50.000%", s)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

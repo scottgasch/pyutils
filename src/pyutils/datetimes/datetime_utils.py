@@ -13,7 +13,7 @@ from typing import Any, NewType, Optional, Tuple
 import holidays  # type: ignore
 import pytz
 
-from pyutils.datetimez import constants
+from pyutils.datetimes import constants
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +153,8 @@ def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetim
         if dt.tzinfo == tz:
             return dt
         raise Exception(
-            f'{dt} is already timezone aware; use replace_timezone or translate_timezone '
-            + 'depending on the semantics you want.  See the pydocs / code.'
+            f"{dt} is already timezone aware; use replace_timezone or translate_timezone "
+            + "depending on the semantics you want.  See the pydocs / code."
         )
     return dt.replace(tzinfo=tz)
 
@@ -206,7 +206,7 @@ def replace_timezone(
     """
     if is_timezone_aware(dt):
         logger.warning(
-            '%s already has a timezone; klobbering it anyway.\n  Be aware that this operation changed the instant to which the object refers.',
+            "%s already has a timezone; klobbering it anyway.\n  Be aware that this operation changed the instant to which the object refers.",
             dt,
         )
         return datetime.datetime(
@@ -829,7 +829,7 @@ def string_to_datetime(
 ) -> Tuple[datetime.datetime, str]:
     """A nice way to convert a string into a datetime.  Returns both the
     datetime and the format string used to parse it.  Also consider
-    :mod:`pyutils.datetimez.dateparse_utils` for a full parser alternative.
+    :mod:`pyutils.datetimes.dateparse_utils` for a full parser alternative.
 
     Args:
         txt: the string to be converted into a datetime
@@ -966,9 +966,9 @@ def minute_number(hour: int, minute: int) -> MinuteOfDay:
     1439
     """
     if hour < 0 or hour > 23:
-        raise ValueError(f'Bad hour: {hour}.  Expected 0 <= hour <= 23')
+        raise ValueError(f"Bad hour: {hour}.  Expected 0 <= hour <= 23")
     if minute < 0 or minute > 59:
-        raise ValueError(f'Bad minute: {minute}.  Expected 0 <= minute <= 59')
+        raise ValueError(f"Bad minute: {minute}.  Expected 0 <= minute <= 59")
     return MinuteOfDay(hour * 60 + minute)
 
 
@@ -1079,23 +1079,23 @@ def parse_duration(duration: str, raise_on_error=False) -> int:
         return int(duration)
 
     m = re.match(
-        r'(\d+ *d[ays]*)* *(\d+ *h[ours]*)* *(\d+ *m[inutes]*)* *(\d+ *[seconds]*)',
+        r"(\d+ *d[ays]*)* *(\d+ *h[ours]*)* *(\d+ *m[inutes]*)* *(\d+ *[seconds]*)",
         duration,
     )
     if not m and raise_on_error:
-        raise ValueError(f'{duration} is not a valid duration.')
+        raise ValueError(f"{duration} is not a valid duration.")
 
     seconds = 0
-    m = re.search(r'(\d+) *d[ays]*', duration)
+    m = re.search(r"(\d+) *d[ays]*", duration)
     if m is not None:
         seconds += int(m.group(1)) * 60 * 60 * 24
-    m = re.search(r'(\d+) *h[ours]*', duration)
+    m = re.search(r"(\d+) *h[ours]*", duration)
     if m is not None:
         seconds += int(m.group(1)) * 60 * 60
-    m = re.search(r'(\d+) *m[inutes]*', duration)
+    m = re.search(r"(\d+) *m[inutes]*", duration)
     if m is not None:
         seconds += int(m.group(1)) * 60
-    m = re.search(r'(\d+) *s[econds]*', duration)
+    m = re.search(r"(\d+) *s[econds]*", duration)
     if m is not None:
         seconds += int(m.group(1))
     return seconds
@@ -1151,14 +1151,14 @@ def describe_duration(seconds: int, *, include_seconds=False) -> str:
         descr = descr + f"{int(minutes[0])} minutes"
 
     if include_seconds:
-        descr = descr + ', '
+        descr = descr + ", "
         if len(descr) > 0:
-            descr = descr + 'and '
+            descr = descr + "and "
         s = minutes[1]
         if s == 1:
-            descr = descr + '1 second'
+            descr = descr + "1 second"
         else:
-            descr = descr + f'{s} seconds'
+            descr = descr + f"{s} seconds"
     return descr
 
 
@@ -1219,15 +1219,15 @@ def describe_duration_briefly(seconds: int, *, include_seconds=False) -> str:
     hours = divmod(days[1], constants.SECONDS_PER_HOUR)
     minutes = divmod(hours[1], constants.SECONDS_PER_MINUTE)
 
-    descr = ''
+    descr = ""
     if days[0] > 0:
-        descr = f'{int(days[0])}d '
+        descr = f"{int(days[0])}d "
     if hours[0] > 0:
-        descr = descr + f'{int(hours[0])}h '
+        descr = descr + f"{int(hours[0])}h "
     if minutes[0] > 0 or (len(descr) == 0 and not include_seconds):
-        descr = descr + f'{int(minutes[0])}m '
+        descr = descr + f"{int(minutes[0])}m "
     if minutes[1] > 0 and include_seconds:
-        descr = descr + f'{int(minutes[1])}s'
+        descr = descr + f"{int(minutes[1])}s"
     return descr.strip()
 
 
@@ -1400,7 +1400,7 @@ def easter(year, method=EASTER_WESTERN):
     return datetime.date(int(y), int(m), int(d))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

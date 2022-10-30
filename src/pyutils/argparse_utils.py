@@ -49,21 +49,21 @@ class ActionNoYes(argparse.Action):
 
     def __init__(self, option_strings, dest, default=None, required=False, help=None):
         if default is None:
-            msg = 'You must provide a default with Yes/No action'
+            msg = "You must provide a default with Yes/No action"
             logger.critical(msg)
             raise ValueError(msg)
         if len(option_strings) != 1:
-            msg = 'Only single argument is allowed with NoYes action'
+            msg = "Only single argument is allowed with NoYes action"
             logger.critical(msg)
             raise ValueError(msg)
         opt = option_strings[0]
-        if not opt.startswith('--'):
-            msg = 'Yes/No arguments must be prefixed with --'
+        if not opt.startswith("--"):
+            msg = "Yes/No arguments must be prefixed with --"
             logger.critical(msg)
             raise ValueError(msg)
 
         opt = opt[2:]
-        opts = ['--' + opt, '--no_' + opt]
+        opts = ["--" + opt, "--no_" + opt]
         super().__init__(
             opts,
             dest,
@@ -76,7 +76,7 @@ class ActionNoYes(argparse.Action):
 
     @overrides
     def __call__(self, parser, namespace, values, option_strings=None):
-        if option_strings.startswith('--no-') or option_strings.startswith('--no_'):
+        if option_strings.startswith("--no-") or option_strings.startswith("--no_"):
             setattr(namespace, self.dest, False)
         else:
             setattr(namespace, self.dest, True)
@@ -252,7 +252,7 @@ def valid_percentage(num: str) -> float:
     argparse.ArgumentTypeError: 115 is an invalid percentage; expected 0 <= n <= 100.0
 
     """
-    num = num.strip('%')
+    num = num.strip("%")
     n = float(num)
     if 0.0 <= n <= 100.0:
         return n
@@ -340,7 +340,7 @@ def valid_date(txt: str) -> datetime.date:
     date = to_date(txt)
     if date is not None:
         return date
-    msg = f'Cannot parse argument as a date: {txt}'
+    msg = f"Cannot parse argument as a date: {txt}"
     logger.error(msg)
     raise argparse.ArgumentTypeError(msg)
 
@@ -372,7 +372,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
     .. note::
         Because this code uses an English date-expression parsing grammar
         internally, much more complex datetimes can be expressed in free form.
-        See :mod:`pyutils.datetimez.dateparse_utils` for details.  These
+        See :mod:`pyutils.datetimes.dateparse_utils` for details.  These
         are not included in here because they are hard to write valid doctests
         for!
 
@@ -384,7 +384,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
     dt = to_datetime(txt)
     if dt is not None:
         return dt
-    msg = f'Cannot parse argument as datetime: {txt}'
+    msg = f"Cannot parse argument as datetime: {txt}"
     logger.error(msg)
     raise argparse.ArgumentTypeError(msg)
 
@@ -438,7 +438,7 @@ def valid_duration(txt: str) -> datetime.timedelta:
     ...
     argparse.ArgumentTypeError: a little while is not a valid duration.
     """
-    from pyutils.datetimez.datetime_utils import parse_duration
+    from pyutils.datetimes.datetime_utils import parse_duration
 
     try:
         secs = parse_duration(txt, raise_on_error=True)
@@ -448,8 +448,8 @@ def valid_duration(txt: str) -> datetime.timedelta:
         raise argparse.ArgumentTypeError(e) from e
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
-    doctest.ELLIPSIS_MARKER = '-ANYTHING-'
+    doctest.ELLIPSIS_MARKER = "-ANYTHING-"
     doctest.testmod()

@@ -7,7 +7,7 @@
 import unittest
 
 from pyutils import unittest_utils
-from pyutils.typez.centcount import CentCount
+from pyutils.types.centcount import CentCount
 
 
 class TestCentCount(unittest.TestCase):
@@ -58,10 +58,10 @@ class TestCentCount(unittest.TestCase):
             amount /= another
 
     def test_equality(self):
-        usa = CentCount(1.0, 'USD')
-        can = CentCount(1.0, 'CAD')
+        usa = CentCount(1.0, "USD")
+        can = CentCount(1.0, "CAD")
         self.assertNotEqual(usa, can)
-        eh = CentCount(1.0, 'CAD')
+        eh = CentCount(1.0, "CAD")
         self.assertEqual(can, eh)
 
     def test_comparison(self):
@@ -73,7 +73,7 @@ class TestCentCount(unittest.TestCase):
         self.assertLess(neg_one, one)
         self.assertGreater(one, neg_one)
         self.assertGreater(three, one)
-        looney = CentCount(1.0, 'CAD')
+        looney = CentCount(1.0, "CAD")
         with self.assertRaises(TypeError):
             print(looney < one)
 
@@ -97,5 +97,5 @@ class TestCentCount(unittest.TestCase):
         self.assertTrue(two > one)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

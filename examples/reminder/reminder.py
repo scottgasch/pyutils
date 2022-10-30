@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 
 from pyutils import argparse_utils, bootstrap, config, persistent, string_utils
 from pyutils.ansi import fg, reset
-from pyutils.datetimez import dateparse_utils as dateparse
+from pyutils.datetimes import dateparse_utils as dateparse
 from pyutils.files import file_utils
 
 logger = logging.getLogger(__name__)
@@ -24,24 +24,24 @@ cfg = config.add_commandline_args(
 cfg.add_argument(
     "--reminder_filename",
     type=argparse_utils.valid_filename,
-    default='.reminder',
-    metavar='FILENAME',
+    default=".reminder",
+    metavar="FILENAME",
     help="Override the .reminder filepath",
 )
 cfg.add_argument(
-    '--reminder_cache_file',
+    "--reminder_cache_file",
     type=str,
     default=f'{os.environ["HOME"]}/.reminder_cache',
-    metavar='FILENAME',
-    help='Override the .reminder cache location',
+    metavar="FILENAME",
+    help="Override the .reminder cache location",
 )
 cfg.add_argument(
-    "-n", "--count", type=int, metavar='COUNT', help="How many events to remind about"
+    "-n", "--count", type=int, metavar="COUNT", help="How many events to remind about"
 )
 cfg.add_argument(
     "--days_ahead",
     type=int,
-    metavar='#DAYS',
+    metavar="#DAYS",
     help="How many days ahead to remind about",
 )
 cfg.add_argument(
@@ -73,10 +73,10 @@ class Reminder(object):
     def __init__(
         self, cached_state: Optional[Dict[datetime.date, List[str]]] = None
     ) -> None:
-        if not config.config['override_timestamp']:
+        if not config.config["override_timestamp"]:
             self.today = datetime.date.today()
         else:
-            self.today = config.config['override_timestamp'][0].date()
+            self.today = config.config["override_timestamp"][0].date()
             logger.debug(
                 'Overriding "now" with %s because of commandline argument.',
                 self.today,
@@ -85,7 +85,7 @@ class Reminder(object):
             self.label_by_date = cached_state
             return
         self.label_by_date: Dict[datetime.date, List[str]] = defaultdict(list)
-        self.read_file(config.config['reminder_filename'])
+        self.read_file(config.config["reminder_filename"])
 
     def handle_event_by_adjusting_year_to_now(
         self,
@@ -109,21 +109,21 @@ class Reminder(object):
                 month=orig_date.month,
                 day=orig_date.day,
             )
-            logger.debug('Date in %d: %s', year, dt)
+            logger.debug("Date in %d: %s", year, dt)
             self.label_by_date[dt].append(label)
-            logger.debug('%s => %s', dt, label)
+            logger.debug("%s => %s", dt, label)
 
     def handle_event_with_fixed_year(
         self,
         orig_date: datetime.date,
         orig_label: str,
     ) -> None:
-        logger.debug('Fixed date event...')
+        logger.debug("Fixed date event...")
         self.label_by_date[orig_date].append(orig_label)
-        logger.debug('%s => %s', orig_date, orig_label)
+        logger.debug("%s => %s", orig_date, orig_label)
 
     def read_file(self, filename: str) -> None:
-        logger.debug('Reading %s:', filename)
+        logger.debug("Reading %s:", filename)
         date_parser = dateparse.DateParser()
         parsing_mode = Reminder.MODE_EVENT
         with open(filename) as f:
@@ -133,33 +133,33 @@ class Reminder(object):
             line = re.sub(r"#.*$", "", line)
             if re.match(r"^ *$", line) is not None:
                 continue
-            logger.debug('> %s', line)
+            logger.debug("> %s", line)
             try:
                 if "=" in line:
                     label, date = line.split("=")
                 else:
                     print(f"Skipping unparsable line: {line}", file=sys.stderr)
-                    logger.error('Skipping malformed line: %s', line)
+                    logger.error("Skipping malformed line: %s", line)
                     continue
 
                 if label == "type":
                     if "event" in date:
                         parsing_mode = Reminder.MODE_EVENT
-                        logger.debug('--- EVENT MODE ---')
+                        logger.debug("--- EVENT MODE ---")
                     elif "birthday" in date:
                         parsing_mode = Reminder.MODE_BIRTHDAY
-                        logger.debug('--- BIRTHDAY MODE ---')
+                        logger.debug("--- BIRTHDAY MODE ---")
                     elif "anniversary" in date:
                         parsing_mode = Reminder.MODE_ANNIVERSARY
-                        logger.debug('--- ANNIVERSARY MODE ---')
+                        logger.debug("--- ANNIVERSARY MODE ---")
                 else:
                     date_parser.parse(date)
                     orig_date = date_parser.get_date()
                     if orig_date is None:
                         print(f"Skipping unparsable date: {line}", file=sys.stderr)
-                        logger.error('Skipping line with unparsable date')
+                        logger.error("Skipping line with unparsable date")
                         continue
-                    logger.debug('Original date: %s', orig_date)
+                    logger.debug("Original date: %s", orig_date)
 
                     overt_year = date_parser.saw_overt_year
                     if parsing_mode in (
@@ -174,7 +174,7 @@ class Reminder(object):
 
             except Exception as e:
                 print(f"Skipping unparsable line: {line}", file=sys.stderr)
-                logger.error('Skipping malformed line: %s', line)
+                logger.error("Skipping malformed line: %s", line)
                 logger.exception(e)
 
     def remind(
@@ -224,16 +224,16 @@ class Reminder(object):
 
     @classmethod
     def load(cls):
-        if not config.config['override_timestamp']:
+        if not config.config["override_timestamp"]:
             now = datetime.datetime.now()
         else:
-            now = config.config['override_timestamp'][0]
+            now = config.config["override_timestamp"][0]
             logger.debug(
                 'Overriding "now" with %s because of commandline argument.', now
             )
 
         cache_ts = file_utils.get_file_mtime_as_datetime(
-            config.config['reminder_cache_file']
+            config.config["reminder_cache_file"]
         )
         if cache_ts is None:
             return None
@@ -245,14 +245,14 @@ class Reminder(object):
             and now.year == cache_ts.year
         ):
             reminder_ts = file_utils.get_file_mtime_as_datetime(
-                config.config['reminder_filename']
+                config.config["reminder_filename"]
             )
 
             # ...and the .reminder file wasn't updated since the cache write...
             if reminder_ts <= cache_ts:
                 import pickle
 
-                with open(config.config['reminder_cache_file'], 'rb') as rf:
+                with open(config.config["reminder_cache_file"], "rb") as rf:
                     reminder_data = pickle.load(rf)
                     return cls(reminder_data)
         return None
@@ -260,7 +260,7 @@ class Reminder(object):
     def save(self):
         import pickle
 
-        with open(config.config['reminder_cache_file'], 'wb') as wf:
+        with open(config.config["reminder_cache_file"], "wb") as wf:
             pickle.dump(
                 self.label_by_date,
                 wf,
@@ -271,9 +271,9 @@ class Reminder(object):
 @bootstrap.initialize
 def main() -> None:
     reminder = Reminder()
-    count = config.config['count']
-    days_ahead = config.config['days_ahead']
-    reminder.remind(count, days_ahead, config.config['date'])
+    count = config.config["count"]
+    days_ahead = config.config["days_ahead"]
+    reminder.remind(count, days_ahead, config.config["date"])
     return None
 
 

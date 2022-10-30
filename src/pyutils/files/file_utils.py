@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 def remove_newlines(x: str) -> str:
     """Trivial function to be used as a line_transformer in
     :meth:`slurp_file` for no newlines in file contents"""
-    return x.replace('\n', '')
+    return x.replace("\n", "")
 
 
 def strip_whitespace(x: str) -> str:
@@ -43,7 +43,7 @@ def strip_whitespace(x: str) -> str:
 def remove_hash_comments(x: str) -> str:
     """Trivial function to be used as a line_transformer in
     :meth:`slurp_file` for no # comments in file contents"""
-    return re.sub(r'#.*$', '', x)
+    return re.sub(r"#.*$", "", x)
 
 
 def slurp_file(
@@ -70,12 +70,12 @@ def slurp_file(
         for x in line_transformers:
             xforms.append(x)
     if not file_is_readable(filename):
-        raise Exception(f'{filename} can\'t be read.')
+        raise Exception(f"{filename} can't be read.")
     with open(filename) as rf:
         for line in rf:
             for transformation in xforms:
                 line = transformation(line)
-            if skip_blank_lines and line == '':
+            if skip_blank_lines and line == "":
                 continue
             ret.append(line)
     return ret
@@ -115,7 +115,7 @@ def fix_multiple_slashes(path: str) -> str:
     >>> fix_multiple_slashes(p) == p
     True
     """
-    return re.sub(r'/+', '/', path)
+    return re.sub(r"/+", "/", path)
 
 
 def delete(path: str) -> None:
@@ -174,7 +174,7 @@ def without_all_extensions(path: str) -> str:
     '/home/scott/foobar'
 
     """
-    while '.' in path:
+    while "." in path:
         path = without_extension(path)
     return path
 
@@ -948,7 +948,7 @@ def get_file_mtime_timedelta(filename: str) -> Optional[datetime.timedelta]:
 
 def describe_file_timestamp(filename: str, extractor, *, brief=False) -> Optional[str]:
     """~Internal helper"""
-    from pyutils.datetimez.datetime_utils import (
+    from pyutils.datetimes.datetime_utils import (
         describe_duration,
         describe_duration_briefly,
     )
@@ -1203,7 +1203,7 @@ class FileWriter(contextlib.AbstractContextManager):
         """
         self.filename = filename
         uuid = uuid4()
-        self.tempfile = f'{filename}-{uuid}.tmp'
+        self.tempfile = f"{filename}-{uuid}.tmp"
         self.handle: Optional[TextIO] = None
 
     def __enter__(self) -> TextIO:
@@ -1214,14 +1214,14 @@ class FileWriter(contextlib.AbstractContextManager):
     def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
         if self.handle is not None:
             self.handle.close()
-            cmd = f'/bin/mv -f {self.tempfile} {self.filename}'
+            cmd = f"/bin/mv -f {self.tempfile} {self.filename}"
             ret = os.system(cmd)
             if (ret >> 8) != 0:
-                raise Exception(f'{cmd} failed, exit value {ret>>8}!')
+                raise Exception(f"{cmd} failed, exit value {ret>>8}!")
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

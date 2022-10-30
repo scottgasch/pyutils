@@ -89,7 +89,7 @@ and
 :meth:`pyutils.string_utils.to_date`.  This means any of these are
 also able to accept and recognize this larger set of date expressions.
 
-See the `unittest <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/datetimez/dateparse_utils_test.py;h=93c7b96e4c19af217fbafcf1ed5dbde13ec599c5;hb=HEAD>`_ for more examples and the `grammar <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=src/pyutils/datetimez/dateparse_utils.g4;hb=HEAD>`_ for more details.
+See the `unittest <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/datetimes/dateparse_utils_test.py;h=93c7b96e4c19af217fbafcf1ed5dbde13ec599c5;hb=HEAD>`_ for more examples and the `grammar <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=src/pyutils/datetimes/dateparse_utils.g4;hb=HEAD>`_ for more details.
 """
 
 import datetime
@@ -104,14 +104,14 @@ import holidays  # type: ignore
 import pytz
 
 from pyutils import bootstrap, decorator_utils
-from pyutils.datetimez.dateparse_utilsLexer import dateparse_utilsLexer  # type: ignore
-from pyutils.datetimez.dateparse_utilsListener import (
+from pyutils.datetimes.dateparse_utilsLexer import dateparse_utilsLexer  # type: ignore
+from pyutils.datetimes.dateparse_utilsListener import (
     dateparse_utilsListener,
 )  # type: ignore
-from pyutils.datetimez.dateparse_utilsParser import (
+from pyutils.datetimes.dateparse_utilsParser import (
     dateparse_utilsParser,
 )  # type: ignore
-from pyutils.datetimez.datetime_utils import (
+from pyutils.datetimes.datetime_utils import (
     TimeUnit,
     date_to_datetime,
     datetime_to_date,

@@ -1657,16 +1657,16 @@ def to_date(in_str: str) -> Optional[datetime.date]:
     Returns:
         The datetime.date the string contained or None to indicate
         an error.  This parser is relatively clever; see
-        :class:`datetimez.dateparse_utils` docs for details.
+        :class:`datetimes.dateparse_utils` docs for details.
 
-    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`extract_date`,
+    See also: :mod:`pyutils.datetimes.dateparse_utils`, :meth:`extract_date`,
     :meth:`is_valid_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
 
     >>> to_date('9/11/2001')
     datetime.date(2001, 9, 11)
     >>> to_date('xyzzy')
     """
-    import pyutils.datetimez.dateparse_utils as du
+    import pyutils.datetimes.dateparse_utils as du
 
     try:
         d = du.DateParser()  # type: ignore
@@ -1687,7 +1687,7 @@ def extract_date(in_str: Any) -> Optional[datetime.datetime]:
     Returns:
         a datetime if date was found, otherwise None
 
-    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    See also: :mod:`pyutils.datetimes.dateparse_utils`, :meth:`to_date`,
     :meth:`is_valid_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
 
     >>> extract_date("filename.txt    dec 13, 2022")
@@ -1698,7 +1698,7 @@ def extract_date(in_str: Any) -> Optional[datetime.datetime]:
     """
     import itertools
 
-    import pyutils.datetimez.dateparse_utils as du
+    import pyutils.datetimes.dateparse_utils as du
 
     d = du.DateParser()  # type: ignore
     chunks = in_str.split()
@@ -1726,9 +1726,9 @@ def is_valid_date(in_str: str) -> bool:
     Returns:
         True if the string represents a valid date that we can recognize
         and False otherwise.  This parser is relatively clever; see
-        :class:`datetimez.dateparse_utils` docs for details.
+        :class:`datetimes.dateparse_utils` docs for details.
 
-    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    See also: :mod:`pyutils.datetimes.dateparse_utils`, :meth:`to_date`,
     :meth:`extract_date`, :meth:`to_datetime`, :meth:`valid_datetime`.
 
     >>> is_valid_date('1/2/2022')
@@ -1740,7 +1740,7 @@ def is_valid_date(in_str: str) -> bool:
     >>> is_valid_date('xyzzy')
     False
     """
-    import pyutils.datetimez.dateparse_utils as dp
+    import pyutils.datetimes.dateparse_utils as dp
 
     try:
         d = dp.DateParser()  # type: ignore
@@ -1760,15 +1760,15 @@ def to_datetime(in_str: str) -> Optional[datetime.datetime]:
     Returns:
         A python datetime parsed from in_str or None to indicate
         an error.  This parser is relatively clever; see
-        :class:`datetimez.dateparse_utils` docs for details.
+        :class:`datetimes.dateparse_utils` docs for details.
 
-    See also: :mod:`pyutils.datetimez.dateparse_utils`, :meth:`to_date`,
+    See also: :mod:`pyutils.datetimes.dateparse_utils`, :meth:`to_date`,
     :meth:`extract_date`, :meth:`valid_datetime`.
 
     >>> to_datetime('7/20/1969 02:56 GMT')
     datetime.datetime(1969, 7, 20, 2, 56, tzinfo=<StaticTzInfo 'GMT'>)
     """
-    import pyutils.datetimez.dateparse_utils as dp
+    import pyutils.datetimes.dateparse_utils as dp
 
     try:
         d = dp.DateParser()  # type: ignore
@@ -1789,7 +1789,7 @@ def valid_datetime(in_str: str) -> bool:
     Returns:
         True if in_str contains a valid datetime and False otherwise.
         This parser is relatively clever; see
-        :class:`datetimez.dateparse_utils` docs for details.
+        :class:`datetimes.dateparse_utils` docs for details.
 
     >>> valid_datetime('next wednesday at noon')
     True
