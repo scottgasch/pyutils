@@ -12,10 +12,12 @@ remote machine depending on the style of decoration::
     def my_function(a, b, c) -> int:
         ...do some slow / expensive work, e.g., an http request
 
+    # Run with background subprocess
     @p.parallelize(method=Method.PROCESS)
     def my_other_function(d, e, f) -> str:
         ...do more really expensive work, e.g., a network read
 
+    # Run in a helper process on another machine.
     @p.parallelize(method=Method.REMOTE)
     def my_other_other_function(g, h) -> int:
         ...this work will be distributed to a remote machine pool
@@ -71,6 +73,31 @@ do some setup work:
 
     If you're trying to set this up and struggling, email me at
     scott.gasch@gmail.com.  I'm happy to help.
+
+    What you get back when you call a decorated message is a
+    :class:`pyutils.parallelize.smart_future.SmartFuture`.  This class
+    attempts to transparently wrap a normal Python :class:`Future`
+    (see
+    https://docs.python.org/3/library/concurrent.futures.html#future-objects).
+    If your code just uses the result of a `parallelized` method it
+    will block waiting on the result of the method as soon as it uses
+    the result in a manner that requires its value to be known
+    (e.g. using it in an expression, calling a method on it, hashing
+    it, etc...)  But you can do operations that do not require the
+    value to be known (e.g. storing it in a list, storing it as a
+    value in a dict, etc...) without blocking.
+
+    There are two helper methods in
+    :mod:`pyutils.parallelize.smart_future` to help deal with these
+    :class:`SmartFuture` objects called
+    :meth:`pyutils.parallelize.smart_future.wait_all` and
+    :meth:`pyutils.parallelize.smart_future.wait_any`.  These, when
+    given a collection of :class:`SmartFuture` objects,
+    will block until one (any) or all (all) are finished and yield the
+    finished objects to the caller.  Callers can be confident that any
+    objects returned from these methods will not block when accessed.
+    See documentation in :mod:`pyutils.parallelize.smart_future` for
+    more details.
 
 """
 

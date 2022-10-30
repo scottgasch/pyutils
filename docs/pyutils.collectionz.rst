@@ -1,9 +1,12 @@
 pyutils.collectionz package
 ===========================
 
-This subpackage contains some homegrown collections that try to emulate
-:mod:`collections` included in the Python standard library.  It ends
-with a 'z' so as not to collide with the standard library package.
+This subpackage contains some homegrown collections that try to
+emulate :mod:`collections` included in the Python standard library
+(see:
+https://docs.python.org/3/library/collections.html#module-collections).
+It ends with a 'z' so as not to collide with the standard library
+package.
 
 Submodules
 ----------

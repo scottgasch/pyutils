@@ -50,7 +50,7 @@ def wait_any(
             futures completes
         log_exceptions: Should we log (warning + exception) any
             underlying exceptions raised during future processing or
-            silently ignore then?
+            silently ignore them?
         timeout: invoke callback with a periodicity of timeout while
             awaiting futures
 
@@ -105,7 +105,7 @@ def wait_all(
         futures: A collection of futures that we're waiting for
         log_exceptions: Should we log (warning + exception) any
             underlying exceptions raised during future processing or
-            silently ignore then?
+            silently ignore them?
 
     Returns:
         Only when all futures in the input list are ready.  Blocks
