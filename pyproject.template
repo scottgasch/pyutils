@@ -44,8 +44,8 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = [
     "pyutils", "pyutils.collectionz", "pyutils.compress",
-    "pyutils.datetimez", "pyutils.files", "pyutils.parallelize",
-    "pyutils.search", "pyutils.security", "pyutils.typez"
+    "pyutils.datetimes", "pyutils.files", "pyutils.parallelize",
+    "pyutils.search", "pyutils.security", "pyutils.types"
 ]
 
 [tool.setuptools.package-dir]
