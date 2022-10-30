@@ -108,3 +108,27 @@ This version -------- 0.0.1b5
 Previous version ---- 0.0.1b4
 Total commits -------       26
 ```
+# 🎁 Release notes (`0.0.1b6`)
+
+## Changes
+- Fix docs after rename
+- Rename some directories (e.g. typez -> types) since they don't collide with any stdlib names.
+- Add better docs with an example to SharedDict.
+- Add id_generator_test.
+- Add run_tests.py to the examples/README list.
+- Make run_tests_serially.sh skip zookeeper_test.py too.
+- Teach run_tests.py to abort inflight tests in case of emergency shutdown.
+- Fix wrong TimeoutError in catch.
+- Get reminder to stop leaving turds around my filesystem.
+- Docs for dataclass_utils.
+- Add dataclass_utils for some simple dataclass wrappers and annotation.
+- Improve documentation / doctests.
+- Update documentation.
+- Cut version 0.0.1b5
+
+## Metadata
+```
+This version -------- 0.0.1b6
+Previous version ---- 0.0.1b5
+Total commits -------       14
+```
