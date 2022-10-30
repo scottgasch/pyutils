@@ -83,6 +83,7 @@ To actually build the code (by which I mean type check it, lint it, package it, 
 it, etc...) you need some other dependencies installed:
 
     - black: I use black to auto-format the code
+    - mypy: a Python type checker
     - coverage: used by the --coverage option of `run_tests.py`.
     - flake8: a Python linter
     - pylint: another Python linter
