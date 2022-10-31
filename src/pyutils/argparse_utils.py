@@ -330,7 +330,8 @@ def valid_date(txt: str) -> datetime.date:
     .. note::
         dates like 'next wednesday' work fine, they are just
         hard to doctest for without knowing when the testcase will be
-        executed...
+        executed...  See :py:mod:`pyutils.datetimes.dateparse_utils`
+        for other examples of usable expressions.
 
     >>> valid_date('next wednesday') # doctest: +ELLIPSIS
     -ANYTHING-
