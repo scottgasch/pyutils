@@ -75,11 +75,11 @@ printf "# 🎁 Release notes (\`$VERSION\`)\n\n## Changes\n$CHANGES\n\n## Metada
 
 echo "Updating pyproject.toml with this version number"
 cat ./pyproject.template | sed s/##VERSION##/$VERSION/g > ./pyproject.toml
-git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
 
 echo "Building..."
 python -m build
 
+echo "Checking in binary wheel package"
 WHEEL=dist/pyutils-latest-py3-none-any.whl
 if [ ! -f ${WHEEL} ]; then
     echo "Can't find ${WHEEL}?!"
@@ -90,7 +90,9 @@ git rm ${LINK}
 ln -s ${WHEEL} dist/pyutils-latest-py3-none-any.whl
 git add ${WHEEL}
 git add ${LINK}
-git commit -a -m "Add binary wheel for ${VERSION}"
+git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
+
+echo "Pushing changes"
 git push
 
 echo "Done.  To upload, run: \"twine upload --verbose --repository testpypi dist/*\""
