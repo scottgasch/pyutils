@@ -94,6 +94,12 @@ git rm ${LINK}
 ln -s ${WHEEL} dist/pyutils-latest-py3-none-any.whl
 git add ${WHEEL}
 git add ${LINK}
+cd dist/
+for FILE in *.whl; do
+    md5 ${FILE} > ${FILE}.md5
+done
+git add *.md5
+cd ..
 git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
 
 echo "Pushing changes to git"
