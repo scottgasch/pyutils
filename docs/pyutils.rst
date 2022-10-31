@@ -41,6 +41,8 @@ stable:
     - overrides: code decorator to mark and enforce method overrides.
     - pytz: Python timezones, used in date parser and utils.
 
+You can also install the wheel directly; the latest is checked in under: https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=dist;hb=HEAD.
+
 Development
 -----------
 
