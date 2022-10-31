@@ -51,16 +51,20 @@ if ! ask_y_n "About to cut (build, test, package, give you the command to upload
     echo "Ok, exiting instead."
     exit 0
 fi
+LAST_TAG=$(git tag | tail -1)
+if [ "${LAST_TAG}" == "${VERSION}" ]; then
+    echo "Last tag is the same as ${VERSION}?!  Aborted."
+    exit 1
+fi
 echo
 
 echo "Ok, here are the commit message of changes since the last version..."
-LAST_TAG=$(git tag | tail -1)
 git log $LAST_TAG..HEAD
 pause
 echo
 echo
 
-echo "Ok, running scottutilz tests including test_some_dependencies.py..."
+echo "Ok, running pyutils and scottutilz tests including test_some_dependencies.py..."
 cd ../scottutilz/tests
 ./run_tests.py --all --coverage
 cd ../../pyutils
@@ -76,10 +80,10 @@ printf "# 🎁 Release notes (\`$VERSION\`)\n\n## Changes\n$CHANGES\n\n## Metada
 echo "Updating pyproject.toml with this version number"
 cat ./pyproject.template | sed s/##VERSION##/$VERSION/g > ./pyproject.toml
 
-echo "Building..."
+echo "Building wheel..."
 python -m build
 
-echo "Checking in binary wheel package"
+echo "Checking in wheel package under dist/"
 WHEEL=dist/pyutils-latest-py3-none-any.whl
 if [ ! -f ${WHEEL} ]; then
     echo "Can't find ${WHEEL}?!"
@@ -92,7 +96,7 @@ git add ${WHEEL}
 git add ${LINK}
 git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
 
-echo "Pushing changes"
+echo "Pushing changes to git"
 git push
 
-echo "Done.  To upload, run: \"twine upload --verbose --repository testpypi dist/*\""
+echo "Done.  To upload, run: \"twine upload --verbose --repository pypi dist/*\""
