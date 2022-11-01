@@ -83,9 +83,9 @@ URLS_RAW_STRING = (
     r"(#\S*)?"  # hash
 )
 
-URL_RE = re.compile(r"^{}$".format(URLS_RAW_STRING), re.IGNORECASE)
+URL_RE = re.compile(rf"^{URLS_RAW_STRING}$", re.IGNORECASE)
 
-URLS_RE = re.compile(r"({})".format(URLS_RAW_STRING), re.IGNORECASE)
+URLS_RE = re.compile(rf"({URLS_RAW_STRING})", re.IGNORECASE)
 
 ESCAPED_AT_SIGN = re.compile(r'(?!"[^"]*)@+(?=[^"]*")|\\@')
 
@@ -93,9 +93,9 @@ EMAILS_RAW_STRING = (
     r"[a-zA-Z\d._\+\-'`!%#$&*/=\?\^\{\}\|~\\]+@[a-z\d-]+\.?[a-z\d-]+\.[a-z]{2,4}"
 )
 
-EMAIL_RE = re.compile(r"^{}$".format(EMAILS_RAW_STRING))
+EMAIL_RE = re.compile(rf"^{EMAILS_RAW_STRING}$")
 
-EMAILS_RE = re.compile(r"({})".format(EMAILS_RAW_STRING))
+EMAILS_RE = re.compile(rf"({EMAILS_RAW_STRING})")
 
 CAMEL_CASE_TEST_RE = re.compile(r"^[a-zA-Z]*([a-z]+[A-Z]+|[A-Z]+[a-z]+)[a-zA-Z\d]*$")
 
@@ -165,7 +165,7 @@ NO_LETTERS_OR_NUMBERS_RE = re.compile(r"[^\w\d]+|_+", re.IGNORECASE | re.UNICODE
 
 MARGIN_RE = re.compile(r"^[^\S\r\n]+")
 
-ESCAPE_SEQUENCE_RE = re.compile(r"\[[^A-Za-z]*[A-Za-z]")
+ESCAPE_SEQUENCE_RE = re.compile(r"\x1B\[[^A-Za-z]*[A-Za-z]")
 
 NUM_SUFFIXES = {
     "Pb": (1024**5),
@@ -262,7 +262,7 @@ def is_none_or_empty(in_str: Optional[str]) -> bool:
     return in_str is None or len(in_str.strip()) == 0
 
 
-def is_string(obj: Any) -> bool:
+def is_string(in_str: Any) -> bool:
     """
     Args:
         in_str: the object to test
@@ -281,7 +281,7 @@ def is_string(obj: Any) -> bool:
     >>> is_string([1, 2, 3])
     False
     """
-    return isinstance(obj, str)
+    return isinstance(in_str, str)
 
 
 def is_empty_string(in_str: Any) -> bool:
@@ -568,19 +568,19 @@ def number_string_to_integer(in_str: str) -> int:
     ...
     ValueError: Unknown word: xyzzy
     """
-    if type(in_str) == int:
+    if isinstance(in_str, int):
         return int(in_str)
 
     current = result = 0
     in_str = in_str.replace('-', ' ')
-    for word in in_str.split():
-        if word not in NUM_WORDS:
-            if is_integer_number(word):
-                current += int(word)
+    for w in in_str.split():
+        if w not in NUM_WORDS:
+            if is_integer_number(w):
+                current += int(w)
                 continue
             else:
-                raise ValueError("Unknown word: " + word)
-        scale, increment = NUM_WORDS[word]
+                raise ValueError("Unknown word: " + w)
+        scale, increment = NUM_WORDS[w]
         current = current * scale + increment
         if scale > 100:
             result += current
@@ -683,14 +683,16 @@ def strip_escape_sequences(in_str: str) -> str:
         by a regular expression.  While this gets common ones,
         there may exist valid sequences that it doesn't match.
 
-    >>> strip_escape_sequences('[12;11;22mthis is a test!')
+    >>> strip_escape_sequences('\x1B[12;11;22mthis is a test!')
     'this is a test!'
     """
     in_str = ESCAPE_SEQUENCE_RE.sub("", in_str)
     return in_str
 
 
-def add_thousands_separator(in_str: str, *, separator_char=',', places=3) -> str:
+def add_thousands_separator(
+    in_str: str, *, separator_char: str = ',', places: int = 3
+) -> str:
     """
     Args:
         in_str: string or number to which to add thousands separator(s)
@@ -946,6 +948,7 @@ def is_snake_case(in_str: Any, *, separator: str = "_") -> bool:
     """
     Args:
         in_str: the string to test
+        separator: the snake case separator character to use
 
     Returns: True if the string is snake case and False otherwise.  A
         string is considered snake case when:
@@ -1003,6 +1006,7 @@ def is_uuid(in_str: Any, allow_hex: bool = False) -> bool:
     """
     Args:
         in_str: the string to test
+        allow_hex: should we allow hexidecimal digits in valid uuids?
 
     Returns:
         True if the in_str contains a valid UUID and False otherwise.
@@ -1221,6 +1225,7 @@ def is_slug(in_str: Any, separator: str = "-") -> bool:
     """
     Args:
         in_str: string to test
+        separator: the slug character to use
 
     Returns:
         True if in_str is a slug string and False otherwise.
@@ -1374,10 +1379,11 @@ def reverse(in_str: str) -> str:
     return in_str[::-1]
 
 
-def camel_case_to_snake_case(in_str, *, separator="_"):
+def camel_case_to_snake_case(in_str: str, *, separator: str = "_"):
     """
     Args:
         in_str: the camel case string to convert
+        separator: the snake case separator character to use
 
     Returns:
         A snake case string equivalent to the camel case input or the
@@ -1404,6 +1410,8 @@ def snake_case_to_camel_case(
     """
     Args:
         in_str: the snake case string to convert
+        upper_case_first: should we capitalize the first letter?
+        separator: the separator character to use
 
     Returns:
         A camel case string that is equivalent to the snake case string
@@ -1646,7 +1654,7 @@ def to_bool(in_str: str) -> bool:
     """
     if not is_string(in_str):
         raise ValueError(in_str)
-    return in_str.lower() in ("true", "1", "yes", "y", "t", "on")
+    return in_str.lower() in set(["true", "1", "yes", "y", "t", "on"])
 
 
 def to_date(in_str: str) -> Optional[datetime.date]:
@@ -1710,7 +1718,7 @@ def extract_date(in_str: Any) -> Optional[datetime.datetime]:
     ):
         try:
             expr = " ".join(ngram)
-            logger.debug(f"Trying {expr}")
+            logger.debug("Trying %s", expr)
             if d.parse(expr):
                 return d.get_datetime()
         except du.ParseException:  # type: ignore
@@ -1894,8 +1902,8 @@ def _sprintf(*args, **kwargs) -> str:
         sep = " "
     if end is None:
         end = "\n"
-    for i, arg in enumerate(args):
-        if i:
+    for n, arg in enumerate(args):
+        if n:
             ret += sep
         if isinstance(arg, str):
             ret += arg
@@ -2159,7 +2167,7 @@ def make_contractions(txt: str) -> str:
             for second in second_list:
                 # Disallow there're/where're.  They're valid English
                 # but sound weird.
-                if (first in ('there', 'where')) and second == 'a(re)':
+                if (first in set(['there', 'where'])) and second == 'a(re)':
                     continue
 
                 pattern = fr'\b({first})\s+{second}\b'
@@ -2228,8 +2236,8 @@ def ngrams(txt: str, n: int):
     words = txt.split()
     for ngram in ngrams_presplit(words, n):
         ret = ''
-        for word in ngram:
-            ret += f'{word} '
+        for w in ngram:
+            ret += f'{w} '
         yield ret.strip()
 
 
@@ -2262,7 +2270,7 @@ def trigrams(txt: str):
 
 
 def shuffle_columns_into_list(
-    input_lines: Sequence[str], column_specs: Iterable[Iterable[int]], delim=''
+    input_lines: Sequence[str], column_specs: Iterable[Iterable[int]], delim: str = ''
 ) -> Iterable[str]:
     """Helper to shuffle / parse columnar data and return the results as a
     list.
@@ -2307,7 +2315,7 @@ def shuffle_columns_into_list(
 def shuffle_columns_into_dict(
     input_lines: Sequence[str],
     column_specs: Iterable[Tuple[str, Iterable[int]]],
-    delim='',
+    delim: str = '',
 ) -> Dict[str, str]:
     """Helper to shuffle / parse columnar data and return the results
     as a dict.
@@ -2389,10 +2397,14 @@ def to_ascii(txt: str):
     raise Exception('to_ascii works with strings and bytes')
 
 
-def to_base64(txt: str, *, encoding='utf-8', errors='surrogatepass') -> bytes:
+def to_base64(
+    txt: str, *, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+) -> bytes:
     """
     Args:
         txt: the input data to encode
+        encoding: the encoding to use during conversion
+        errors: how to handle encoding errors
 
     Returns:
         txt encoded with a 64-chracter alphabet.  Similar to and compatible
@@ -2437,10 +2449,14 @@ def is_base64(txt: str) -> bool:
     return True
 
 
-def from_base64(b64: bytes, encoding='utf-8', errors='surrogatepass') -> str:
+def from_base64(
+    b64: bytes, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+) -> str:
     """
     Args:
         b64: bytestring of 64-bit encoded data to decode / convert.
+        encoding: the encoding to use during conversion
+        errors: how to handle encoding errors
 
     Returns:
         The decoded form of b64 as a normal python string.  Similar to
@@ -2474,7 +2490,7 @@ def chunk(txt: str, chunk_size: int):
         yield txt[x : x + chunk_size]
 
 
-def to_bitstring(txt: str, *, delimiter='') -> str:
+def to_bitstring(txt: str, *, delimiter: str = '') -> str:
     """
     Args:
         txt: the string to convert into a bitstring
@@ -2525,11 +2541,14 @@ def is_bitstring(txt: str) -> bool:
     return is_binary_integer_number(f'0b{txt}')
 
 
-def from_bitstring(bits: str, encoding='utf-8', errors='surrogatepass') -> str:
+def from_bitstring(
+    bits: str, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+) -> str:
     """
     Args:
         bits: the bitstring to convert back into a python string
-        encoding: the encoding to use
+        encoding: the encoding to use during conversion
+        errors: how to handle encoding errors
 
     Returns:
         The regular python string represented by bits.  Note that this
