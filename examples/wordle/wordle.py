@@ -655,11 +655,6 @@ class AutoPlayer(object):
                 if letter in word_state.letters_excluded:
                     return False
 
-                # If we already tried this letter in this position and
-                # it wasn't green, this isn't a possible solution.
-                if n in word_state.letters_at_unknown_positions[letter]:
-                    return False
-
                 # If we know a letter is in a position, solution words
                 # must have that letter in that position.
                 if (
@@ -667,6 +662,12 @@ class AutoPlayer(object):
                     and letter != word_state.letters_at_known_positions[n]
                 ):
                     return False
+
+                # If we already tried this letter in this position and
+                # it wasn't green, this isn't a possible solution.
+                if n in word_state.letters_at_unknown_positions[letter]:
+                    return False
+
                 letters_seen[letter] += 1
 
             # Finally, the word must include all letters presently
