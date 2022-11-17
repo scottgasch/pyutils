@@ -27,7 +27,7 @@ A Histogram helper class.  Creates outputs like this::
     [20..21): ▏                                                     ( 0.16% n=1)
     --------------------------------------------------------------------------------
      [4..21):                                                         pop(Σn)=625
-                                                                      mean(x̄)=12.000
+                                                                      mean(μ)=12.000
                                                                   median(p50)=12.000
                                                                      mode(Mo)=12.000
                                                                      stdev(σ)=0.113
@@ -183,7 +183,7 @@ class SimpleHistogram(Generic[T]):
                     details.lowest_start = start
                 if details.highest_end is None or end > details.highest_end:
                     details.highest_end = end
-                label = f'[{label_formatter}..{label_formatter}): ' % (start, end)
+                label = f"[{label_formatter}..{label_formatter}): " % (start, end)
                 label_width = len(label)
                 if (
                     details.max_label_width is None
@@ -192,7 +192,7 @@ class SimpleHistogram(Generic[T]):
                     details.max_label_width = label_width
         return details
 
-    def __repr__(self, *, width: int = 80, label_formatter: str = '%d') -> str:
+    def __repr__(self, *, width: int = 80, label_formatter: str = "%d") -> str:
         """Returns a pretty (text) representation of the histogram and
         some vital stats about the population in it (min, max, mean,
         median, mode, stdev, etc...)
@@ -207,7 +207,7 @@ class SimpleHistogram(Generic[T]):
         assert details.lowest_start is not None
         assert details.highest_end is not None
         assert details.max_population is not None
-        sigma_label = f'[{label_formatter}..{label_formatter}): ' % (
+        sigma_label = f"[{label_formatter}..{label_formatter}): " % (
             details.lowest_start,
             details.highest_end,
         )
@@ -218,7 +218,7 @@ class SimpleHistogram(Generic[T]):
         for (start, end), pop in sorted(self.buckets.items(), key=lambda x: x[0]):
             if start < details.lowest_start:
                 continue
-            label = f'[{label_formatter}..{label_formatter}): ' % (start, end)
+            label = f"[{label_formatter}..{label_formatter}): " % (start, end)
             bar = bar_graph_string(
                 pop,
                 details.max_population,
@@ -232,17 +232,17 @@ class SimpleHistogram(Generic[T]):
             txt += f"({pop/self.count*100.0:5.2f}% n={pop})\n"
             if start == details.last_bucket_start:
                 break
-        txt += '-' * width + '\n'
+        txt += "-" * width + "\n"
         txt += sigma_label.rjust(details.max_label_width)
-        txt += ' ' * (bar_width - 2)
-        txt += f'     pop(Σn)={self.count}\n'
-        txt += ' ' * (bar_width + details.max_label_width - 2)
-        txt += f'     mean(x̄)={self.stats.get_mean():.3f}\n'
-        txt += ' ' * (bar_width + details.max_label_width - 2)
-        txt += f' median(p50)={self.stats.get_median():.3f}\n'
-        txt += ' ' * (bar_width + details.max_label_width - 2)
-        txt += f'    mode(Mo)={self.stats.get_mode()[0]:.3f}\n'
-        txt += ' ' * (bar_width + details.max_label_width - 2)
-        txt += f'    stdev(σ)={self.stats.get_stdev():.3f}\n'
-        txt += '\n'
+        txt += " " * (bar_width - 2)
+        txt += f"     pop(Σn)={self.count}\n"
+        txt += " " * (bar_width + details.max_label_width - 2)
+        txt += f"     mean(μ)={self.stats.get_mean():.3f}\n"
+        txt += " " * (bar_width + details.max_label_width - 2)
+        txt += f" median(p50)={self.stats.get_median():.3f}\n"
+        txt += " " * (bar_width + details.max_label_width - 2)
+        txt += f"    mode(Mo)={self.stats.get_mode()[0]:.3f}\n"
+        txt += " " * (bar_width + details.max_label_width - 2)
+        txt += f"    stdev(σ)={self.stats.get_stdev():.3f}\n"
+        txt += "\n"
         return txt
