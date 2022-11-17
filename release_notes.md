@@ -184,3 +184,29 @@ This version -------- 0.0.1b6
 Previous version ---- 0.0.1b5
 Total commits -------       17
 ```
+# 🎁 Release notes (`0.0.1b7`)
+
+## Changes
+- Fix stdev.
+- Use the right greek letter for the mean of the population, not the sample.
+- Change path of remote_worker so the macbook can work too.
+- This is slightly faster...
+- Messing with config files for git presubmit check while cleaing up string_utils lint errors.
+- More tweaking of cut_version.sh.
+- Adds MD5 checksums to wheels.
+- Doc updates to argparse_utils.py.
+- More changes to cut_version.sh.
+- Update cut_version.sh.
+- Modify cut_version to check in wheel produced.
+- Update docs in parallelize again.
+- Add binary wheels.
+- Update docs.
+- Update docs around development
+- Cut version 0.0.1b6
+
+## Metadata
+```
+This version -------- 0.0.1b7
+Previous version ---- 0.0.1b6
+Total commits -------       16
+```

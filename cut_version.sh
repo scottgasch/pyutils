@@ -84,17 +84,17 @@ echo "Building wheel..."
 python -m build
 
 echo "Checking in wheel package under dist/"
-WHEEL=dist/pyutils-latest-py3-none-any.whl
+cd dist
+WHEEL=pyutils-${VERSION}-py3-none-any.whl
 if [ ! -f ${WHEEL} ]; then
     echo "Can't find ${WHEEL}?!"
     exit 1
 fi
-LINK=dist/pyutils-latest-py3-none-any.whl
-git rm ${LINK}
-ln -s ${WHEEL} dist/pyutils-latest-py3-none-any.whl
+LINK=pyutils-latest-py3-none-any.whl
+git rm -f ${LINK}
+ln -s ${WHEEL} ${LINK}
 git add ${WHEEL}
 git add ${LINK}
-cd dist/
 for FILE in *.whl; do
     md5 ${FILE} > ${FILE}.md5
 done
