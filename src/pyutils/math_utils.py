@@ -40,7 +40,7 @@ class NumericPopulation(object):
     >>> pop.get_mean()
     5.2
     >>> round(pop.get_stdev(), 1)
-    1.4
+    3.1
     >>> pop.get_percentile(20)
     3
     >>> pop.get_percentile(60)
@@ -138,7 +138,7 @@ class NumericPopulation(object):
         for n in self.highers:
             variance += (n - mean) ** 2
         count = len(self.lowers) + len(self.highers)
-        return math.sqrt(variance) / count
+        return math.sqrt(variance / count)
 
     def _create_sorted_copy_if_needed(self, count: int):
         """Internal helper."""
@@ -314,7 +314,7 @@ def is_prime(n: int) -> bool:
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
