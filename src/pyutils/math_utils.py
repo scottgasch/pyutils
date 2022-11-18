@@ -218,6 +218,7 @@ def truncate_float(n: float, decimals: int = 2):
 
     Args:
         n: the float to truncate
+        decimals: how many decimal places are desired?
 
     >>> truncate_float(3.1415927, 3)
     3.141
