@@ -17,8 +17,8 @@ class NumericPopulation(object):
     """This object *store* a numerical population in a way that enables relatively
     fast addition of new numbers (:math:`O(2log_2 n)`) and instant access to the
     median value in the population (:math:`O(1)`).  It also provides other population
-    summary statistics such as the :meth:`mode`, :meth:`get_percentile` and
-    :meth:`stdev`.
+    summary statistics such as the :meth:`get_mode`, :meth:`get_percentile` and
+    :meth:`get_stdev`.
 
     .. note::
 
