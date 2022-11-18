@@ -13,8 +13,8 @@ A :class:`Persistent` is just a class with a :meth:`Persistent.load` and
 :class:`JsonFileBasedPersistent` and :class:`PicklingFileBasedPersistent`
 define these methods to, save data in a particular format.  The details
 of where and whether to save are left to your code to decide by implementing
-interface methods like :meth:`Persistent.get_filename` and
-:meth:`Persistent.should_we_load_data`.
+interface methods like :meth:`FileBasedPersistent.get_filename` and
+:meth:`FileBasedPersistent.should_we_load_data`.
 
 This module inculdes some helpers to make deciding whether to load persisted
 state easier such as :meth:`was_file_written_today` and
@@ -169,33 +169,33 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
     def load(cls) -> Optional[Any]:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
-            logger.debug('Attempting to load state from %s', filename)
+            logger.debug("Attempting to load state from %s", filename)
             assert file_utils.file_is_readable(filename)
 
             import pickle
 
             try:
-                with open(filename, 'rb') as rf:
+                with open(filename, "rb") as rf:
                     data = pickle.load(rf)
                     return cls(data)
 
             except Exception as e:
-                raise Exception(f'Failed to load {filename}.') from e
+                raise Exception(f"Failed to load {filename}.") from e
         return None
 
     @overrides
     def save(self) -> bool:
         filename = self.get_filename()
         if self.should_we_save_data(filename):
-            logger.debug('Trying to save state in %s', filename)
+            logger.debug("Trying to save state in %s", filename)
             try:
                 import pickle
 
-                with open(filename, 'wb') as wf:
+                with open(filename, "wb") as wf:
                     pickle.dump(self.get_persistent_data(), wf, pickle.HIGHEST_PROTOCOL)
                 return True
             except Exception as e:
-                raise Exception(f'Failed to save to {filename}.') from e
+                raise Exception(f"Failed to save to {filename}.") from e
         return False
 
 
@@ -246,43 +246,43 @@ class JsonFileBasedPersistent(FileBasedPersistent):
     def load(cls) -> Any:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
-            logger.debug('Trying to load state from %s', filename)
+            logger.debug("Trying to load state from %s", filename)
             import json
 
             try:
-                with open(filename, 'r') as rf:
+                with open(filename, "r") as rf:
                     lines = rf.readlines()
 
                 # This is probably bad... but I like comments
                 # in config files and JSON doesn't support them.  So
                 # pre-process the buffer to remove comments thus
                 # allowing people to add them.
-                buf = ''
+                buf = ""
                 for line in lines:
-                    line = re.sub(r'#.*$', '', line)
+                    line = re.sub(r"#.*$", "", line)
                     buf += line
                 json_dict = json.loads(buf)
                 return cls(json_dict)
 
             except Exception as e:
                 logger.exception(e)
-                raise Exception(f'Failed to load {filename}.') from e
+                raise Exception(f"Failed to load {filename}.") from e
         return None
 
     @overrides
     def save(self) -> bool:
         filename = self.get_filename()
         if self.should_we_save_data(filename):
-            logger.debug('Trying to save state in %s', filename)
+            logger.debug("Trying to save state in %s", filename)
             try:
                 import json
 
                 json_blob = json.dumps(self.get_persistent_data())
-                with open(filename, 'w') as wf:
+                with open(filename, "w") as wf:
                     wf.writelines(json_blob)
                 return True
             except Exception as e:
-                raise Exception(f'Failed to save to {filename}.') from e
+                raise Exception(f"Failed to save to {filename}.") from e
         return False
 
 
@@ -422,23 +422,23 @@ class persistent_autoloaded_singleton(object):
             # memory.
             if self.instance is not None:
                 logger.debug(
-                    'Returning already instantiated singleton instance of %s.',
+                    "Returning already instantiated singleton instance of %s.",
                     cls.__name__,
                 )
                 return self.instance
 
             # Otherwise, try to load it from persisted state.
             was_loaded = False
-            logger.debug('Attempting to load %s from persisted state.', cls.__name__)
+            logger.debug("Attempting to load %s from persisted state.", cls.__name__)
             self.instance = cls.load()
             if not self.instance:
-                msg = 'Loading from cache failed.'
+                msg = "Loading from cache failed."
                 logger.warning(msg)
-                logger.debug('Attempting to instantiate %s directly.', cls.__name__)
+                logger.debug("Attempting to instantiate %s directly.", cls.__name__)
                 self.instance = cls(*args, **kwargs)
             else:
                 logger.debug(
-                    'Class %s was loaded from persisted state successfully.',
+                    "Class %s was loaded from persisted state successfully.",
                     cls.__name__,
                 )
                 was_loaded = True
@@ -450,7 +450,7 @@ class persistent_autoloaded_singleton(object):
                 and self.persist_at_shutdown is PersistAtShutdown.IF_NOT_LOADED
             ):
                 logger.debug(
-                    'Scheduling a deferred called to save at process shutdown time.'
+                    "Scheduling a deferred called to save at process shutdown time."
                 )
                 atexit.register(self.instance.save)
             return self.instance
@@ -458,7 +458,7 @@ class persistent_autoloaded_singleton(object):
         return _load
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
