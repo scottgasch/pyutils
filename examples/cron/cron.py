@@ -90,7 +90,7 @@ def run_command(timeout: Optional[int], timestamp_file: Optional[str]) -> int:
         logger.debug(
             f"____ (↑↑↑ subprocess finished in {t():.2f}s, exit value was {ret} ↑↑↑) ____"
         )
-        if timestamp_file is not None and os.path.exists(timestamp_file):
+        if ret == 0 and timestamp_file is not None and os.path.exists(timestamp_file):
             logger.debug("Touching %s", timestamp_file)
             file_utils.touch_file(timestamp_file)
         return ret
