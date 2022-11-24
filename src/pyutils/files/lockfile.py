@@ -176,8 +176,12 @@ class LockFile(contextlib.AbstractContextManager):
     def __enter__(self):
         if self.acquire_with_retries():
             return self
-        contents = self._get_lockfile_contents()
-        msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} ({contents.commandline}).  Giving up."
+        raw_contents = self._read_lockfile()
+        if raw_contents:
+            contents = LockFileContents(**json.loads(raw_contents))
+            msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} ({contents.commandline}).  Giving up."
+        else:
+            msg = "Couldn't acquire lockfile; giving up."
         logger.warning(msg)
         raise LockFileException(msg)
 
@@ -219,35 +223,40 @@ class LockFile(contextlib.AbstractContextManager):
         )
         return json.dumps(contents.__dict__)
 
-    def _detect_stale_lockfile(self) -> None:
+    def _read_lockfile(self) -> Optional[str]:
         try:
             with open(self.lockfile, "r") as rf:
                 lines = rf.readlines()
-                if len(lines) == 1:
-                    line = lines[0]
-                    line_dict = json.loads(line)
-                    contents = LockFileContents(**line_dict)
-                    logger.debug('Blocking lock contents="%s"', contents)
+                return lines[0]
+        except Exception as e:
+            logger.exception(e)
+        return None
 
-                    # Does the PID exist still?
-                    try:
-                        os.kill(contents.pid, 0)
-                    except OSError:
-                        logger.warning(
-                            "Lockfile %s's pid (%d) is stale; force acquiring...",
-                            self.lockfile,
-                            contents.pid,
-                        )
-                        self.release()
+    def _detect_stale_lockfile(self) -> None:
+        raw_contents = self._read_lockfile()
+        if not raw_contents:
+            return
 
-                    # Has the lock expiration expired?
-                    if contents.expiration_timestamp is not None:
-                        now = datetime.datetime.now().timestamp()
-                        if now > contents.expiration_timestamp:
-                            logger.warning(
-                                "Lockfile %s's expiration time has passed; force acquiring",
-                                self.lockfile,
-                            )
-                            self.release()
-        except Exception:
-            pass  # If the lockfile doesn't exist or disappears, good.
+        contents = LockFileContents(**json.loads(raw_contents))
+        logger.debug('Blocking lock contents="%s"', contents)
+
+        # Does the PID exist still?
+        try:
+            os.kill(contents.pid, 0)
+        except OSError:
+            logger.warning(
+                "Lockfile %s's pid (%d) is stale; force acquiring...",
+                self.lockfile,
+                contents.pid,
+            )
+            self.release()
+
+        # Has the lock expiration expired?
+        if contents.expiration_timestamp is not None:
+            now = datetime.datetime.now().timestamp()
+            if now > contents.expiration_timestamp:
+                logger.warning(
+                    "Lockfile %s's expiration time has passed; force acquiring",
+                    self.lockfile,
+                )
+                self.release()
