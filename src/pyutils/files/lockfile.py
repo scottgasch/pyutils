@@ -176,7 +176,8 @@ class LockFile(contextlib.AbstractContextManager):
     def __enter__(self):
         if self.acquire_with_retries():
             return self
-        msg = f"Couldn't acquire {self.lockfile}; giving up."
+        contents = self._get_lockfile_contents()
+        msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} ({contents.commandline}).  Giving up."
         logger.warning(msg)
         raise LockFileException(msg)
 
