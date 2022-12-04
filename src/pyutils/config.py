@@ -177,7 +177,7 @@ class OptionalRawFormatter(argparse.HelpFormatter):
     """
 
     def _split_lines(self, text, width):
-        if text.startswith('RAW|'):
+        if text.startswith("RAW|"):
             return text[4:].splitlines()
         return argparse.HelpFormatter._split_lines(self, text, width)
 
@@ -188,56 +188,56 @@ ARGS = argparse.ArgumentParser(
     description=None,
     formatter_class=OptionalRawFormatter,
     fromfile_prefix_chars="@",
-    epilog=f'{PROGRAM_NAME} uses config.py ({__file__}) for global, cross-module configuration setup and parsing.',
+    epilog=f"{PROGRAM_NAME} uses config.py ({__file__}) for global, cross-module configuration setup and parsing.",
     # I don't fully understand why but when loaded by sphinx sometimes
     # the same module is loaded many times causing any arguments it
     # registers via module-level code to be redefined.  Work around
     # this iff the program is 'sphinx-build'
-    conflict_handler='resolve' if PROGRAM_NAME == 'sphinx-build' else 'error',
+    conflict_handler="resolve" if PROGRAM_NAME == "sphinx-build" else "error",
 )
 
 # Arguments specific to config.py.  Other users should get their own group by
 # invoking config.add_commandline_args.
 GROUP = ARGS.add_argument_group(
-    f'Global Config ({__file__})',
-    'Args that control the global config itself; how meta!',
+    f"Global Config ({__file__})",
+    "Args that control the global config itself; how meta!",
 )
 GROUP.add_argument(
-    '--config_loadfile',
-    metavar='FILENAME',
+    "--config_loadfile",
+    metavar="FILENAME",
     default=None,
     help='Config file (populated via --config_savefile) from which to read args in lieu or in addition to those passed via the commandline.  Note that if the given path begins with "zk:" then it is interpreted as a zookeeper path instead of as a filesystem path.  When loading config from zookeeper, any argument with the string "dynamic" in the name (e.g. --module_dynamic_url) may be modified at runtime by changes made to zookeeper (using --config_savefile=zk:path).  You should therefore either write your code to handle dynamic argument changes or avoid naming arguments "dynamic" if you use zookeeper configuration paths.',
 )
 GROUP.add_argument(
-    '--config_dump',
+    "--config_dump",
     default=False,
-    action='store_true',
-    help='Display the global configuration (possibly derived from multiple sources) on STDERR at program startup time.',
+    action="store_true",
+    help="Display the global configuration (possibly derived from multiple sources) on STDERR at program startup time.",
 )
 GROUP.add_argument(
-    '--config_savefile',
+    "--config_savefile",
     type=str,
-    metavar='FILENAME',
+    metavar="FILENAME",
     default=None,
     help='Populate a config file (compatible with --config_loadfile) and write it at the given path for later [re]use.  If the given path begins with "zk:" it is interpreted as a zookeeper path instead of a local filesystem path.  When updating zookeeper-based configs, all running programs that read their configuration from zookeeper (via --config_loadfile=zk:<path>) will see the update.  Those that also enabled --config_allow_dynamic_updates will change the value of any flags with the string "dynamic" in their names (e.g. --my_dynamic_flag or --dynamic_database_connect_string).',
 )
 GROUP.add_argument(
-    '--config_allow_dynamic_updates',
+    "--config_allow_dynamic_updates",
     default=False,
-    action='store_true',
+    action="store_true",
     help='If enabled, allow config flags with the string "dynamic" in their names to change at runtime when a new Zookeeper based configuration is created.  See the --config_savefile help message for more information about this option.',
 )
 GROUP.add_argument(
-    '--config_rejects_unrecognized_arguments',
+    "--config_rejects_unrecognized_arguments",
     default=False,
-    action='store_true',
-    help='If present, config will raise an exception if it doesn\'t recognize an argument.  The default behavior is to ignore unknown arguments so as to allow interoperability with programs that want to use their own argparse calls to parse their own, separate commandline args.',
+    action="store_true",
+    help="If present, config will raise an exception if it doesn't recognize an argument.  The default behavior is to ignore unknown arguments so as to allow interoperability with programs that want to use their own argparse calls to parse their own, separate commandline args.",
 )
 GROUP.add_argument(
-    '--config_exit_after_parse',
+    "--config_exit_after_parse",
     default=False,
-    action='store_true',
-    help='If present, halt the program after parsing config.  Useful, for example, to write a --config_savefile and then terminate.',
+    action="store_true",
+    help="If present, halt the program after parsing config.  Useful, for example, to write a --config_savefile and then terminate.",
 )
 
 
@@ -282,6 +282,9 @@ class Config:
 
         # Per known zk file, what is the max version we have seen?
         self.max_version: Dict[str, int] = {}
+
+        # The argv after parsing known args.
+        self.parsed_argv: Optional[List[str]] = None
 
     def __getitem__(self, key: str) -> Optional[Any]:
         """If someone uses []'s on us, pass it onto self.config."""
@@ -415,14 +418,14 @@ class Config:
         logger = logging.getLogger(__name__)
         try:
             contents, meta = self.zk.get(event.path, watch=self._process_dynamic_args)
-            logger.debug('Update for %s at version=%d.', event.path, meta.version)
+            logger.debug("Update for %s at version=%d.", event.path, meta.version)
             logger.debug(
-                'Max known version for %s is %d.',
+                "Max known version for %s is %d.",
                 event.path,
                 self.max_version.get(event.path, 0),
             )
         except Exception as e:
-            raise Exception('Error reading data from zookeeper') from e
+            raise Exception("Error reading data from zookeeper") from e
 
         # Make sure we process changes in order.
         if meta.version > self.max_version.get(event.path, 0):
@@ -435,7 +438,7 @@ class Config:
                 # 'dynamic' if we are going to allow them to change at
                 # runtime as a signal that the programmer is expecting
                 # this.
-                if 'dynamic' in arg and config.config['config_allow_dynamic_updates']:
+                if "dynamic" in arg and config.config["config_allow_dynamic_updates"]:
                     temp_argv.append(arg)
                     logger.info("Updating %s from zookeeper async config change.", arg)
 
@@ -449,9 +452,9 @@ class Config:
     def _read_config_from_zookeeper(self, zkpath: str) -> Optional[str]:
         from pyutils import zookeeper
 
-        if not zkpath.startswith('/config/'):
-            zkpath = '/config/' + zkpath
-            zkpath = re.sub(r'//+', '/', zkpath)
+        if not zkpath.startswith("/config/"):
+            zkpath = "/config/" + zkpath
+            zkpath = re.sub(r"//+", "/", zkpath)
 
         try:
             if self.zk is None:
@@ -465,22 +468,22 @@ class Config:
             contents, meta = self.zk.get(zkpath, watch=self._process_dynamic_args)
             contents = contents.decode()
             self.saved_messages.append(
-                f'Setting {zkpath}\'s max_version to {meta.version}'
+                f"Setting {zkpath}'s max_version to {meta.version}"
             )
             self.max_version[zkpath] = meta.version
-            self.saved_messages.append(f'Read config from zookeeper {zkpath}.')
+            self.saved_messages.append(f"Read config from zookeeper {zkpath}.")
             return contents
         except Exception as e:
             self.saved_messages.append(
-                f'Failed to read {zkpath} from zookeeper: exception {e}'
+                f"Failed to read {zkpath} from zookeeper: exception {e}"
             )
             return None
 
     def _read_config_from_disk(self, filepath: str) -> Optional[str]:
         if not os.path.exists(filepath):
             return None
-        with open(filepath, 'r') as rf:
-            self.saved_messages.append(f'Read config from disk file {filepath}')
+        with open(filepath, "r") as rf:
+            self.saved_messages.append(f"Read config from disk file {filepath}")
             return rf.read()
 
     def _augment_sys_argv_from_loadfile(self):
@@ -492,8 +495,8 @@ class Config:
         saw_other_args = False
         grab_next_arg = False
         for arg in sys.argv[1:]:
-            if 'config_loadfile' in arg:
-                pieces = arg.split('=')
+            if "config_loadfile" in arg:
+                pieces = arg.split("=")
                 if len(pieces) > 1:
                     loadfile = pieces[1]
                 else:
@@ -508,29 +511,29 @@ class Config:
 
         # Get contents from wherever.
         contents = None
-        if loadfile[:3] == 'zk:':
+        if loadfile[:3] == "zk:":
             contents = self._read_config_from_zookeeper(loadfile[3:])
         else:
             contents = self._read_config_from_disk(loadfile)
 
         if contents:
             if saw_other_args:
-                msg = f'Augmenting commandline arguments with those from {loadfile}.'
+                msg = f"Augmenting commandline arguments with those from {loadfile}."
             else:
-                msg = f'Reading commandline arguments from {loadfile}.'
+                msg = f"Reading commandline arguments from {loadfile}."
             print(msg, file=sys.stderr)
             self.saved_messages.append(msg)
         else:
-            msg = f'Failed to read/parse contents from {loadfile}'
+            msg = f"Failed to read/parse contents from {loadfile}"
             print(msg, file=sys.stderr)
             self.saved_messages.append(msg)
             return
 
         # Augment args with new ones.
         newargs = [
-            arg.strip('\n')
-            for arg in contents.split('\n')
-            if 'config_savefile' not in arg
+            arg.strip("\n")
+            for arg in contents.split("\n")
+            if "config_savefile" not in arg
         ]
         sys.argv += newargs
 
@@ -541,13 +544,13 @@ class Config:
         print()
 
     def _write_config_to_disk(self, data: str, filepath: str) -> None:
-        with open(filepath, 'w') as wf:
+        with open(filepath, "w") as wf:
             wf.write(data)
 
     def _write_config_to_zookeeper(self, data: str, zkpath: str) -> None:
-        if not zkpath.startswith('/config/'):
-            zkpath = '/config/' + zkpath
-            zkpath = re.sub(r'//+', '/', zkpath)
+        if not zkpath.startswith("/config/"):
+            zkpath = "/config/" + zkpath
+            zkpath = re.sub(r"//+", "/", zkpath)
         try:
             if not self.zk:
                 from pyutils import zookeeper
@@ -556,23 +559,23 @@ class Config:
             encoded_data = data.encode()
             if len(encoded_data) > 1024 * 1024:
                 raise Exception(
-                    f'Saved args are too large ({len(encoded_data)} bytes exceeds zk limit)'
+                    f"Saved args are too large ({len(encoded_data)} bytes exceeds zk limit)"
                 )
             if not self.zk.exists(zkpath):
                 self.zk.create(zkpath, encoded_data)
                 self.saved_messages.append(
-                    f'Just created {zkpath}; setting its max_version to 0'
+                    f"Just created {zkpath}; setting its max_version to 0"
                 )
                 self.max_version[zkpath] = 0
             else:
                 meta = self.zk.set(zkpath, encoded_data)
                 self.saved_messages.append(
-                    f'Setting {zkpath}\'s max_version to {meta.version}'
+                    f"Setting {zkpath}'s max_version to {meta.version}"
                 )
                 self.max_version[zkpath] = meta.version
         except Exception as e:
-            raise Exception(f'Failed to create zookeeper path {zkpath}') from e
-        self.saved_messages.append(f'Saved config to zookeeper in {zkpath}')
+            raise Exception(f"Failed to create zookeeper path {zkpath}") from e
+        self.saved_messages.append(f"Saved config to zookeeper in {zkpath}")
 
     def parse(self, entry_module: Optional[str]) -> Dict[str, Any]:
         """Main program should invoke this early in main().  Note that the
@@ -597,7 +600,7 @@ class Config:
         # when the user passes -h or --help, it will be visible on the
         # screen w/o scrolling.  This just makes for a nicer --help screen.
         for arg in sys.argv:
-            if arg in ('--help', '-h'):
+            if arg in ("--help", "-h"):
                 if entry_module is not None:
                     entry_module = os.path.basename(entry_module)
                 ARGS._action_groups = Config._reorder_arg_action_groups_before_help(
@@ -620,33 +623,34 @@ class Config:
         # --config_rejects_unrecognized_arguments was passed, die
         # if we have unknown arguments.
         if len(unknown) > 0:
-            if config['config_rejects_unrecognized_arguments']:
+            if config["config_rejects_unrecognized_arguments"]:
                 raise Exception(
-                    f'Encountered unrecognized config argument(s) {unknown} with --config_rejects_unrecognized_arguments enabled; halting.'
+                    f"Encountered unrecognized config argument(s) {unknown} with --config_rejects_unrecognized_arguments enabled; halting."
                 )
             self.saved_messages.append(
-                f'Config encountered unrecognized commandline arguments: {unknown}'
+                f"Config encountered unrecognized commandline arguments: {unknown}"
             )
         sys.argv = sys.argv[:1] + unknown
+        self.parsed_argv = sys.argv[:1] + unknown
 
         # Check for savefile and populate it if requested.
-        savefile = config['config_savefile']
+        savefile = config["config_savefile"]
         if savefile and len(savefile) > 0:
-            data = '\n'.join(ORIG_ARGV[1:])
-            if savefile[:3] == 'zk:':
+            data = "\n".join(ORIG_ARGV[1:])
+            if savefile[:3] == "zk:":
                 self._write_config_to_zookeeper(savefile[3:], data)
             else:
                 self._write_config_to_disk(savefile, data)
 
         # Also dump the config on stderr if requested.
-        if config['config_dump']:
+        if config["config_dump"]:
             self.dump_config()
 
         # Finally, maybe exit now if the user passed
         # --config_exit_after_parse indicating they want to just
         # update a config file and halt.
         self.config_parse_called = True
-        if config['config_exit_after_parse']:
+        if config["config_exit_after_parse"]:
             print("Exiting because of --config_exit_after_parse.")
             if self.zk:
                 self.zk.stop()
@@ -660,7 +664,7 @@ class Config:
     def late_logging(self):
         """Log messages saved earlier now that logging has been initialized."""
         logger = logging.getLogger(__name__)
-        logger.debug('Original commandline was: %s', ORIG_ARGV)
+        logger.debug("Original commandline was: %s", ORIG_ARGV)
         for _ in self.saved_messages:
             logger.debug(_)
 
@@ -725,6 +729,13 @@ def late_logging() -> None:
 def dump_config() -> None:
     """Print the current config to stdout."""
     CONFIG.dump_config()
+
+
+def argv_after_parse() -> Optional[List[str]]:
+    """Return the argv with all known arguments removed."""
+    if CONFIG.has_been_parsed:
+        return CONFIG.parsed_argv
+    return None
 
 
 def overwrite_argparse_epilog(msg: str) -> None:
