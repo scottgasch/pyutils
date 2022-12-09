@@ -26,6 +26,7 @@ import datetime
 import json
 import logging
 import os
+import platform
 import signal
 import sys
 import warnings
@@ -149,11 +150,14 @@ class LockFile(contextlib.AbstractContextManager):
 
     def _try_acquire_zk_lock(self) -> bool:
         assert self.expiration_timestamp
+        identifier = f"Lockfile for pid={os.getpid()} on machine {platform.node()}"
+        if self.override_command:
+            identifier += f" running {self.override_command}"
         self.zk_lease = zookeeper.RenewableReleasableLease(
             self.zk_client,
             self.lockfile,
             datetime.timedelta(seconds=self.expiration_timestamp),
-            f"Pyutils lockfile pid={os.getpid()}",
+            identifier,
         )
         return self.zk_lease
 
