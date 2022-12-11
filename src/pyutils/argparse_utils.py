@@ -370,6 +370,9 @@ def valid_datetime(txt: str) -> datetime.datetime:
     >>> valid_datetime('6/5/2021 3:01:02')
     datetime.datetime(2021, 6, 5, 3, 1, 2)
 
+    >>> valid_datetime('Sun Dec 11 11:50:00 PST 2022')
+    datetime.datetime(2022, 12, 11, 11, 50)
+
     .. note::
         Because this code uses an English date-expression parsing grammar
         internally, much more complex datetimes can be expressed in free form.
@@ -385,6 +388,13 @@ def valid_datetime(txt: str) -> datetime.datetime:
     dt = to_datetime(txt)
     if dt is not None:
         return dt
+
+    # Don't choke on the default format of unix date.
+    try:
+        return datetime.datetime.strptime(txt, "%a %b %d %H:%M:%S %Z %Y")
+    except Exception:
+        pass
+
     msg = f"Cannot parse argument as datetime: {txt}"
     logger.error(msg)
     raise argparse.ArgumentTypeError(msg)
