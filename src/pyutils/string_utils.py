@@ -1754,8 +1754,7 @@ def is_valid_date(in_str: str) -> bool:
         _ = d.parse(in_str)
         return True
     except dp.ParseException:  # type: ignore
-        msg = f'Unable to parse date {in_str}.'
-        logger.warning(msg)
+        pass
     return False
 
 
@@ -1783,8 +1782,7 @@ def to_datetime(in_str: str) -> Optional[datetime.datetime]:
         if isinstance(dt, datetime.datetime):
             return dt
     except Exception:
-        msg = f'Unable to parse datetime {in_str}.'
-        logger.warning(msg)
+        pass
     return None
 
 
@@ -1810,8 +1808,6 @@ def valid_datetime(in_str: str) -> bool:
     _ = to_datetime(in_str)
     if _ is not None:
         return True
-    msg = f'Unable to parse datetime {in_str}.'
-    logger.warning(msg)
     return False
 
 
