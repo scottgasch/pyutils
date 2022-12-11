@@ -1681,8 +1681,7 @@ def to_date(in_str: str) -> Optional[datetime.date]:
         d.parse(in_str)
         return d.get_date()
     except du.ParseException:  # type: ignore
-        msg = f'Unable to parse date {in_str}.'
-        logger.warning(msg)
+        pass
     return None
 
 
