@@ -73,8 +73,15 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
                 new_highest_candidates.append(parent.right.value.highest_in_subtree)
             parent.value.highest_in_subtree = max(new_highest_candidates)
 
-    def find_one_overlap(self, x: NumericRange):
+    def find_one_overlap(self, to_find: NumericRange) -> Optional[NumericRange]:
         """Identify and return one overlapping node from the tree.
+
+        Args:
+            to_find: the interval with which to find an overlap.
+
+        Returns:
+            An overlapping range from the tree or None if no such
+            ranges exist in the tree at present.
 
         >>> tree = AugmentedIntervalTree()
         >>> tree.insert(NumericRange(20, 24))
@@ -90,8 +97,9 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
         >>> tree.insert(NumericRange(21, 27))
         >>> tree.find_one_overlap(NumericRange(6, 7))
         1..30
+
         """
-        return self._find_one_overlap(self.root, x)
+        return self._find_one_overlap(self.root, to_find)
 
     def _find_one_overlap(
         self, root: bst.Node, x: NumericRange
@@ -110,8 +118,18 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
             return self._find_one_overlap(root.right, x)
         return None
 
-    def find_all_overlaps(self, x: NumericRange):
-        """Yields ranges previously added to the tree that x overlaps with.
+    def find_all_overlaps(
+        self, to_find: NumericRange
+    ) -> Generator[NumericRange, None, None]:
+        """Yields ranges previously added to the tree that overlaps with
+        to_find argument.
+
+        Args:
+            to_find: the interval with which to find all overlaps.
+
+        Returns:
+            A (potentially empty) sequence of all ranges in the tree
+            that overlap with the argument.
 
         >>> tree = AugmentedIntervalTree()
         >>> tree.insert(NumericRange(20, 24))
@@ -140,10 +158,11 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
         18..22
         16..28
         21..27
+
         """
         if self.root is None:
             return
-        yield from self._find_all_overlaps(self.root, x)
+        yield from self._find_all_overlaps(self.root, to_find)
 
     def _find_all_overlaps(
         self, root: bst.Node, x: NumericRange
