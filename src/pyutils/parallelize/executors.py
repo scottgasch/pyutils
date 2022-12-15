@@ -393,7 +393,7 @@ class BundleDetails:
     machine: Optional[str]
     """The remote machine running this bundle or None if none (yet)"""
 
-    hostname: str
+    controller: str
     """The controller machine"""
 
     code_file: str
@@ -588,7 +588,8 @@ class RemoteExecutorStatus:
         total_finished = len(self.finished_bundle_timings)
         total_in_flight = self.total_in_flight()
         ret = f'\n\n{underline()}Remote Executor Pool Status{reset()}: '
-        qall = None
+        qall_median = None
+        qall_p95 = None
         if len(self.finished_bundle_timings) > 1:
             qall_median = self.finished_bundle_timings.get_median()
             qall_p95 = self.finished_bundle_timings.get_percentile(95)
@@ -642,8 +643,8 @@ class RemoteExecutorStatus:
                             if details is not None:
                                 details.slower_than_local_p95 = False
 
-                    if qall is not None:
-                        if sec > qall[1]:
+                    if qall_p95 is not None:
+                        if sec > qall_p95:
                             ret += f'{bg("red")}>∀p95{reset()} '
                             if details is not None:
                                 details.slower_than_global_p95 = True
@@ -1067,7 +1068,7 @@ class RemoteExecutor(BaseExecutor):
 
         self.adjust_task_count(+1)
         uuid = bundle.uuid
-        hostname = bundle.hostname
+        controller = bundle.controller
         avoid_machine = override_avoid_machine
         is_original = bundle.src_bundle is None
 
@@ -1121,7 +1122,7 @@ class RemoteExecutor(BaseExecutor):
                     return None
 
         # Send input code / data to worker machine if it's not local.
-        if hostname not in machine:
+        if controller not in machine:
             try:
                 cmd = (
                     f'{SCP} {bundle.code_file} {username}@{machine}:{bundle.code_file}'
@@ -1274,7 +1275,7 @@ class RemoteExecutor(BaseExecutor):
             bundle.end_ts = time.time()
             if not was_cancelled:
                 assert bundle.machine is not None
-                if bundle.hostname not in bundle.machine:
+                if bundle.controller not in bundle.machine:
                     cmd = f'{SCP} {username}@{machine}:{result_file} {result_file} 2>/dev/null'
                     logger.info(
                         "%s: Fetching results back from %s@%s via %s",
@@ -1387,7 +1388,7 @@ class RemoteExecutor(BaseExecutor):
             worker=None,
             username=None,
             machine=None,
-            hostname=platform.node(),
+            controller=platform.node(),
             code_file=code_file,
             result_file=result_file,
             pid=0,
@@ -1421,7 +1422,7 @@ class RemoteExecutor(BaseExecutor):
             worker=None,
             username=None,
             machine=None,
-            hostname=src_bundle.hostname,
+            controller=src_bundle.controller,
             code_file=src_bundle.code_file,
             result_file=src_bundle.result_file,
             pid=0,
@@ -1485,11 +1486,10 @@ class RemoteExecutor(BaseExecutor):
                 raise RemoteExecutorException(
                     f'{bundle}: This bundle can\'t be completed despite several backups and retries',
                 )
-            else:
-                logger.error(
-                    '%s: At least it\'s only a backup; better luck with the others.',
-                    bundle,
-                )
+            logger.error(
+                '%s: At least it\'s only a backup; better luck with the others.',
+                bundle,
+            )
             return None
         else:
             msg = f'>>> Emergency rescheduling {bundle} because of unexected errors (wtf?!) <<<'
