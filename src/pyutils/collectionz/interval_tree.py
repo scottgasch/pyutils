@@ -43,15 +43,27 @@ class NumericRange(object):
         self.highest_in_subtree: Numeric = high
 
     def __lt__(self, other: NumericRange) -> bool:
+        """
+        Returns:
+            True is this range is less than (lower low) other, else False.
+        """
         return self.low < other.low
 
     @overrides
     def __eq__(self, other: object) -> bool:
+        """
+        Returns:
+            True if this is the same range as other, else False.
+        """
         if not isinstance(other, NumericRange):
             return False
         return self.low == other.low and self.high == other.high
 
     def overlaps_with(self, other: NumericRange) -> bool:
+        """
+        Returns:
+            True if this NumericRange overlaps with other, else False.
+        """
         return self.low <= other.high and self.high >= other.low
 
     def __repr__(self) -> str:
