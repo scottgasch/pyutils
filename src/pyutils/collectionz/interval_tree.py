@@ -22,6 +22,18 @@ class NumericRange(object):
     helper methods on it."""
 
     def __init__(self, low: Numeric, high: Numeric):
+        """Creates a NumericRange.
+
+        Args:
+            low: the lowest point in the range (inclusive).
+            high: the highest point in the range (inclusive).
+
+        .. warning::
+
+            If low > high this code swaps the parameters and keeps the range
+            rather than raising.
+
+        """
         if low > high:
             temp: Numeric = low
             low = high
