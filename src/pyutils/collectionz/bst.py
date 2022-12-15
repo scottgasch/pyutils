@@ -272,8 +272,7 @@ class BinarySearchTree(object):
         return False
 
     def _on_delete(self, parent: Optional[Node], deleted: Node) -> None:
-        """This is called just before deleted is deleted --
-        i.e. before the tree changes."""
+        """This is called just after deleted was deleted from the tree"""
         pass
 
     def _delete(self, value: Any, parent: Optional[Node], node: Node) -> bool:
@@ -282,37 +281,37 @@ class BinarySearchTree(object):
 
             # Deleting a leaf node
             if node.left is None and node.right is None:
-                self._on_delete(parent, node)
                 if parent is not None:
                     if parent.left == node:
                         parent.left = None
                     else:
                         assert parent.right == node
                         parent.right = None
+                self._on_delete(parent, node)
                 return True
 
             # Node only has a right.
             elif node.left is None:
                 assert node.right is not None
-                self._on_delete(parent, node)
                 if parent is not None:
                     if parent.left == node:
                         parent.left = node.right
                     else:
                         assert parent.right == node
                         parent.right = node.right
+                self._on_delete(parent, node)
                 return True
 
             # Node only has a left.
             elif node.right is None:
                 assert node.left is not None
-                self._on_delete(parent, node)
                 if parent is not None:
                     if parent.left == node:
                         parent.left = node.left
                     else:
                         assert parent.right == node
                         parent.right = node.left
+                self._on_delete(parent, node)
                 return True
 
             # Node has both a left and right.
