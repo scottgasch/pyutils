@@ -7,7 +7,7 @@ described by: https://en.wikipedia.org/wiki/Interval_tree.
 from __future__ import annotations
 
 from functools import total_ordering
-from typing import Any, Optional, Union
+from typing import Any, Generator, Optional, Union
 
 from overrides import overrides
 
@@ -18,6 +18,9 @@ Numeric = Union[int, float]
 
 @total_ordering
 class NumericRange(object):
+    """Essentially a tuple of numbers denoting a range with some added
+    helper methods on it."""
+
     def __init__(self, low: Numeric, high: Numeric):
         if low > high:
             temp: Numeric = low
@@ -44,11 +47,8 @@ class NumericRange(object):
 
 
 class AugmentedIntervalTree(bst.BinarySearchTree):
-    def __init__(self):
-        super().__init__()
-
     @staticmethod
-    def assert_value_must_be_range(value: Any) -> None:
+    def _assert_value_must_be_range(value: Any) -> None:
         if not isinstance(value, NumericRange):
             raise Exception(
                 "AugmentedIntervalTree expects to use NumericRanges, see bst for a "
@@ -57,7 +57,7 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
 
     @overrides
     def _on_insert(self, parent: Optional[bst.Node], new: bst.Node) -> None:
-        AugmentedIntervalTree.assert_value_must_be_range(new.value)
+        AugmentedIntervalTree._assert_value_must_be_range(new.value)
         for ancestor in self.parent_path(new):
             assert ancestor
             if new.value.high > ancestor.value.highest_in_subtree:
@@ -93,9 +93,11 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
         """
         return self._find_one_overlap(self.root, x)
 
-    def _find_one_overlap(self, root: bst.Node, x: NumericRange):
+    def _find_one_overlap(
+        self, root: bst.Node, x: NumericRange
+    ) -> Optional[NumericRange]:
         if root is None:
-            return
+            return None
 
         if root.value.overlaps_with(x):
             return root.value
@@ -106,6 +108,7 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
 
         if root.right:
             return self._find_one_overlap(root.right, x)
+        return None
 
     def find_all_overlaps(self, x: NumericRange):
         """Yields ranges previously added to the tree that x overlaps with.
@@ -142,9 +145,11 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
             return
         yield from self._find_all_overlaps(self.root, x)
 
-    def _find_all_overlaps(self, root: bst.Node, x: NumericRange):
+    def _find_all_overlaps(
+        self, root: bst.Node, x: NumericRange
+    ) -> Generator[NumericRange, None, None]:
         if root is None:
-            return
+            return None
 
         if root.value.overlaps_with(x):
             yield root.value

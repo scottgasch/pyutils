@@ -28,6 +28,14 @@ pyutils.collectionz.bst module
    :undoc-members:
    :show-inheritance:
 
+pyutils.collectionz.interval\_tree module
+-----------------------------------------
+
+.. automodule:: pyutils.collectionz.interval_tree
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.collectionz.shared\_dict module
 ---------------------------------------
 
