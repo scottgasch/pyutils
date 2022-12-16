@@ -47,7 +47,10 @@ class NumericRange(object):
         Returns:
             True is this range is less than (lower low) other, else False.
         """
-        return self.low < other.low
+        if self.low != other.low:
+            return self.low < other.low
+        else:
+            return self.high < other.high
 
     @overrides
     def __eq__(self, other: object) -> bool:
