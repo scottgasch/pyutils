@@ -16,8 +16,7 @@ class Graph(object):
         """Constructs a new Graph object.
 
         Args:
-            directed: are we modeling a directed graph?  See ::meth
-                add_edge.
+            directed: are we modeling a directed graph?  See :meth:`add_edge`.
 
         """
         self.directed = directed
@@ -56,8 +55,8 @@ class Graph(object):
 
         .. note::
 
-        If either or both of src and dest are not already added to the
-        graph, they are implicitly added by adding this edge.
+            If either or both of src and dest are not already added to
+            the graph, they are implicitly added by adding this edge.
 
         Args:
             src: the source vertex id
@@ -129,13 +128,15 @@ class Graph(object):
         Returns:
             An ordered sequence of vertex ids visited by the traversal.
 
-                A ------ B
-                |        |
-                |        |
-                C ------ D ------ E ------ F -O
-                                  |
-                                  |
-                                  G
+        .. graphviz::
+
+            graph g {
+                node [shape=record];
+                A -- B -- D;
+                A -- C -- D -- E -- F;
+                F -- F;
+                E -- G;
+            }
 
         >>> g = Graph()
         >>> g.add_edge('A', 'B')
@@ -181,13 +182,15 @@ class Graph(object):
         Returns:
             An ordered sequence of vertex ids visited by the traversal.
 
-                A ------ B
-                |        |
-                |        |
-                C ------ D ------ E ------ F -O
-                                  |
-                                  |
-                                  G
+        .. graphviz::
+
+            graph g {
+                node [shape=record];
+                A -- B -- D;
+                A -- C -- D -- E -- F;
+                F -- F;
+                E -- G;
+            }
 
         >>> g = Graph()
         >>> g.add_edge('A', 'B')

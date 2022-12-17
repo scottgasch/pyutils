@@ -2316,6 +2316,14 @@ pyutils.function\_utils module
    :undoc-members:
    :show-inheritance:
 
+pyutils.graph module
+------------------------------
+
+.. automodule:: pyutils.graph
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.id\_generator module
 ----------------------------
 

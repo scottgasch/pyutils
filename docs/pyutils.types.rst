@@ -40,6 +40,14 @@ pyutils.types.rate module
    :undoc-members:
    :show-inheritance:
 
+pyutils.types.simple module
+---------------------------
+
+.. automodule:: pyutils.types.simple
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.types.type\_utils module
 --------------------------------
 
