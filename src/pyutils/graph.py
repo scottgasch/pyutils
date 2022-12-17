@@ -85,7 +85,7 @@ class Graph(object):
 
     def remove_edge(self, source: str, dest: str):
         """Remove a previously added edge in the graph.  If the graph is
-        not directed (see :meth:`__ini__`), also removes the reciprocal
+        not directed (see :meth:`__init__`), also removes the reciprocal
         edge from dest back to source.
 
         .. note::
@@ -323,9 +323,9 @@ class Graph(object):
 
             graph g {
                 node [shape=record];
-                A -- B [w=3];
+                A -- B [weight=3];
                 B -- D;
-                A -- C [w=2];
+                A -- C [weight=2];
                 C -- D -- E -- F;
                 F -- F;
                 E -- G;
