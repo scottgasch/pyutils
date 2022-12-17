@@ -309,11 +309,11 @@ class Graph(object):
 
         .. note::
 
-        This method runs Dijkstra's algorithm
-        (https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
-        internally and caches the results.  Subsequent calls made with
-        the same source node before modifying the graph are less
-        expensive due to these cached intermediate results.
+            This method runs Dijkstra's algorithm
+            (https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm)
+            internally and caches the results.  Subsequent calls made with
+            the same source node before modifying the graph are less
+            expensive due to these cached intermediate results.
 
         Returns:
             A tuple containing the minimum distance of the path and the path itself.
