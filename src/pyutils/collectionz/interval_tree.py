@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# © Copyright 2021-2022, Scott Gasch
+
 """This is an augmented interval tree for storing ranges and identifying overlaps as
 described by: https://en.wikipedia.org/wiki/Interval_tree.
 """
@@ -7,13 +9,12 @@ described by: https://en.wikipedia.org/wiki/Interval_tree.
 from __future__ import annotations
 
 from functools import total_ordering
-from typing import Any, Generator, Optional, Union
+from typing import Any, Generator, Optional
 
 from overrides import overrides
 
 from pyutils.collectionz import bst
-
-Numeric = Union[int, float]
+from pyutils.types.simple import Numeric
 
 
 @total_ordering

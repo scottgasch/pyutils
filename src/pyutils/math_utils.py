@@ -11,10 +11,11 @@ from heapq import heappop, heappush
 from typing import Dict, List, Optional, Tuple
 
 from pyutils import dict_utils
+from pyutils.types.simple import Numeric
 
 
 class NumericPopulation(object):
-    """This object *store* a numerical population in a way that enables relatively
+    """This object *store* a numeric population in a way that enables relatively
     fast addition of new numbers (:math:`O(2log_2 n)`) and instant access to the
     median value in the population (:math:`O(1)`).  It also provides other population
     summary statistics such as the :meth:`get_mode`, :meth:`get_percentile` and
@@ -50,11 +51,11 @@ class NumericPopulation(object):
     def __init__(self):
         self.lowers, self.highers = [], []
         self.aggregate = 0.0
-        self.sorted_copy: Optional[List[float]] = None
+        self.sorted_copy: Optional[List[Numeric]] = None
         self.maximum = None
         self.minimum = None
 
-    def add_number(self, number: float):
+    def add_number(self, number: Numeric):
         """Adds a number to the population.  Runtime complexity of this
         operation is :math:`O(2 log_2 n)`
 
@@ -92,7 +93,7 @@ class NumericPopulation(object):
         elif len(self.highers) - len(self.lowers) > 1:
             heappush(self.lowers, -heappop(self.highers))
 
-    def get_median(self) -> float:
+    def get_median(self) -> Numeric:
         """
         Returns:
             The median (p50) of the current population in :math:`O(1)` time.
@@ -112,13 +113,13 @@ class NumericPopulation(object):
         count = len(self)
         return self.aggregate / count
 
-    def get_mode(self) -> Tuple[float, int]:
+    def get_mode(self) -> Tuple[Numeric, int]:
         """
         Returns:
             The population mode (most common member in the population)
             in :math:`O(n)` time.
         """
-        count: Dict[float, int] = collections.defaultdict(int)
+        count: Dict[Numeric, int] = collections.defaultdict(int)
         for n in self.lowers:
             count[-n] += 1
         for n in self.highers:
@@ -150,7 +151,7 @@ class NumericPopulation(object):
                 self.sorted_copy.append(x)
             self.sorted_copy = sorted(self.sorted_copy)
 
-    def get_percentile(self, n: float) -> float:
+    def get_percentile(self, n: float) -> Numeric:
         """
         Returns: the number at approximately pn% in the population
         (i.e. the nth percentile) in :math:`O(n log_2 n)` time (it

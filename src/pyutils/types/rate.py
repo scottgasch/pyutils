@@ -39,7 +39,7 @@ class Rate(object):
         count = 0
         if multiplier is not None:
             if isinstance(multiplier, str):
-                multiplier = multiplier.replace('%', '')
+                multiplier = multiplier.replace("%", "")
                 m = float(multiplier)
                 m /= 100
                 self.multiplier: float = m
@@ -54,7 +54,7 @@ class Rate(object):
             count += 1
         if count != 1:
             raise Exception(
-                'Exactly one of percentage, percent_change or multiplier is required.'
+                "Exactly one of percentage, percent_change or multiplier is required."
             )
 
     def apply_to(self, other):
@@ -124,4 +124,4 @@ class Rate(object):
             percentage = (self.multiplier - 1.0) * 100.0
         else:
             percentage = self.multiplier * 100.0
-        return f'{percentage:+.{places}f}%'
+        return f"{percentage:+.{places}f}%"
