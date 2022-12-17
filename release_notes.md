@@ -210,3 +210,38 @@ This version -------- 0.0.1b7
 Previous version ---- 0.0.1b6
 Total commits -------       16
 ```
+# 🎁 Release notes (`0.0.1b8`)
+
+## Changes
+- Docs for Graph.
+- Adds Graph.
+- Tiebreak ordering of ranges with the same lower bound using upper bound.
+- More docs...
+- More docs.
+- Update docs again.
+- Update docs and type hints in interval_tree.  Add it to the pydocs.
+- Fix interval_tree so it actually works.  Add unittests.
+- Bug and readability fix.
+- Adds IntervalTree.
+- Remove more annoying warning messages dumped to console from library code.
+- Be less annoying.
+- Make argparse utils' valid_date work with the default format of UNIX date.
+- Improve identifier for zookeeper based lockfiles.
+- Adds support for zookeeper-based lockfiles.
+- Make the processed cmdline available to callers.
+- Fixup/improve error message when giving up on lock acquisition.
+- Improve error message for logs.
+- Do not touch timestamp if cronjob failed!
+- Fix docs.
+- Only upload one wheel.
+- Update docs.
+- Update docs.
+- Tweak cut_version.sh again.
+- Cut version 0.0.1b7
+
+## Metadata
+```
+This version -------- 0.0.1b8
+Previous version ---- 0.0.1b7
+Total commits -------       25
+```
