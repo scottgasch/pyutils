@@ -69,7 +69,7 @@ def slurp_file(
     if line_transformers is not None:
         for x in line_transformers:
             xforms.append(x)
-    if not file_is_readable(filename):
+    if not is_readable(filename):
         raise Exception(f"{filename} can't be read.")
     with open(filename) as rf:
         for line in rf:
@@ -347,7 +347,7 @@ def does_file_exist(filename: str) -> bool:
     Returns:
         True if filename exists and is a normal file.
 
-    See also :meth:`create_path_if_not_exist`, :meth:`file_is_readable`.
+    See also :meth:`create_path_if_not_exist`, :meth:`is_readable`.
 
     >>> does_file_exist(__file__)
     True
@@ -357,7 +357,7 @@ def does_file_exist(filename: str) -> bool:
     return os.path.exists(filename) and os.path.isfile(filename)
 
 
-def file_is_readable(filename: str) -> bool:
+def is_readable(filename: str) -> bool:
     """Is the file readable?
 
     Args:
@@ -367,13 +367,13 @@ def file_is_readable(filename: str) -> bool:
         True if the file exists, is a normal file, and is readable
         by the current process.  False otherwise.
 
-    See also :meth:`does_file_exist`, :meth:`file_is_writable`,
-    :meth:`file_is_executable`.
+    See also :meth:`does_file_exist`, :meth:`is_writable`,
+    :meth:`is_executable`.
     """
-    return does_file_exist(filename) and os.access(filename, os.R_OK)
+    return os.access(filename, os.R_OK)
 
 
-def file_is_writable(filename: str) -> bool:
+def is_writable(filename: str) -> bool:
     """Is the file writable?
 
     Args:
@@ -383,12 +383,12 @@ def file_is_writable(filename: str) -> bool:
         True if file exists, is a normal file and is writable by the
         current process.  False otherwise.
 
-    See also :meth:`file_is_readable`, :meth:`does_file_exist`.
+    See also :meth:`is_readable`, :meth:`does_file_exist`.
     """
-    return does_file_exist(filename) and os.access(filename, os.W_OK)
+    return os.access(filename, os.W_OK)
 
 
-def file_is_executable(filename: str) -> bool:
+def is_executable(filename: str) -> bool:
     """Is the file executable?
 
     Args:
@@ -398,10 +398,10 @@ def file_is_executable(filename: str) -> bool:
         True if file exists, is a normal file and is executable by the
         current process.  False otherwise.
 
-    See also :meth:`does_file_exist`, :meth:`file_is_readable`,
-    :meth:`file_is_writable`.
+    See also :meth:`does_file_exist`, :meth:`is_readable`,
+    :meth:`is_writable`.
     """
-    return does_file_exist(filename) and os.access(filename, os.X_OK)
+    return os.access(filename, os.X_OK)
 
 
 def does_directory_exist(dirname: str) -> bool:

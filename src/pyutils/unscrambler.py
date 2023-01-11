@@ -11,7 +11,7 @@ from pyutils import config, decorator_utils, list_utils
 from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(
-    f'Unscrambler base library ({__file__})', 'A fast word unscrambler.'
+    f"Unscrambler base library ({__file__})", "A fast word unscrambler."
 )
 cfg.add_argument(
     "--unscrambler_default_indexfile",
@@ -29,61 +29,61 @@ fprint_bits = 52
 fprint_mask = (2**fprint_bits - 1) << letters_bits
 
 fprint_feature_bit = {
-    'e': 0,
-    'i': 2,
-    'a': 4,
-    'o': 6,
-    'r': 8,
-    'n': 10,
-    't': 12,
-    's': 14,
-    'l': 16,
-    'c': 18,
-    'u': 20,
-    'p': 22,
-    'm': 24,
-    'd': 26,
-    'h': 28,
-    'y': 30,
-    'g': 32,
-    'b': 34,
-    'f': 36,
-    'v': 38,
-    'k': 40,
-    'w': 42,
-    'z': 44,
-    'x': 46,
-    'q': 48,
-    'j': 50,
+    "e": 0,
+    "i": 2,
+    "a": 4,
+    "o": 6,
+    "r": 8,
+    "n": 10,
+    "t": 12,
+    "s": 14,
+    "l": 16,
+    "c": 18,
+    "u": 20,
+    "p": 22,
+    "m": 24,
+    "d": 26,
+    "h": 28,
+    "y": 30,
+    "g": 32,
+    "b": 34,
+    "f": 36,
+    "v": 38,
+    "k": 40,
+    "w": 42,
+    "z": 44,
+    "x": 46,
+    "q": 48,
+    "j": 50,
 }
 
 letter_sigs = {
-    'a': 1789368711,
-    'b': 3146859322,
-    'c': 43676229,
-    'd': 3522623596,
-    'e': 3544234957,
-    'f': 3448207591,
-    'g': 1282648386,
-    'h': 3672791226,
-    'i': 1582316135,
-    'j': 4001984784,
-    'k': 831769172,
-    'l': 1160692746,
-    'm': 2430986565,
-    'n': 1873586768,
-    'o': 694443915,
-    'p': 1602297017,
-    'q': 533722196,
-    'r': 3754550193,
-    's': 1859447115,
-    't': 1121373020,
-    'u': 2414108708,
-    'v': 2693866766,
-    'w': 748799881,
-    'x': 2627529228,
-    'y': 2376066489,
-    'z': 802338724,
+    "a": 1789368711,
+    "b": 3146859322,
+    "c": 43676229,
+    "d": 3522623596,
+    "e": 3544234957,
+    "f": 3448207591,
+    "g": 1282648386,
+    "h": 3672791226,
+    "i": 1582316135,
+    "j": 4001984784,
+    "k": 831769172,
+    "l": 1160692746,
+    "m": 2430986565,
+    "n": 1873586768,
+    "o": 694443915,
+    "p": 1602297017,
+    "q": 533722196,
+    "r": 3754550193,
+    "s": 1859447115,
+    "t": 1121373020,
+    "u": 2414108708,
+    "v": 2693866766,
+    "w": 748799881,
+    "x": 2627529228,
+    "y": 2376066489,
+    "z": 802338724,
 }
 
 
@@ -119,11 +119,11 @@ class Unscrambler(object):
         self.words = []
 
         filename = Unscrambler.get_indexfile(indexfile)
-        with open(filename, 'r') as rf:
+        with open(filename, "r") as rf:
             lines = rf.readlines()
         for line in lines:
             line = line[:-1]
-            (fsig, word) = line.split('+')
+            (fsig, word) = line.split("+")
             isig = int(fsig, 16)
             self.sigs.append(isig)
             self.words.append(word)
@@ -135,13 +135,13 @@ class Unscrambler(object):
             The current indexfile location
         """
         if indexfile is None:
-            if 'unscrambler_default_indexfile' in config.config:
-                indexfile = config.config['unscrambler_default_indexfile']
+            if "unscrambler_default_indexfile" in config.config:
+                indexfile = config.config["unscrambler_default_indexfile"]
                 assert type(indexfile) == str
             else:
                 indexfile = "/usr/share/dict/sparse_index"
         else:
-            assert file_utils.file_is_readable(indexfile), f"Can't read {indexfile}"
+            assert file_utils.is_readable(indexfile), f"Can't read {indexfile}"
         return indexfile
 
     # 52 bits
@@ -217,8 +217,8 @@ class Unscrambler(object):
 
     @staticmethod
     def repopulate(
-        dictfile: str = '/usr/share/dict/words',
-        indexfile: str = '/usr/share/dict/sparse_index',
+        dictfile: str = "/usr/share/dict/words",
+        indexfile: str = "/usr/share/dict/sparse_index",
     ) -> None:
         """
         Repopulates the indexfile.
@@ -238,7 +238,7 @@ class Unscrambler(object):
         seen = set()
         with open(dictfile, "r") as f:
             for word in f:
-                word = word.replace('\n', '')
+                word = word.replace("\n", "")
                 word = word.lower()
                 sig = Unscrambler.compute_word_sig(word)
                 logger.debug("%s => 0x%x", word, sig)
@@ -249,10 +249,10 @@ class Unscrambler(object):
                     words_by_sigs[sig] += f",{word}"
                 else:
                     words_by_sigs[sig] = word
-        with open(indexfile, 'w') as f:
+        with open(indexfile, "w") as f:
             for sig in sorted(words_by_sigs.keys()):
                 word = words_by_sigs[sig]
-                print(f'0x{sig:x}+{word}', file=f)
+                print(f"0x{sig:x}+{word}", file=f)
 
     def lookup(self, word: str, *, window_size: int = 5) -> Dict[str, bool]:
         """Looks up a potentially scrambled word optionally including near

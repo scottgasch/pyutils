@@ -170,7 +170,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Attempting to load state from %s", filename)
-            assert file_utils.file_is_readable(filename)
+            assert file_utils.is_readable(filename)
 
             import pickle
 

@@ -573,7 +573,7 @@ class AutoPlayer(object):
         # remaining words.  See --mode=PRECOMPUTE for how to populate.
         self.position_hash = {}
         filename = config.config['hash_file']
-        if filename is not None and file_utils.file_is_readable(filename):
+        if filename is not None and file_utils.is_readable(filename):
             logger.debug(f'Initializing position hash from {filename}...')
             with open(filename, 'r') as rf:
                 for line in rf:
@@ -594,7 +594,7 @@ class AutoPlayer(object):
         # All legal solutions pre-sorted by length.
         self.all_possible_solutions_by_length = defaultdict(list)
         filename = config.config['solutions_file']
-        if filename is not None and file_utils.file_is_readable(filename):
+        if filename is not None and file_utils.is_readable(filename):
             logger.debug(f'Initializing valid solution word list from {filename}...')
             with open(filename) as rf:
                 for word in rf:
@@ -608,7 +608,7 @@ class AutoPlayer(object):
         # All legal guesses pre-sorted by length.
         self.all_possible_guesses_by_length = defaultdict(list)
         filename = config.config['guesses_file']
-        if filename is not None and file_utils.file_is_readable(filename):
+        if filename is not None and file_utils.is_readable(filename):
             logger.debug(f'Initializing legal guess word list from {filename}...')
             with open(filename) as rf:
                 for word in rf:
@@ -1084,7 +1084,7 @@ def colorize_guess(guess: Word, hints: Dict[Position, Hint]) -> str:
 def get_max_letter_population() -> Dict[Letter, int]:
     filename = config.config['solutions_file']
     max_letter_population_per_word: Dict[Letter, int] = defaultdict(int)
-    if filename is not None and file_utils.file_is_readable(filename):
+    if filename is not None and file_utils.is_readable(filename):
         logger.debug(
             'Figuring out all letters\' max frequency in the solution space...'
         )
