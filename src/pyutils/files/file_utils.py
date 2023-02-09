@@ -312,7 +312,7 @@ def create_path_if_not_exist(path, on_error=None) -> None:
 
     .. warning::
 
-        Files are created with mode 0x0777 (i.e. world read/writeable).
+        Files are created with mode 0o0777 (i.e. world read/writeable).
 
     >>> import uuid
     >>> import os
@@ -1192,7 +1192,6 @@ class FileWriter(contextlib.AbstractContextManager):
             print("This is a test!", file=w)
             time.sleep(2)
             print("This is only a test...", file=w)
-
     """
 
     def __init__(self, filename: str) -> None:
@@ -1218,6 +1217,65 @@ class FileWriter(contextlib.AbstractContextManager):
             ret = os.system(cmd)
             if (ret >> 8) != 0:
                 raise Exception(f"{cmd} failed, exit value {ret>>8}!")
+        return False
+
+
+class CreateFileWithMode(contextlib.AbstractContextManager):
+    """This helper context manager can be used instead of the typical
+    pattern for creating a file if you want to ensure that the file
+    created is a particular permission mode upon creation.
+
+    Python's open doesn't support this; you need to set the os.umask
+    and then create a descriptor to open via os.open, see below.
+
+        >>> import os
+        >>> filename = f'/tmp/CreateFileWithModeTest.{os.getpid()}'
+        >>> with CreateFileWithMode(filename, mode=0o600) as wf:
+        ...     print('This is a test', file=wf)
+        >>> result = os.stat(filename)
+
+        Note: there is a high order bit set in this that is S_IFREG indicating
+        that the file is a "normal file".  Clear it with the mask.
+
+        >>> print(f'{result.st_mode & 0o7777:o}')
+        600
+        >>> with open(filename, 'r') as rf:
+        ...     contents = rf.read()
+        >>> contents
+        'This is a test\\n'
+        >>> remove(filename)
+    """
+
+    def __init__(self, filename: str, mode=0o600) -> None:
+        """
+        Args:
+            filename: path of the file to create.  It must not already
+                exist or we raise an Exception.
+            mode: the UNIX-style octal mode with which to create the
+                filename.
+        """
+        self.filename = filename
+        self.mode = mode & 0o7777
+        self.handle: Optional[TextIO] = None
+        self.old_umask = os.umask(0)
+
+    def __enter__(self) -> TextIO:
+        if does_file_exist(self.filename):
+            raise Exception(
+                f"{self.filename} already exists; it must not to use this class"
+            )
+        descriptor = os.open(
+            path=self.filename,
+            flags=(os.O_WRONLY | os.O_CREAT | os.O_TRUNC),
+            mode=self.mode,
+        )
+        self.handle = open(descriptor, "w")
+        return self.handle
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
+        os.umask(self.old_umask)
+        if self.handle is not None:
+            self.handle.close()
         return False
 
 
