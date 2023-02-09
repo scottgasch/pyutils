@@ -245,3 +245,19 @@ This version -------- 0.0.1b8
 Previous version ---- 0.0.1b7
 Total commits -------       25
 ```
+# 🎁 Release notes (`0.0.1b9`)
+
+## Changes
+- Fix typo in README.
+- Remove the requirement that filename is a file from is_*.
+- Typos in docs.
+- Update docs.
+- Adds remove_edge and shortest path.
+- Cut version 0.0.1b8
+
+## Metadata
+```
+This version -------- 0.0.1b9
+Previous version ---- 0.0.1b8
+Total commits -------        6
+```
