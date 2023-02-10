@@ -1050,7 +1050,7 @@ def touch_file(filename: str, *, mode: Optional[int] = 0o666):
 
     .. warning::
 
-        The default creation mode is 0x666 which is world readable
+        The default creation mode is 0o666 which is world readable
         and writable.  Override this by passing in your own mode
         parameter if desired.
 
@@ -1246,24 +1246,27 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
         >>> remove(filename)
     """
 
-    def __init__(self, filename: str, mode=0o600) -> None:
+    def __init__(self, filename: str, mode: Optional[int] = 0o600) -> None:
         """
         Args:
-            filename: path of the file to create.  It must not already
-                exist or we raise an Exception.
+            filename: path of the file to create.
             mode: the UNIX-style octal mode with which to create the
-                filename.
+                filename.  Defaults to 0o600.
+
+        .. warning::
+
+            If the file already exists it will be overwritten!
+
         """
         self.filename = filename
-        self.mode = mode & 0o7777
+        if mode is not None:
+            self.mode = mode & 0o7777
+        else:
+            self.mode = 0o666
         self.handle: Optional[TextIO] = None
         self.old_umask = os.umask(0)
 
     def __enter__(self) -> TextIO:
-        if does_file_exist(self.filename):
-            raise Exception(
-                f"{self.filename} already exists; it must not to use this class"
-            )
         descriptor = os.open(
             path=self.filename,
             flags=(os.O_WRONLY | os.O_CREAT | os.O_TRUNC),
