@@ -47,7 +47,6 @@ import enum
 import io
 import logging
 import os
-import random
 import sys
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
@@ -58,156 +57,156 @@ from overrides import overrides
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
-from pyutils import argparse_utils, config
+from pyutils import argparse_utils, config, misc_utils
 
-cfg = config.add_commandline_args(f'Logging ({__file__})', 'Args related to logging')
+cfg = config.add_commandline_args(f"Logging ({__file__})", "Args related to logging")
 cfg.add_argument(
-    '--logging_config_file',
+    "--logging_config_file",
     type=argparse_utils.valid_filename,
     default=None,
-    metavar='FILENAME',
-    help='Config file containing the logging setup, see: https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial',
+    metavar="FILENAME",
+    help="Config file containing the logging setup, see: https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial",
 )
 cfg.add_argument(
-    '--logging_level',
+    "--logging_level",
     type=str,
-    default='INFO',
-    choices=['NOTSET', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-    metavar='LEVEL',
-    help='The global default level below which to squelch log messages; see also --lmodule',
+    default="INFO",
+    choices=["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    metavar="LEVEL",
+    help="The global default level below which to squelch log messages; see also --lmodule",
 )
 cfg.add_argument(
-    '--logging_format',
+    "--logging_format",
     type=str,
     default=None,
-    help='The format for lines logged via the logger module.  See: https://docs.python.org/3/library/logging.html#formatter-objects',
+    help="The format for lines logged via the logger module.  See: https://docs.python.org/3/library/logging.html#formatter-objects",
 )
 cfg.add_argument(
-    '--logging_date_format',
+    "--logging_date_format",
     type=str,
-    default='%Y/%m/%dT%H:%M:%S.%f%z',
-    metavar='DATEFMT',
-    help='The format of any dates in --logging_format.',
+    default="%Y/%m/%dT%H:%M:%S.%f%z",
+    metavar="DATEFMT",
+    help="The format of any dates in --logging_format.",
 )
 cfg.add_argument(
-    '--logging_console',
+    "--logging_console",
     action=argparse_utils.ActionNoYes,
     default=True,
-    help='Should we log to the console (stderr)',
+    help="Should we log to the console (stderr)",
 )
 cfg.add_argument(
-    '--logging_filename',
+    "--logging_filename",
     type=str,
     default=None,
-    metavar='FILENAME',
-    help='The filename of the logfile to write.',
+    metavar="FILENAME",
+    help="The filename of the logfile to write.",
 )
 cfg.add_argument(
-    '--logging_filename_maxsize',
+    "--logging_filename_maxsize",
     type=int,
     default=(1024 * 1024),
-    metavar='#BYTES',
-    help='The maximum size (in bytes) to write to the logging_filename.',
+    metavar="#BYTES",
+    help="The maximum size (in bytes) to write to the logging_filename.",
 )
 cfg.add_argument(
-    '--logging_filename_count',
+    "--logging_filename_count",
     type=int,
     default=7,
-    metavar='COUNT',
-    help='The number of logging_filename copies to keep before deleting.',
+    metavar="COUNT",
+    help="The number of logging_filename copies to keep before deleting.",
 )
 cfg.add_argument(
-    '--logging_syslog',
+    "--logging_syslog",
     action=argparse_utils.ActionNoYes,
     default=False,
-    help='Should we log to localhost\'s syslog.',
+    help="Should we log to localhost's syslog.",
 )
 cfg.add_argument(
-    '--logging_syslog_facility',
+    "--logging_syslog_facility",
     type=str,
-    default='USER',
+    default="USER",
     choices=[
-        'NOTSET',
-        'AUTH',
-        'AUTH_PRIV',
-        'CRON',
-        'DAEMON',
-        'FTP',
-        'KERN',
-        'LPR',
-        'MAIL',
-        'NEWS',
-        'SYSLOG',
-        'USER',
-        'UUCP',
-        'LOCAL0',
-        'LOCAL1',
-        'LOCAL2',
-        'LOCAL3',
-        'LOCAL4',
-        'LOCAL5',
-        'LOCAL6',
-        'LOCAL7',
+        "NOTSET",
+        "AUTH",
+        "AUTH_PRIV",
+        "CRON",
+        "DAEMON",
+        "FTP",
+        "KERN",
+        "LPR",
+        "MAIL",
+        "NEWS",
+        "SYSLOG",
+        "USER",
+        "UUCP",
+        "LOCAL0",
+        "LOCAL1",
+        "LOCAL2",
+        "LOCAL3",
+        "LOCAL4",
+        "LOCAL5",
+        "LOCAL6",
+        "LOCAL7",
     ],
-    metavar='SYSLOG_FACILITY_LIST',
-    help='The default syslog message facility identifier',
+    metavar="SYSLOG_FACILITY_LIST",
+    help="The default syslog message facility identifier",
 )
 cfg.add_argument(
-    '--logging_debug_threads',
+    "--logging_debug_threads",
     action=argparse_utils.ActionNoYes,
     default=False,
-    help='Should we prepend pid/tid data to all log messages?',
+    help="Should we prepend pid/tid data to all log messages?",
 )
 cfg.add_argument(
-    '--logging_debug_modules',
+    "--logging_debug_modules",
     action=argparse_utils.ActionNoYes,
     default=False,
-    help='Should we prepend module/function data to all log messages?',
+    help="Should we prepend module/function data to all log messages?",
 )
 cfg.add_argument(
-    '--logging_info_is_print',
+    "--logging_info_is_print",
     action=argparse_utils.ActionNoYes,
     default=False,
-    help='logging.info also prints to stdout.',
+    help="logging.info also prints to stdout.",
 )
 cfg.add_argument(
-    '--logging_squelch_repeats',
+    "--logging_squelch_repeats",
     action=argparse_utils.ActionNoYes,
     default=True,
-    help='Do we allow code to indicate that it wants to squelch repeated logging messages or should we always log?',
+    help="Do we allow code to indicate that it wants to squelch repeated logging messages or should we always log?",
 )
 cfg.add_argument(
-    '--logging_probabilistically',
+    "--logging_probabilistically",
     action=argparse_utils.ActionNoYes,
     default=True,
-    help='Do we allow probabilistic logging (for code that wants it) or should we always log?',
+    help="Do we allow probabilistic logging (for code that wants it) or should we always log?",
 )
 # See also: OutputMultiplexer
 cfg.add_argument(
-    '--logging_captures_prints',
+    "--logging_captures_prints",
     action=argparse_utils.ActionNoYes,
     default=False,
-    help='When calling print, also log.info automatically.',
+    help="When calling print, also log.info automatically.",
 )
 cfg.add_argument(
-    '--lmodule',
+    "--lmodule",
     type=str,
-    metavar='<SCOPE>=<LEVEL>[,<SCOPE>=<LEVEL>...]',
+    metavar="<SCOPE>=<LEVEL>[,<SCOPE>=<LEVEL>...]",
     help=(
-        'Allows per-scope logging levels which override the global level set with --logging-level.'
-        + 'Pass a space separated list of <scope>=<level> where <scope> is one of: module, '
-        + 'module:function, or :function and <level> is a logging level (e.g. INFO, DEBUG...)'
+        "Allows per-scope logging levels which override the global level set with --logging-level."
+        + "Pass a space separated list of <scope>=<level> where <scope> is one of: module, "
+        + "module:function, or :function and <level> is a logging level (e.g. INFO, DEBUG...)"
     ),
 )
 cfg.add_argument(
-    '--logging_clear_preexisting_handlers',
+    "--logging_clear_preexisting_handlers",
     action=argparse_utils.ActionNoYes,
     default=True,
     help=(
-        'Should logging code clear preexisting global logging handlers and thus insist that is '
-        + 'alone can add handlers.  Use this to work around annoying modules that insert global '
-        + 'handlers with formats and logging levels you might now want.  Caveat emptor, this may '
-        + 'cause you to miss logging messages.'
+        "Should logging code clear preexisting global logging handlers and thus insist that is "
+        + "alone can add handlers.  Use this to work around annoying modules that insert global "
+        + "handlers with formats and logging levels you might now want.  Caveat emptor, this may "
+        + "cause you to miss logging messages."
     ),
 )
 
@@ -297,11 +296,11 @@ class SquelchRepeatedMessagesFilter(logging.Filter):
     @overrides
     def filter(self, record: logging.LogRecord) -> bool:
         """Should we drop this log message?"""
-        id1 = f'{record.module}:{record.funcName}'
+        id1 = f"{record.module}:{record.funcName}"
         if id1 not in squelched_logging_counts:
             return True
         threshold = squelched_logging_counts[id1]
-        logsite = f'{record.pathname}+{record.lineno}+{record.levelno}+{record.msg}'
+        logsite = f"{record.pathname}+{record.lineno}+{record.levelno}+{record.msg}"
         count = self.counters[logsite]
         self.counters[logsite] += 1
         return count < threshold
@@ -327,7 +326,7 @@ class DynamicPerScopeLoggingLevelFilter(logging.Filter):
         """Given a level name, return its numberic value."""
         numeric_level = getattr(logging, name, None)
         if not isinstance(numeric_level, int):
-            raise ValueError(f'Invalid level: {name}')
+            raise ValueError(f"Invalid level: {name}")
         return numeric_level
 
     def __init__(
@@ -347,20 +346,20 @@ class DynamicPerScopeLoggingLevelFilter(logging.Filter):
         """
         super().__init__()
         self.valid_levels = set(
-            ['NOTSET', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+            ["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         )
         self.default_logging_level = default_logging_level
         self.level_by_scope = {}
         if per_scope_logging_levels is not None:
-            for chunk in per_scope_logging_levels.split(','):
-                if '=' not in chunk:
+            for chunk in per_scope_logging_levels.split(","):
+                if "=" not in chunk:
                     print(
                         f'Malformed lmodule directive: "{chunk}", missing "=".  Ignored.',
                         file=sys.stderr,
                     )
                     continue
                 try:
-                    (scope, level) = chunk.split('=')
+                    (scope, level) = chunk.split("=")
                 except ValueError:
                     print(
                         f'Malformed lmodule directive: "{chunk}".  Ignored.',
@@ -388,8 +387,8 @@ class DynamicPerScopeLoggingLevelFilter(logging.Filter):
             min_level = None
             for scope in (
                 record.module,
-                f'{record.module}:{record.funcName}',
-                f':{record.funcName}',
+                f"{record.module}:{record.funcName}",
+                f":{record.funcName}",
             ):
                 level = self.level_by_scope.get(scope, None)
                 if level is not None:
@@ -453,11 +452,9 @@ class ProbabilisticFilter(logging.Filter):
     @overrides
     def filter(self, record: logging.LogRecord) -> bool:
         """Should the message be logged?"""
-        id1 = f'{record.module}:{record.funcName}'
-        if id1 not in probabilistic_logging_levels:
-            return True
-        threshold = probabilistic_logging_levels[id1]
-        return (random.random() * 100.0) <= threshold
+        identifier = f"{record.module}:{record.funcName}"
+        threshold = probabilistic_logging_levels.get(identifier, 100.0)
+        return misc_utils.execute_probabilistically(threshold)
 
 
 class OnlyInfoFilter(logging.Filter):
@@ -514,71 +511,71 @@ def _log_about_logging(
     level_name = logging._levelToName.get(
         default_logging_level, str(default_logging_level)
     )
-    logger.debug('Initialized global logging; default logging level is %s.', level_name)
+    logger.debug("Initialized global logging; default logging level is %s.", level_name)
     if (
-        config.config['logging_clear_preexisting_handlers']
+        config.config["logging_clear_preexisting_handlers"]
         and preexisting_handlers_count > 0
     ):
         logger.debug(
-            'Logging cleared %d global handlers (--logging_clear_preexisting_handlers)',
+            "Logging cleared %d global handlers (--logging_clear_preexisting_handlers)",
             preexisting_handlers_count,
         )
     logger.debug('Logging format specification is "%s"', fmt)
-    if config.config['logging_debug_threads']:
+    if config.config["logging_debug_threads"]:
         logger.debug(
-            '...Logging format spec captures tid/pid. (--logging_debug_threads)'
+            "...Logging format spec captures tid/pid. (--logging_debug_threads)"
         )
-    if config.config['logging_debug_modules']:
+    if config.config["logging_debug_modules"]:
         logger.debug(
-            '...Logging format spec captures files/functions/lineno. (--logging_debug_modules)'
+            "...Logging format spec captures files/functions/lineno. (--logging_debug_modules)"
         )
-    if config.config['logging_syslog']:
+    if config.config["logging_syslog"]:
         logger.debug(
-            'Logging to syslog as %s with priority mapping based on level. (--logging_syslog)',
+            "Logging to syslog as %s with priority mapping based on level. (--logging_syslog)",
             facility_name,
         )
-    if config.config['logging_filename']:
+    if config.config["logging_filename"]:
         logger.debug(
             'Logging to file "%s". (--logging_filename)',
             config.config["logging_filename"],
         )
         logger.debug(
-            '...with %d bytes max file size. (--logging_filename_maxsize)',
+            "...with %d bytes max file size. (--logging_filename_maxsize)",
             config.config["logging_filename_maxsize"],
         )
         logger.debug(
-            '...and %d rotating backup file count. (--logging_filename_count)',
+            "...and %d rotating backup file count. (--logging_filename_count)",
             config.config["logging_filename_count"],
         )
-    if config.config['logging_console']:
-        logger.debug('Logging to the console (stderr). (--logging_console)')
-    if config.config['logging_info_is_print']:
+    if config.config["logging_console"]:
+        logger.debug("Logging to the console (stderr). (--logging_console)")
+    if config.config["logging_info_is_print"]:
         logger.debug(
-            'Logging logger.info messages will be repeated on stdout. (--logging_info_is_print)'
+            "Logging logger.info messages will be repeated on stdout. (--logging_info_is_print)"
         )
-    if config.config['logging_squelch_repeats']:
+    if config.config["logging_squelch_repeats"]:
         logger.debug(
-            'Logging code allowed to request repeated messages be squelched. (--logging_squelch_repeats)'
-        )
-    else:
-        logger.debug(
-            'Logging code forbidden to request messages be squelched; all messages logged. (--no_logging_squelch_repeats)'
-        )
-    if config.config['logging_probabilistically']:
-        logger.debug(
-            'Logging code is allowed to request probabilistic logging. (--logging_probabilistically)'
+            "Logging code allowed to request repeated messages be squelched. (--logging_squelch_repeats)"
         )
     else:
         logger.debug(
-            'Logging code is forbidden to request probabilistic logging; messages always logged. (--no_logging_probabilistically)'
+            "Logging code forbidden to request messages be squelched; all messages logged. (--no_logging_squelch_repeats)"
         )
-    if config.config['lmodule']:
+    if config.config["logging_probabilistically"]:
+        logger.debug(
+            "Logging code is allowed to request probabilistic logging. (--logging_probabilistically)"
+        )
+    else:
+        logger.debug(
+            "Logging code is forbidden to request probabilistic logging; messages always logged. (--no_logging_probabilistically)"
+        )
+    if config.config["lmodule"]:
         logger.debug(
             f'Logging dynamic per-module logging enabled. (--lmodule={config.config["lmodule"]})'
         )
-    if config.config['logging_captures_prints']:
+    if config.config["logging_captures_prints"]:
         logger.debug(
-            'Logging will capture printed data as logger.info messages. (--logging_captures_prints)'
+            "Logging will capture printed data as logger.info messages. (--logging_captures_prints)"
         )
 
 
@@ -605,15 +602,15 @@ def initialize_logging(logger=None) -> logging.Logger:
     # setup.
     preexisting_handlers_count = 0
     assert config.has_been_parsed()
-    if config.config['logging_clear_preexisting_handlers']:
+    if config.config["logging_clear_preexisting_handlers"]:
         while logger.hasHandlers():
             logger.removeHandler(logger.handlers[0])
             preexisting_handlers_count += 1
 
     # --logging_config_file pulls logging settings from a config file
     # skipping the rest of this setup.
-    if config.config['logging_config_file'] is not None:
-        fileConfig(config.config['logging_config_file'])
+    if config.config["logging_config_file"] is not None:
+        fileConfig(config.config["logging_config_file"])
         return logger
 
     handlers: List[logging.Handler] = []
@@ -621,7 +618,7 @@ def initialize_logging(logger=None) -> logging.Logger:
 
     # Global default logging level (--logging_level); messages below
     # this level will be silenced.
-    logging_level = config.config['logging_level']
+    logging_level = config.config["logging_level"]
     assert logging_level
     logging_level = logging_level.upper()
     default_logging_level = getattr(logging, logging_level, None)
@@ -629,37 +626,36 @@ def initialize_logging(logger=None) -> logging.Logger:
         raise ValueError(f'Invalid level: {config.config["logging_level"]}')
 
     # Custom or default --logging_format?
-    if config.config['logging_format']:
-        fmt = config.config['logging_format']
+    if config.config["logging_format"]:
+        fmt = config.config["logging_format"]
+    elif config.config["logging_syslog"]:
+        fmt = "%(levelname).1s:%(filename)s[%(process)d]: %(message)s"
     else:
-        if config.config['logging_syslog']:
-            fmt = '%(levelname).1s:%(filename)s[%(process)d]: %(message)s'
-        else:
-            fmt = '%(levelname).1s:%(asctime)s: %(message)s'
+        fmt = "%(levelname).1s:%(asctime)s: %(message)s"
 
     # --logging_debug_threads and --logging_debug_modules both affect
     # the format by prepending information about the pid/tid or
     # file/function.
-    if config.config['logging_debug_threads']:
-        fmt = f'%(process)d.%(thread)d|{fmt}'
-    if config.config['logging_debug_modules']:
-        fmt = f'%(filename)s:%(funcName)s:%(lineno)s|{fmt}'
+    if config.config["logging_debug_threads"]:
+        fmt = f"%(process)d.%(thread)d|{fmt}"
+    if config.config["logging_debug_modules"]:
+        fmt = f"%(filename)s:%(funcName)s:%(lineno)s|{fmt}"
 
     # --logging_syslog (optionally with --logging_syslog_facility)
     # sets up for logging to use the standard system syslogd as a
     # sink.
     facility_name = None
-    if config.config['logging_syslog']:
-        if sys.platform not in ('win32', 'cygwin'):
-            if config.config['logging_syslog_facility']:
-                facility_name = 'LOG_' + config.config['logging_syslog_facility']
+    if config.config["logging_syslog"]:
+        if sys.platform not in ("win32", "cygwin"):
+            if config.config["logging_syslog_facility"]:
+                facility_name = "LOG_" + config.config["logging_syslog_facility"]
             facility = SysLogHandler.__dict__.get(facility_name, SysLogHandler.LOG_USER)  # type: ignore
             assert facility is not None
-            handler = SysLogHandler(facility=facility, address='/dev/log')
+            handler = SysLogHandler(facility=facility, address="/dev/log")
             handler.setFormatter(
                 MillisecondAwareFormatter(
                     fmt=fmt,
-                    datefmt=config.config['logging_date_format'],
+                    datefmt=config.config["logging_date_format"],
                 )
             )
             handlers.append(handler)
@@ -667,31 +663,31 @@ def initialize_logging(logger=None) -> logging.Logger:
     # --logging_filename (with friends --logging_filename_count and
     # --logging_filename_maxsize) set up logging to a file on the
     # filesystem with automatic rotation when it gets too big.
-    if config.config['logging_filename']:
-        max_bytes = config.config['logging_filename_maxsize']
-        assert max_bytes and type(max_bytes) == int
-        backup_count = config.config['logging_filename_count']
-        assert backup_count and type(backup_count) == int
+    if config.config["logging_filename"]:
+        max_bytes = config.config["logging_filename_maxsize"]
+        assert max_bytes and isinstance(max_bytes, int)
+        backup_count = config.config["logging_filename_count"]
+        assert backup_count and isinstance(backup_count, int)
         handler = RotatingFileHandler(
-            config.config['logging_filename'],
+            config.config["logging_filename"],
             maxBytes=max_bytes,
             backupCount=backup_count,
         )
         handler.setFormatter(
             MillisecondAwareFormatter(
                 fmt=fmt,
-                datefmt=config.config['logging_date_format'],
+                datefmt=config.config["logging_date_format"],
             )
         )
         handlers.append(handler)
 
     # --logging_console is, ahem, logging to the console.
-    if config.config['logging_console']:
+    if config.config["logging_console"]:
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
             MillisecondAwareFormatter(
                 fmt=fmt,
-                datefmt=config.config['logging_date_format'],
+                datefmt=config.config["logging_date_format"],
             )
         )
         handlers.append(handler)
@@ -703,7 +699,7 @@ def initialize_logging(logger=None) -> logging.Logger:
 
     # --logging_info_is_print echoes any message to logger.info(x) as
     # a print statement on stdout.
-    if config.config['logging_info_is_print']:
+    if config.config["logging_info_is_print"]:
         handler = logging.StreamHandler(sys.stdout)
         handler.addFilter(OnlyInfoFilter())
         logger.addHandler(handler)
@@ -712,7 +708,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     # messages (identical log site and message contents) to be
     # silenced.  Logging code must request this explicitly, it isn't
     # automatic.  This option just allows the silencing to happen.
-    if config.config['logging_squelch_repeats']:
+    if config.config["logging_squelch_repeats"]:
         for handler in handlers:
             handler.addFilter(SquelchRepeatedMessagesFilter())
 
@@ -722,7 +718,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     # This option just allows the non-deterministic behavior to
     # happen.  Disabling it will cause every log message to be
     # produced.
-    if config.config['logging_probabilistically']:
+    if config.config["logging_probabilistically"]:
         for handler in handlers:
             handler.addFilter(ProbabilisticFilter())
 
@@ -733,7 +729,7 @@ def initialize_logging(logger=None) -> logging.Logger:
         handler.addFilter(
             DynamicPerScopeLoggingLevelFilter(
                 default_logging_level,
-                config.config['lmodule'],
+                config.config["lmodule"],
             )
         )
     logger.setLevel(0)
@@ -741,11 +737,11 @@ def initialize_logging(logger=None) -> logging.Logger:
 
     # --logging_captures_prints, if set, will capture and log.info
     # anything printed on stdout.
-    if config.config['logging_captures_prints']:
+    if config.config["logging_captures_prints"]:
         import builtins
 
         def print_and_also_log(*arg, **kwarg):
-            f = kwarg.get('file', None)
+            f = kwarg.get("file", None)
             if f == sys.stderr:
                 logger.warning(*arg)
             else:
@@ -777,10 +773,10 @@ def tprint(*args, **kwargs) -> None:
     still needed by some code.  Please use --logging_debug_threads in
     new code.
     """
-    if config.config['logging_debug_threads']:
+    if config.config["logging_debug_threads"]:
         from pyutils.parallelize.thread_utils import current_thread_id
 
-        print(f'{current_thread_id()}', end="")
+        print(f"{current_thread_id()}", end="")
         print(*args, **kwargs)
     else:
         pass
@@ -840,7 +836,7 @@ class OutputMultiplexer(object):
 
         self.f: Optional[List[Any]] = None
         if filenames is not None:
-            self.f = [open(filename, 'wb', buffering=0) for filename in filenames]
+            self.f = [open(filename, "wb", buffering=0) for filename in filenames]
         else:
             if destination_bitv & OutputMultiplexer.Destination.FILENAMES:
                 raise ValueError("Filenames argument is required if bitv & FILENAMES")
@@ -887,11 +883,11 @@ class OutputMultiplexer(object):
             sep = " "
         if end is None:
             end = "\n"
-        if end == '\n':
-            buf += '\n'
+        if end == "\n":
+            buf += "\n"
         if self.destination_bitv & self.Destination.FILENAMES and self.f is not None:
             for _ in self.f:
-                _.write(buf.encode('utf-8'))
+                _.write(buf.encode("utf-8"))
                 _.flush()
 
         if self.destination_bitv & self.Destination.FILEHANDLES and self.h is not None:
@@ -984,7 +980,7 @@ def hlog(message: str) -> None:
     os.system(f"/usr/bin/logger -p local7.info -- '{message}'")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
