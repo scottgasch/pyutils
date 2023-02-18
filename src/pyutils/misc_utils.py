@@ -31,8 +31,18 @@ def debugger_is_attached() -> bool:
 
 def execute_probabilistically(probability_to_execute: float) -> bool:
     """
+    Args:
+        probability_to_execute: the probability of returning True.
+
     Returns:
         True with a given probability.
+
+    >>> random.seed(22)
+    >>> execute_probabilistically(50.0)
+    False
+    >>> execute_probabilistically(50.0)
+    True
+
     """
     return random.uniform(0.0, 100.0) < probability_to_execute
 
