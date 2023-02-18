@@ -5,6 +5,7 @@
 """Miscellaneous utilities."""
 
 import os
+import random
 import sys
 
 
@@ -24,11 +25,19 @@ def debugger_is_attached() -> bool:
     Returns:
         True if a debugger is attached, False otherwise.
     """
-    gettrace = getattr(sys, 'gettrace', lambda: None)
+    gettrace = getattr(sys, "gettrace", lambda: None)
     return gettrace() is not None
 
 
-if __name__ == '__main__':
+def execute_probabilistically(probability_to_execute: float) -> bool:
+    """
+    Returns:
+        True with a given probability.
+    """
+    return random.uniform(0.0, 100.0) < probability_to_execute
+
+
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
