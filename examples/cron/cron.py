@@ -94,10 +94,10 @@ def run_command(timeout: Optional[int], timestamp_file: Optional[str]) -> int:
             logger.debug("Touching %s", timestamp_file)
             file_utils.touch_file(timestamp_file)
         return ret
-    except Exception as e:
-        logger.exception(e)
+    except Exception:
+        msg = "Cron subprocess failed; giving up."
+        logger.exception(msg)
         print("Cron subprocess failed, giving up.", file=sys.stderr)
-        logger.warning("Cron subprocess failed, giving up")
         return -1000
 
 
@@ -170,10 +170,9 @@ def main() -> int:
                             file=wf,
                         )
                 return retval
-        except lockfile.LockFileException as e:
-            logger.exception(e)
+        except lockfile.LockFileException:
             msg = f"Failed to acquire {lockfile_path}, giving up."
-            logger.error(msg)
+            logger.exception(msg)
             print(msg, file=sys.stderr)
             return 1000
     else:

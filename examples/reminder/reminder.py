@@ -172,10 +172,9 @@ class Reminder(object):
                     else:
                         self.handle_event_with_fixed_year(orig_date, label)
 
-            except Exception as e:
+            except Exception:
+                logger.exception("Skipping malformed line: %s", line)
                 print(f"Skipping unparsable line: {line}", file=sys.stderr)
-                logger.error("Skipping malformed line: %s", line)
-                logger.exception(e)
 
     def remind(
         self, count: Optional[int], days_ahead: Optional[int], say_date: bool
