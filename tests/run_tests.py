@@ -405,7 +405,7 @@ class DoctestTestRunner(TemplatedTestRunner):
     @overrides
     def identify_tests(self) -> List[TestToRun]:
         ret = []
-        out = exec_utils.cmd(f'grep -lR "^ *import doctest" {ROOT}/*')
+        out = exec_utils.cmd(f'/usr/bin/grep -lR "^ *import doctest" {ROOT}/*')
         for test in out.split("\n"):
             if re.match(r".*\.py$", test):
                 basename = file_utils.without_path(test)
