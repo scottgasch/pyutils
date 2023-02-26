@@ -265,7 +265,9 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                 return cls(json_dict)
 
             except Exception as e:
-                logger.exception(e)
+                logger.exception(
+                    "Failed to load path %s; raising an exception", filename
+                )
                 raise Exception(f"Failed to load {filename}.") from e
         return None
 

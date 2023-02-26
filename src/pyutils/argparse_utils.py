@@ -455,7 +455,7 @@ def valid_duration(txt: str) -> datetime.timedelta:
         secs = parse_duration(txt, raise_on_error=True)
         return datetime.timedelta(seconds=secs)
     except Exception as e:
-        logger.exception(e)
+        logger.exception("Exception while parsing a supposed duration: %s", txt)
         raise argparse.ArgumentTypeError(e) from e
 
 

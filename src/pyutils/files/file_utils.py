@@ -533,8 +533,8 @@ def get_file_raw_timestamps(filename: str) -> Optional[os.stat_result]:
     """
     try:
         return os.stat(filename)
-    except Exception as e:
-        logger.exception(e)
+    except Exception:
+        logger.exception("Failed to stat path %s; returning None", filename)
         return None
 
 

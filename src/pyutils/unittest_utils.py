@@ -31,46 +31,46 @@ from pyutils import bootstrap, config, function_utils
 
 logger = logging.getLogger(__name__)
 cfg = config.add_commandline_args(
-    f'Logging ({__file__})', 'Args related to function decorators'
+    f"Logging ({__file__})", "Args related to function decorators"
 )
 cfg.add_argument(
-    '--unittests_ignore_perf',
-    action='store_true',
+    "--unittests_ignore_perf",
+    action="store_true",
     default=False,
-    help='Ignore unittest perf regression in @check_method_for_perf_regressions',
+    help="Ignore unittest perf regression in @check_method_for_perf_regressions",
 )
 cfg.add_argument(
-    '--unittests_num_perf_samples',
+    "--unittests_num_perf_samples",
     type=int,
     default=50,
-    help='The count of perf timing samples we need to see before blocking slow runs on perf grounds',
+    help="The count of perf timing samples we need to see before blocking slow runs on perf grounds",
 )
 cfg.add_argument(
-    '--unittests_drop_perf_traces',
+    "--unittests_drop_perf_traces",
     type=str,
     nargs=1,
     default=None,
-    help='The identifier (i.e. file!test_fixture) for which we should drop all perf data',
+    help="The identifier (i.e. file!test_fixture) for which we should drop all perf data",
 )
 cfg.add_argument(
-    '--unittests_persistance_strategy',
-    choices=['FILE', 'DATABASE'],
-    default='FILE',
-    help='Should we persist perf data in a file or db?',
+    "--unittests_persistance_strategy",
+    choices=["FILE", "DATABASE"],
+    default="FILE",
+    help="Should we persist perf data in a file or db?",
 )
 cfg.add_argument(
-    '--unittests_perfdb_filename',
+    "--unittests_perfdb_filename",
     type=str,
-    metavar='FILENAME',
+    metavar="FILENAME",
     default=f'{os.environ["HOME"]}/.python_unittest_performance_db',
-    help='File in which to store perf data (iff --unittests_persistance_strategy is FILE)',
+    help="File in which to store perf data (iff --unittests_persistance_strategy is FILE)",
 )
 cfg.add_argument(
-    '--unittests_perfdb_spec',
+    "--unittests_perfdb_spec",
     type=str,
-    metavar='DBSPEC',
-    default='mariadb+pymysql://python_unittest:<PASSWORD>@db.house:3306/python_unittest_performance',
-    help='Db connection spec for perf data (iff --unittest_persistance_strategy is DATABASE)',
+    metavar="DBSPEC",
+    default="mariadb+pymysql://python_unittest:<PASSWORD>@db.house:3306/python_unittest_performance",
+    help="Db connection spec for perf data (iff --unittest_persistance_strategy is DATABASE)",
 )
 
 unittest.main = bootstrap.initialize(unittest.main)
@@ -123,7 +123,7 @@ class FileBasedPerfRegressionDataPersister(PerfRegressionDataPersister):
         self.traces_to_delete: List[str] = []
 
     def load_performance_data(self, method_id: str) -> Dict[str, List[float]]:
-        with open(self.filename, 'rb') as f:
+        with open(self.filename, "rb") as f:
             return pickle.load(f)
 
     def save_performance_data(self, method_id: str, data: Dict[str, List[float]]):
@@ -131,7 +131,7 @@ class FileBasedPerfRegressionDataPersister(PerfRegressionDataPersister):
             if trace in data:
                 data[trace] = []
 
-        with open(self.filename, 'wb') as f:
+        with open(self.filename, "wb") as f:
             pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)
 
     def delete_performance_data(self, method_id: str):
@@ -191,35 +191,34 @@ def check_method_for_perf_regressions(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper_perf_monitor(*args, **kwargs):
-        if config.config['unittests_ignore_perf']:
+        if config.config["unittests_ignore_perf"]:
             return func(*args, **kwargs)
 
-        if config.config['unittests_persistance_strategy'] == 'FILE':
-            filename = config.config['unittests_perfdb_filename']
+        if config.config["unittests_persistance_strategy"] == "FILE":
+            filename = config.config["unittests_perfdb_filename"]
             helper = FileBasedPerfRegressionDataPersister(filename)
-        elif config.config['unittests_persistance_strategy'] == 'DATABASE':
+        elif config.config["unittests_persistance_strategy"] == "DATABASE":
             raise NotImplementedError(
-                'Persisting to a database is not implemented in this version'
+                "Persisting to a database is not implemented in this version"
             )
         else:
-            raise Exception('Unknown/unexpected --unittests_persistance_strategy value')
+            raise Exception("Unknown/unexpected --unittests_persistance_strategy value")
 
         func_id = function_utils.function_identifier(func)
         func_name = func.__name__
-        logger.debug('Watching %s\'s performance...', func_name)
+        logger.debug("Watching %s's performance...", func_name)
         logger.debug('Canonical function identifier = "%s"', func_id)
 
         try:
             perfdb = helper.load_performance_data(func_id)
-        except Exception as e:
-            logger.exception(e)
-            msg = 'Unable to load perfdb; skipping it...'
-            logger.warning(msg)
+        except Exception:
+            msg = "Unable to load perfdb; skipping it..."
+            logger.exception(msg)
             warnings.warn(msg)
             perfdb = {}
 
         # cmdline arg to forget perf traces for function
-        drop_id = config.config['unittests_drop_perf_traces']
+        drop_id = config.config["unittests_drop_perf_traces"]
         if drop_id is not None:
             helper.delete_performance_data(drop_id)
 
@@ -231,28 +230,28 @@ def check_method_for_perf_regressions(func: Callable) -> Callable:
 
         # See if it was unexpectedly slow.
         hist = perfdb.get(func_id, [])
-        if len(hist) < config.config['unittests_num_perf_samples']:
+        if len(hist) < config.config["unittests_num_perf_samples"]:
             hist.append(run_time)
-            logger.debug('Still establishing a perf baseline for %s', func_name)
+            logger.debug("Still establishing a perf baseline for %s", func_name)
         else:
             stdev = statistics.stdev(hist)
-            logger.debug('For %s, performance stdev=%.2f', func_name, stdev)
+            logger.debug("For %s, performance stdev=%.2f", func_name, stdev)
             slowest = hist[-1]
-            logger.debug('For %s, slowest perf on record is %.2fs', func_name, slowest)
+            logger.debug("For %s, slowest perf on record is %.2fs", func_name, slowest)
             limit = slowest + stdev * 4
-            logger.debug('For %s, max acceptable runtime is %.2fs', func_name, limit)
+            logger.debug("For %s, max acceptable runtime is %.2fs", func_name, limit)
             logger.debug(
-                'For %s, actual observed runtime was %.2fs', func_name, run_time
+                "For %s, actual observed runtime was %.2fs", func_name, run_time
             )
             if run_time > limit:
-                msg = f'''{func_id} performance has regressed unacceptably.
+                msg = f"""{func_id} performance has regressed unacceptably.
 {slowest:f}s is the slowest runtime on record in {len(hist)} perf samples.
 It just ran in {run_time:f}s which is 4+ stdevs slower than the slowest.
 Here is the current, full db perf timing distribution:
 
-'''
+"""
                 for x in hist:
-                    msg += f'{x:f}\n'
+                    msg += f"{x:f}\n"
                 logger.error(msg)
                 slf = args[0]  # Peek at the wrapped function's self ref.
                 slf.fail(msg)  # ...to fail the testcase.
@@ -261,7 +260,7 @@ Here is the current, full db perf timing distribution:
 
         # Don't spam the database with samples; just pick a random
         # sample from what we have and store that back.
-        n = min(config.config['unittests_num_perf_samples'], len(hist))
+        n = min(config.config["unittests_num_perf_samples"], len(hist))
         hist = random.sample(hist, n)
         hist.sort()
         perfdb[func_id] = hist
@@ -271,7 +270,7 @@ Here is the current, full db perf timing distribution:
     return wrapper_perf_monitor
 
 
-def check_all_methods_for_perf_regressions(prefix='test_'):
+def check_all_methods_for_perf_regressions(prefix="test_"):
     """This decorator is meant to apply to classes that subclass from
     :class:`unittest.TestCase` and, when applied, has the affect of
     decorating each method that matches the `prefix` given with the
@@ -305,7 +304,7 @@ def check_all_methods_for_perf_regressions(prefix='test_'):
             for name, m in inspect.getmembers(cls, inspect.isfunction):
                 if name.startswith(prefix):
                     setattr(cls, name, check_method_for_perf_regressions(m))
-                    logger.debug('Wrapping %s:%s.', cls.__name__, name)
+                    logger.debug("Wrapping %s:%s.", cls.__name__, name)
         return cls
 
     return decorate_the_testcase
@@ -324,7 +323,7 @@ class RecordStdout(contextlib.AbstractContextManager):
 
     def __init__(self) -> None:
         super().__init__()
-        self.destination = tempfile.SpooledTemporaryFile(mode='r+')
+        self.destination = tempfile.SpooledTemporaryFile(mode="r+")
         self.recorder: Optional[contextlib.redirect_stdout] = None
 
     def __enter__(self) -> Callable[[], tempfile.SpooledTemporaryFile]:
@@ -354,7 +353,7 @@ class RecordStderr(contextlib.AbstractContextManager):
 
     def __init__(self) -> None:
         super().__init__()
-        self.destination = tempfile.SpooledTemporaryFile(mode='r+')
+        self.destination = tempfile.SpooledTemporaryFile(mode="r+")
         self.recorder: Optional[contextlib.redirect_stdout[Any]] = None
 
     def __enter__(self) -> Callable[[], tempfile.SpooledTemporaryFile]:
@@ -388,7 +387,7 @@ class RecordMultipleStreams(contextlib.AbstractContextManager):
     def __init__(self, *files) -> None:
         super().__init__()
         self.files = [*files]
-        self.destination = tempfile.SpooledTemporaryFile(mode='r+')
+        self.destination = tempfile.SpooledTemporaryFile(mode="r+")
         self.saved_writes: List[Callable[..., Any]] = []
 
     def __enter__(self) -> Callable[[], tempfile.SpooledTemporaryFile]:
@@ -404,7 +403,7 @@ class RecordMultipleStreams(contextlib.AbstractContextManager):
         return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

@@ -46,7 +46,7 @@ def cmd_showing_output(
         p.kill()
         raise subprocess.TimeoutExpired(command, timeout_seconds)
 
-    line_enders = set([b'\n', b'\r'])
+    line_enders = set([b"\n", b"\r"])
     sel = selectors.DefaultSelector()
     with subprocess.Popen(
         command,
@@ -213,11 +213,13 @@ def cmd_in_background(command: str, *, silent: bool = False) -> subprocess.Popen
     def kill_subproc() -> None:
         try:
             if subproc.poll() is None:
-                logger.info('At exit handler: killing %s (%s)', subproc, command)
+                logger.info("At exit handler: killing %s (%s)", subproc, command)
                 subproc.terminate()
                 subproc.wait(timeout=10.0)
-        except BaseException as be:
-            logger.exception(be)
+        except BaseException:
+            logger.exception(
+                "Failed to terminate background process %s; giving up.", subproc
+            )
 
     atexit.register(kill_subproc)
     return subproc
@@ -231,7 +233,7 @@ def cmd_list(command: List[str]) -> str:
     return ret.decode("utf-8")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

@@ -1174,8 +1174,8 @@ def main() -> None:
             continue
         try:
             dt = parser.parse(line)
-        except Exception as e:
-            logger.exception(e)
+        except Exception:
+            logger.exception("Could not parse supposed date expression: %s", line)
             print("Unrecognized.")
         else:
             assert dt is not None

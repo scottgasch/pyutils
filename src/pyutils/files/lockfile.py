@@ -220,8 +220,8 @@ class LockFile(contextlib.AbstractContextManager):
         if not self.zk_client:
             try:
                 os.unlink(self.lockfile)
-            except Exception as e:
-                logger.exception(e)
+            except Exception:
+                logger.exception("Failed to unlink path %s; giving up.", self.lockfile)
         else:
             if self.zk_lease:
                 self.zk_lease.release()
@@ -287,8 +287,10 @@ class LockFile(contextlib.AbstractContextManager):
                 with open(self.lockfile, "r") as rf:
                     lines = rf.readlines()
                     return lines[0]
-            except Exception as e:
-                logger.exception(e)
+            except Exception:
+                logger.exception(
+                    "Failed to read from path %s; giving up.", self.lockfile
+                )
         return None
 
     def _detect_stale_lockfile(self) -> None:

@@ -1094,7 +1094,7 @@ class RemoteExecutor(BaseExecutor):
         if self._check_if_cancelled(bundle):
             try:
                 return self._process_work_result(bundle)
-            except Exception as e:
+            except Exception:
                 logger.warning(
                     '%s: bundle says it\'s cancelled upfront but no results?!', bundle
                 )
@@ -1107,10 +1107,10 @@ class RemoteExecutor(BaseExecutor):
                     # it is done but we can't find the results it
                     # should have copied over.  Reschedule the whole
                     # thing.
-                    logger.exception(e)
-                    logger.error(
+                    logger.exception(
                         '%s: We are the original owner thread and yet there are '
-                        'no results for this bundle.  This is unexpected and bad.',
+                        'no results for this bundle.  This is unexpected and bad. '
+                        'Attempting an emergency retry...',
                         bundle,
                     )
                     return self._emergency_retry_nasty_bundle(bundle)
@@ -1134,14 +1134,13 @@ class RemoteExecutor(BaseExecutor):
                 logger.debug(
                     "%s: Copying to %s took %.1fs.", bundle, worker, xfer_latency
                 )
-            except Exception as e:
+            except Exception:
                 self._release_worker(bundle)
                 if is_original:
                     # Weird.  We tried to copy the code to the worker
                     # and it failed...  And we're the original bundle.
                     # We have to retry.
-                    logger.exception(e)
-                    logger.error(
+                    logger.exception(
                         "%s: Failed to send instructions to the worker machine?! "
                         "This is not expected; we\'re the original bundle so this shouldn\'t "
                         "be a race condition.  Attempting an emergency retry...",
@@ -1245,9 +1244,8 @@ class RemoteExecutor(BaseExecutor):
         # unpickle the results we got from the remove machine.  If we
         # still have an active ssh subprocess, keep waiting on it.
         # Otherwise, time for an emergency reschedule.
-        except Exception as e:
-            logger.exception(e)
-            logger.error('%s: Something unexpected just happened...', bundle)
+        except Exception:
+            logger.exception('%s: Something unexpected just happened...', bundle)
             if p is not None:
                 logger.warning(
                     "%s: Failed to wrap up \"done\" bundle, re-waiting on active ssh.",
@@ -1323,8 +1321,7 @@ class RemoteExecutor(BaseExecutor):
                     serialized = rb.read()
                 result = cloudpickle.loads(serialized)
             except Exception as e:
-                logger.exception(e)
-                logger.error('Failed to load %s... this is bad news.', result_file)
+                logger.exception('Failed to load %s... this is bad news.', result_file)
                 self._release_worker(bundle)
 
                 # Re-raise the exception; the code in _wait_for_process may

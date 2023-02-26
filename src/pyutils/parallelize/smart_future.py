@@ -79,11 +79,11 @@ def wait_any(
                 if log_exceptions and not f.cancelled():
                     exception = f.exception()
                     if exception is not None:
-                        logger.warning(
+                        logger.exception(
                             "Future 0x%x raised an unhandled exception and exited.",
                             id(f),
+                            exc_info=exception,
                         )
-                        logger.exception(exception)
                         raise exception
                 yield smart_future_by_real_future[f]
         except concurrent.futures.TimeoutError:
@@ -125,11 +125,11 @@ def wait_all(
             if not f.cancelled():
                 exception = f.exception()
                 if exception is not None:
-                    logger.warning(
+                    logger.exception(
                         "Future 0x%x raised an unhandled exception and exited.",
                         id(f),
+                        exc_info=exception,
                     )
-                    logger.exception(exception)
                     raise exception
     assert len(done) == len(real_futures)
     assert len(not_done) == 0
