@@ -511,7 +511,7 @@ def _log_about_logging(
     level_name = logging._levelToName.get(
         default_logging_level, str(default_logging_level)
     )
-    logger.debug("Initialized global logging; default logging level is %s.", level_name)
+    logger.debug("Initialized global logging; logging level is %s.", level_name)
     if (
         config.config["logging_clear_preexisting_handlers"]
         and preexisting_handlers_count > 0

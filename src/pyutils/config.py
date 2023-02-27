@@ -408,7 +408,7 @@ class Config:
         >>> to_bool('on')
         True
         """
-        return in_str.lower() in ("true", "1", "yes", "y", "t", "on")
+        return in_str.lower() in {"true", "1", "yes", "y", "t", "on"}
 
     def _process_dynamic_args(self, event):
         """Invoked as a callback when a zk-based config changed."""
@@ -664,7 +664,7 @@ class Config:
     def late_logging(self):
         """Log messages saved earlier now that logging has been initialized."""
         logger = logging.getLogger(__name__)
-        logger.debug("Original commandline was: %s", ORIG_ARGV)
+        logger.debug("Invocation commandline: %s", ORIG_ARGV)
         for _ in self.saved_messages:
             logger.debug(_)
 
@@ -733,7 +733,7 @@ def dump_config() -> None:
 
 def argv_after_parse() -> Optional[List[str]]:
     """Return the argv with all known arguments removed."""
-    if CONFIG.has_been_parsed:
+    if CONFIG.has_been_parsed():
         return CONFIG.parsed_argv
     return None
 
