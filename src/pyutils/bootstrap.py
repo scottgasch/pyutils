@@ -298,7 +298,7 @@ def initialize(entry_point):
         entry_descr = None
         try:
             entry_filename = entry_point.__code__.co_filename
-            entry_descr = entry_point.__code__.__repr__()
+            entry_descr = repr(entry_point.__code__)
         except Exception:
             if (
                 "__globals__" in entry_point.__dict__

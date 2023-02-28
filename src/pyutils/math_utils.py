@@ -203,7 +203,7 @@ def gcd_float_sequence(lst: List[float]) -> float:
     """
     if len(lst) <= 0:
         raise ValueError("Need at least one number")
-    elif len(lst) == 1:
+    if len(lst) == 1:
         return lst[0]
     assert len(lst) >= 2
     gcd = gcd_floats(lst[0], lst[1])

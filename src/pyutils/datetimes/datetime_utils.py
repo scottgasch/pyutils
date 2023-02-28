@@ -701,13 +701,13 @@ def n_timeunits_from_base(
 
 def get_format_string(
     *,
-    date_time_separator=" ",
-    include_timezone=True,
-    include_dayname=False,
-    use_month_abbrevs=False,
-    include_seconds=True,
-    include_fractional=False,
-    twelve_hour=True,
+    date_time_separator: str = " ",
+    include_timezone: bool = True,
+    include_dayname: bool = False,
+    use_month_abbrevs: bool = False,
+    include_seconds: bool = True,
+    include_fractional: bool = False,
+    twelve_hour: bool = True,
 ) -> str:
     """
     Helper to return a format string without looking up the documentation
@@ -769,13 +769,13 @@ def get_format_string(
 def datetime_to_string(
     dt: datetime.datetime,
     *,
-    date_time_separator=" ",
-    include_timezone=True,
-    include_dayname=False,
-    use_month_abbrevs=False,
-    include_seconds=True,
-    include_fractional=False,
-    twelve_hour=True,
+    date_time_separator: str = " ",
+    include_timezone: bool = True,
+    include_dayname: bool = False,
+    use_month_abbrevs: bool = False,
+    include_seconds: bool = True,
+    include_fractional: bool = False,
+    twelve_hour: bool = True,
 ) -> str:
     """
     A nice way to convert a datetime into a string; arguably better than
@@ -819,13 +819,13 @@ def datetime_to_string(
 def string_to_datetime(
     txt: str,
     *,
-    date_time_separator=" ",
-    include_timezone=True,
-    include_dayname=False,
-    use_month_abbrevs=False,
-    include_seconds=True,
-    include_fractional=False,
-    twelve_hour=True,
+    date_time_separator: str = " ",
+    include_timezone: bool = True,
+    include_dayname: bool = False,
+    use_month_abbrevs: bool = False,
+    include_seconds: bool = True,
+    include_fractional: bool = False,
+    twelve_hour: bool = True,
 ) -> Tuple[datetime.datetime, str]:
     """A nice way to convert a string into a datetime.  Returns both the
     datetime and the format string used to parse it.  Also consider
@@ -878,10 +878,10 @@ def timestamp() -> str:
 def time_to_string(
     dt: datetime.datetime,
     *,
-    include_seconds=True,
-    include_fractional=False,
-    include_timezone=False,
-    twelve_hour=True,
+    include_seconds: bool = True,
+    include_fractional: bool = False,
+    include_timezone: bool = False,
+    twelve_hour: bool = True,
 ) -> str:
     """A nice way to convert a datetime into a time (only) string.
     This ignores the date part of the datetime completely.
@@ -1043,7 +1043,7 @@ def minute_number_to_time_string(minute_num: MinuteOfDay) -> str:
     return f"{hour:2}:{minute:02}{ampm}"
 
 
-def parse_duration(duration: str, raise_on_error=False) -> int:
+def parse_duration(duration: str, raise_on_error: bool = False) -> int:
     """
     Parse a duration in string form into a delta seconds.
 
@@ -1101,7 +1101,7 @@ def parse_duration(duration: str, raise_on_error=False) -> int:
     return seconds
 
 
-def describe_duration(seconds: int, *, include_seconds=False) -> str:
+def describe_duration(seconds: int, *, include_seconds: bool = False) -> str:
     """
     Describe a duration represented as a count of seconds nicely.
 
@@ -1186,7 +1186,7 @@ def describe_timedelta(delta: datetime.timedelta) -> str:
     return describe_duration(int(delta.total_seconds()))  # Note: drops milliseconds
 
 
-def describe_duration_briefly(seconds: int, *, include_seconds=False) -> str:
+def describe_duration_briefly(seconds: int, *, include_seconds: bool = False) -> str:
     """
     Describe a duration briefly.
 
@@ -1232,13 +1232,14 @@ def describe_duration_briefly(seconds: int, *, include_seconds=False) -> str:
 
 
 def describe_timedelta_briefly(
-    delta: datetime.timedelta, *, include_seconds=False
+    delta: datetime.timedelta, *, include_seconds: bool = False
 ) -> str:
     """
     Describe a duration represented by a timedelta object.
 
     Args:
         delta: the timedelta to describe briefly
+        include_seconds: should we include the second delta?
 
     Returns:
         A string description of the input timedelta object.
@@ -1324,7 +1325,7 @@ EASTER_ORTHODOX = 2
 EASTER_WESTERN = 3
 
 
-def easter(year, method=EASTER_WESTERN):
+def easter(year: int, method: int = EASTER_WESTERN):
     """
     This method was ported from the work done by GM Arts,
     on top of the algorithm by Claus Tondering, which was

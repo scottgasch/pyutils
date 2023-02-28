@@ -70,7 +70,7 @@ class DirectoryFileFilter(object):
         for direntry in os.scandir(self.directory):
             if direntry.is_file(follow_symlinks=True):
                 mtime = direntry.stat(follow_symlinks=True).st_mtime
-                path = f'{self.directory}/{direntry.name}'
+                path = f"{self.directory}/{direntry.name}"
                 self._update_file(path, mtime)
 
     def _update_file(self, filename: str, mtime: Optional[float] = None):
@@ -87,7 +87,7 @@ class DirectoryFileFilter(object):
         if self.mtime_by_filename.get(filename, 0) != mtime:
             md5 = file_utils.get_file_md5(filename)
             logger.debug(
-                'Computed/stored %s\'s MD5 at ts=%.2f (%s)', filename, mtime, md5
+                "Computed/stored %s's MD5 at ts=%.2f (%s)", filename, mtime, md5
             )
             self.mtime_by_filename[filename] = mtime
             self.md5_by_filename[filename] = md5
@@ -110,11 +110,11 @@ class DirectoryFileFilter(object):
         """
         self._update_file(filename)
         file_md5 = self.md5_by_filename.get(filename, 0)
-        logger.debug('%s\'s checksum is %s', filename, file_md5)
+        logger.debug("%s's checksum is %s", filename, file_md5)
         mem_hash = hashlib.md5()
         mem_hash.update(proposed_contents)
         md5 = mem_hash.hexdigest()
-        logger.debug('Item\'s checksum is %s', md5)
+        logger.debug("Item's checksum is %s", md5)
         return md5 != file_md5
 
 
@@ -173,7 +173,9 @@ class DirectoryAllFilesFilter(DirectoryFileFilter):
             self.md5_by_filename[filename] = md5
             self.all_md5s.add(md5)
 
-    def apply(self, proposed_contents: Any, ignored_filename: str = None) -> bool:
+    def apply(
+        self, proposed_contents: Any, ignored_filename: Optional[str] = None
+    ) -> bool:
         """Call this before writing a new file to directory with the
         proposed_contents to be written and it will return a value that
         indicates whether the identical contents is already sitting in
@@ -196,7 +198,7 @@ class DirectoryAllFilesFilter(DirectoryFileFilter):
         return md5 not in self.all_md5s
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

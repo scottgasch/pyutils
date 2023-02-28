@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-nested-blocks
 
 # © Copyright 2021-2023, Scott Gasch
 
@@ -930,10 +932,10 @@ class RemoteExecutor(BaseExecutor):
                     base_score = 0
                     for record in self.workers:
                         if worker.machine == record.machine:
-                            base_score = float(record.weight)
-                            base_score = 1.0 / base_score
-                            base_score *= 200.0
-                            base_score = int(base_score)
+                            temp_score = float(record.weight)
+                            temp_score = 1.0 / temp_score
+                            temp_score *= 200.0
+                            base_score = int(temp_score)
                             break
 
                     for uuid in bundle_uuids:
@@ -1529,7 +1531,7 @@ class ConfigRemoteWorkerPoolProvider(
     RemoteWorkerPoolProvider, persistent.JsonFileBasedPersistent
 ):
     def __init__(self, json_remote_worker_pool: Dict[str, Any]):
-        self.remote_worker_pool = []
+        self.remote_worker_pool: List[RemoteWorkerRecord] = []
         for record in json_remote_worker_pool['remote_worker_records']:
             self.remote_worker_pool.append(
                 dataclass_utils.dataclass_from_dict(RemoteWorkerRecord, record)

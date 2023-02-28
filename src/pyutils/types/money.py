@@ -61,18 +61,18 @@ class Money(object):
 
     def __repr__(self):
         q = Decimal(10) ** -2
-        sign, digits, exp = self.amount.quantize(q).as_tuple()
+        sign, digits, _ = self.amount.quantize(q).as_tuple()
         result = []
         digits = list(map(str, digits))
-        build, next = result.append, digits.pop
+        build, nxt = result.append, digits.pop
         for i in range(2):
-            build(next() if digits else "0")
+            build(nxt() if digits else "0")
         build(".")
         if not digits:
             build("0")
         i = 0
         while digits:
-            build(next())
+            build(nxt())
             i += 1
             if i == 3 and digits:
                 i = 0

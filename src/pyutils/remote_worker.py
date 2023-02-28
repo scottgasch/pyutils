@@ -106,9 +106,9 @@ def main() -> None:
     """Remote worker entry point."""
 
     in_file = config.config["code_file"]
-    assert in_file and type(in_file) == str
+    assert in_file and isinstance(in_file, str)
     out_file = config.config["result_file"]
-    assert out_file and type(out_file) == str
+    assert out_file and isinstance(out_file, str)
 
     thread = None
     stop_event = None

@@ -18,7 +18,7 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Union
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
@@ -139,7 +139,7 @@ def rate_limited(n_calls: int, *, per_period_in_seconds: float = 1.0) -> Callabl
                 wait_time = min_interval_seconds - elapsed_since_last
             else:
                 wait_time = 0.0
-            logger.debug('@%.4f> wait_time = %.4f', time.time(), wait_time)
+            logger.debug("@%.4f> wait_time = %.4f", time.time(), wait_time)
             return wait_time
 
         def wrapper_wrapper_rate_limited(*args, **kargs) -> Any:
@@ -151,11 +151,11 @@ def rate_limited(n_calls: int, *, per_period_in_seconds: float = 1.0) -> Callabl
                     ):
                         break
             with cv:
-                logger.debug('@%.4f> calling it...', time.time())
+                logger.debug("@%.4f> calling it...", time.time())
                 ret = func(*args, **kargs)
                 last_invocation_timestamp[0] = time.time()
                 logger.debug(
-                    '@%.4f> Last invocation <- %.4f',
+                    "@%.4f> Last invocation <- %.4f",
                     time.time(),
                     last_invocation_timestamp[0],
                 )
@@ -303,7 +303,7 @@ class _SingletonWrapper:
     def __call__(self, *args, **kwargs):
         """Returns a single instance of decorated class"""
         logger.debug(
-            '@singleton returning global instance of %s', self.__wrapped__.__name__
+            "@singleton returning global instance of %s", self.__wrapped__.__name__
         )
         if self._instance is None:
             self._instance = self.__wrapped__(*args, **kwargs)
@@ -377,10 +377,10 @@ def memoized(func: Callable) -> Callable:
         cache_key = args + tuple(kwargs.items())
         if cache_key not in wrapper_memoized.cache:
             value = func(*args, **kwargs)
-            logger.debug('Memoizing %s => %s for %s', cache_key, value, func.__name__)
+            logger.debug("Memoizing %s => %s for %s", cache_key, value, func.__name__)
             wrapper_memoized.cache[cache_key] = value
         else:
-            logger.debug('Returning memoized value for %s', {func.__name__})
+            logger.debug("Returning memoized value for %s", {func.__name__})
         return wrapper_memoized.cache[cache_key]
 
     wrapper_memoized.cache = {}  # type: ignore
@@ -451,11 +451,11 @@ def predicated_retry_with_backoff(
         @functools.wraps(f)
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay_sec  # make mutable
-            logger.debug('deco_retry: will make up to %d attempts...', mtries)
+            logger.debug("deco_retry: will make up to %d attempts...", mtries)
             retval = f(*args, **kwargs)
             while mtries > 0:
                 if predicate(retval) is True:
-                    logger.debug('Predicate succeeded, deco_retry is done.')
+                    logger.debug("Predicate succeeded, deco_retry is done.")
                     return retval
                 logger.debug("Predicate failed, sleeping and retrying.")
                 mtries -= 1
@@ -469,7 +469,7 @@ def predicated_retry_with_backoff(
     return deco_retry
 
 
-def retry_if_false(tries: int, *, delay_sec=3.0, backoff=2.0):
+def retry_if_false(tries: int, *, delay_sec: float = 3.0, backoff: float = 2.0):
     """A helper for `@predicated_retry_with_backoff` that retries a
     decorated function as long as it keeps returning False.
 
@@ -514,7 +514,7 @@ def retry_if_false(tries: int, *, delay_sec=3.0, backoff=2.0):
     )
 
 
-def retry_if_none(tries: int, *, delay_sec=3.0, backoff=2.0):
+def retry_if_none(tries: int, *, delay_sec: float = 3.0, backoff: float = 2.0):
     """A helper for `@predicated_retry_with_backoff` that continues to
     invoke the wrapped function as long as it keeps returning None.
     Retries up to N times with a delay between each retry and a
@@ -904,7 +904,7 @@ def timeout(
     return decorate
 
 
-def synchronized(lock):
+def synchronized(lock: Union[threading.Lock, threading.RLock]):
     """Emulates java's "synchronized" keyword: given a lock, require
     that threads take that lock (or wait) before invoking the wrapped
     function and automatically releases the lock afterwards.
@@ -982,7 +982,7 @@ def call_probabilistically(probability_of_call: float) -> Callable:
     return decorator
 
 
-def decorate_matching_methods_with(decorator, acl=None):
+def decorate_matching_methods_with(decorator: Callable, acl: Optional[Callable] = None):
     """Apply the given decorator to all methods in a class whose names
     begin with prefix.  If prefix is None (default), decorate all
     methods in the class.
@@ -1033,17 +1033,14 @@ def decorate_matching_methods_with(decorator, acl=None):
 
     def decorate_the_class(cls):
         for name, m in inspect.getmembers(cls, inspect.isfunction):
-            if acl is None:
+            if acl is None or acl(name):
                 setattr(cls, name, decorator(m))
-            else:
-                if acl(name):
-                    setattr(cls, name, decorator(m))
         return cls
 
     return decorate_the_class
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

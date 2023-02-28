@@ -158,9 +158,10 @@ def run_silently(command: str, timeout_seconds: Optional[float] = None) -> None:
     long.
 
     Args:
-        command: the command to run timeout_seconds: the optional
-            max number of seconds to allow the subprocess to execute or
-            None to indicate no timeout
+        command: the command to run.
+        timeout_seconds: the optional max number of seconds to allow
+            the subprocess to execute or None (default) to indicate no
+            time limit.
 
     Returns:
         No return value; error conditions (including non-zero child process

@@ -15,9 +15,9 @@ from pyutils.collectionz.bidict import BiDict
 
 special_characters = BiDict(
     {
-        ' ': 27,
-        '.': 28,
-        ',': 29,
+        " ": 27,
+        ".": 28,
+        ",": 29,
         "-": 30,
         '"': 31,
     }
@@ -48,8 +48,8 @@ def compress(uncompressed: str) -> bytes:
     """
     compressed = bitstring.BitArray()
     for letter in uncompressed:
-        if 'a' <= letter <= 'z':
-            bits = ord(letter) - ord('a') + 1  # 1..26
+        if "a" <= letter <= "z":
+            bits = ord(letter) - ord("a") + 1  # 1..26
         else:
             if letter not in special_characters:
                 raise Exception(
@@ -81,7 +81,7 @@ def decompress(compressed: bytes) -> str:
     'scott'
 
     """
-    decompressed = ''
+    decompressed = ""
     kompressed = bitstring.BitArray(compressed)
 
     # There are compressed messages that legitimately end with the
@@ -113,15 +113,16 @@ def decompress(compressed: bytes) -> str:
         chunk = chunk.uint
         if chunk == 0:
             break
-        elif 1 <= chunk <= 26:
-            letter = chr(chunk - 1 + ord('a'))
+
+        if 1 <= chunk <= 26:
+            letter = chr(chunk - 1 + ord("a"))
         else:
             letter = special_characters.inverse[chunk][0]
         decompressed += letter
     return decompressed
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

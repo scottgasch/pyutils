@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=too-many-nested-blocks
 
 # © Copyright 2021-2023, Scott Gasch
 
@@ -29,7 +30,7 @@ class ParseError(Exception):
 class Document:
     """A class representing a searchable document."""
 
-    docid: str = ''
+    docid: str = ""
     """A unique identifier for each document -- must be provided
     by the caller.  See :meth:`python_modules.id_generator.get` or
     :meth:`python_modules.string_utils.generate_uuid` for potential
@@ -425,18 +426,18 @@ class Node(object):
                                 f'Invalid key:value syntax at "{tag}"'
                             ) from v
 
-                        if key == '*':
+                        if key == "*":
                             r = set()
                             for kv, s in self.corpus.docids_by_property.items():
-                                if value in ('*', kv[1]):
+                                if value in ("*", kv[1]):
                                     r.update(s)
                         else:
-                            if value == '*':
+                            if value == "*":
                                 r = self.corpus.get_docids_with_property(key)
                             else:
                                 r = self.corpus.get_docids_by_property(key, value)
                     else:
-                        if tag == '*':
+                        if tag == "*":
                             r = set()
                             for s in self.corpus.docids_by_tag.values():
                                 r.update(s)
@@ -466,7 +467,7 @@ class Node(object):
         return retval
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

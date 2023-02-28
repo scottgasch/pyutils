@@ -49,7 +49,7 @@ def remove_hash_comments(x: str) -> str:
 def slurp_file(
     filename: str,
     *,
-    skip_blank_lines=False,
+    skip_blank_lines: bool = False,
     line_transformers: Optional[List[Callable[[str], str]]] = None,
 ):
     """Reads in a file's contents line-by-line to a memory buffer applying
@@ -299,14 +299,16 @@ def get_canonical_path(filespec: str) -> str:
     return os.path.realpath(filespec)
 
 
-def create_path_if_not_exist(path, on_error=None) -> None:
+def create_path_if_not_exist(
+    path: str, on_error: Callable[[str, OSError], None] = None
+) -> None:
     """
     Attempts to create path if it does not exist already.
 
     Args:
         path: the path to attempt to create
-        on_error: If True, it's invoked on error conditions.  Otherwise
-            any exceptions are raised.
+        on_error: If set, it's invoked on error conditions and passed then
+            path and OSError that it caused.
 
     See also :meth:`does_file_exist`.
 
@@ -711,7 +713,8 @@ def set_file_raw_atime_and_mtime(filename: str, ts: float = None):
 
 
 def _convert_file_timestamp_to_datetime(
-    filename: str, producer
+    filename: str,
+    producer: Callable[[str], Optional[float]],
 ) -> Optional[datetime.datetime]:
     """
     Converts a raw file timestamp into a Python datetime.
@@ -719,7 +722,6 @@ def _convert_file_timestamp_to_datetime(
     Args:
         filename: file whose timestamps should be converted.
         producer: source of the timestamp.
-
     Returns:
         The datetime.
     """
@@ -962,7 +964,7 @@ def describe_file_timestamp(filename: str, extractor, *, brief=False) -> Optiona
         return describe_duration(age)
 
 
-def describe_file_atime(filename: str, *, brief=False) -> Optional[str]:
+def describe_file_atime(filename: str, *, brief: bool = False) -> Optional[str]:
     """
     Describe how long ago a file was accessed.
 
@@ -989,7 +991,7 @@ def describe_file_atime(filename: str, *, brief=False) -> Optional[str]:
     return describe_file_timestamp(filename, lambda x: x.st_atime, brief=brief)
 
 
-def describe_file_ctime(filename: str, *, brief=False) -> Optional[str]:
+def describe_file_ctime(filename: str, *, brief: bool = False) -> Optional[str]:
     """Describes a file's creation time.
 
     Args:
@@ -1013,7 +1015,7 @@ def describe_file_ctime(filename: str, *, brief=False) -> Optional[str]:
     return describe_file_timestamp(filename, lambda x: x.st_ctime, brief=brief)
 
 
-def describe_file_mtime(filename: str, *, brief=False) -> Optional[str]:
+def describe_file_mtime(filename: str, *, brief: bool = False) -> Optional[str]:
     """Describes how long ago a file was modified.
 
     Args:
@@ -1095,13 +1097,13 @@ def get_files(directory: str):
             yield full_path
 
 
-def get_matching_files(directory: str, glob: str):
+def get_matching_files(directory: str, glob_string: str):
     """
     Returns the subset of files whose name matches a glob.
 
     Args:
         directory: the directory to match files within.
-        glob: the globbing pattern (may include '*' and '?') to
+        glob_string: the globbing pattern (may include '*' and '?') to
             use when matching files.
 
     Returns:
@@ -1111,7 +1113,7 @@ def get_matching_files(directory: str, glob: str):
     See also :meth:`get_files`, :meth:`expand_globs`.
     """
     for filename in get_files(directory):
-        if fnmatch.fnmatch(filename, glob):
+        if fnmatch.fnmatch(filename, glob_string):
             yield filename
 
 
@@ -1156,23 +1158,23 @@ def get_files_recursive(directory: str):
             yield file_or_directory
 
 
-def get_matching_files_recursive(directory: str, glob: str):
-    """
-    Returns the subset of files whose name matches a glob under a root recursively.
+def get_matching_files_recursive(directory: str, glob_string: str):
+    """Returns the subset of files whose name matches a glob under a root recursively.
 
     Args:
         directory: the root under which to search
-        glob: a globbing pattern that describes the subset of files and directories
-            to return.  May contain '?' and '*'.
+        glob_string: a globbing pattern that describes the subset of
+            files and directories to return.  May contain '?' and '*'.
 
     Returns:
         A generator that yields all files and directories under the given root
         directory that match the given globbing pattern.
 
     See also :meth:`get_files_recursive`.
+
     """
     for filename in get_files_recursive(directory):
-        if fnmatch.fnmatch(filename, glob):
+        if fnmatch.fnmatch(filename, glob_string):
             yield filename
 
 

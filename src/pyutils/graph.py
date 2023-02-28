@@ -303,7 +303,9 @@ class Graph(object):
             unvisited_nodes.remove(current_min_node)
         self.dijkstra = (source, previous_nodes, shortest_path)
 
-    def minimum_path_between(self, source: str, dest: str) -> Tuple[Numeric, List[str]]:
+    def minimum_path_between(
+        self, source: str, dest: str
+    ) -> Tuple[Optional[Numeric], List[str]]:
         """Compute the minimum path (lowest cost path) between source
         and dest.
 
@@ -354,8 +356,9 @@ class Graph(object):
 
         assert self.dijkstra
         path = []
-        node = dest
+        node: Optional[str] = dest
         while node != source:
+            assert node
             path.append(node)
             node = self.dijkstra[1].get(node, None)
             if node is None:

@@ -185,7 +185,7 @@ class LockFile(contextlib.AbstractContextManager):
         *,
         initial_delay: float = 1.0,
         backoff_factor: float = 2.0,
-        max_attempts=5,
+        max_attempts: int = 5,
     ) -> bool:
         """Attempt to acquire the lock repeatedly with retries and backoffs.
 
@@ -245,13 +245,12 @@ class LockFile(contextlib.AbstractContextManager):
         if self.locktime:
             ts = datetime.datetime.now().timestamp()
             duration = ts - self.locktime
-            if (
-                duration
-                >= config.config[
-                    "lockfile_held_duration_warning_threshold"
-                ].total_seconds()
-            ):
-                # Note: describe duration briefly only does 1s granularity...
+            warning_threshold = config.config[
+                "lockfile_held_duration_warning_threshold"
+            ]
+            assert warning_threshold
+            if duration >= warning_threshold.total_seconds():
+                # Note: describe duration briefly only does second-level granularity...
                 str_duration = datetime_utils.describe_duration_briefly(int(duration))
                 msg = f"Held {self.lockfile} for {str_duration}"
                 logger.warning(msg)
@@ -263,7 +262,7 @@ class LockFile(contextlib.AbstractContextManager):
         if self.is_locked:
             self.release()
 
-    def _signal(self, *args):
+    def _signal(self, *unused_args):
         if self.is_locked:
             self.release()
 

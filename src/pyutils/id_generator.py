@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 generators = {}
 
 
-def get(name: str, *, start=0) -> int:
+def get(name: str, *, start: int = 0) -> int:
     """
     Returns a thread-safe, monotonically increasing id suitable for use
     as a globally unique identifier.

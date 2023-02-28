@@ -36,7 +36,7 @@ class Trie(object):
         self.root = {}
         self.end = "~END~"
         self.length = 0
-        self.viz = ''
+        self.viz = ""
         self.content_generator: Generator[str] = None
 
     def insert(self, item: Sequence[Any]) -> None:
@@ -154,7 +154,7 @@ class Trie(object):
         ends.
 
         Args:
-            root_node: root under which to search for item
+            node: root under which to search for item
             item: item whose node is the root of the recursive deletion operation
 
         Returns:
@@ -245,7 +245,7 @@ class Trie(object):
         return self.length
 
     def __iter__(self):
-        self.content_generator = self.generate_recursively(self.root, '')
+        self.content_generator = self.generate_recursively(self.root, "")
         return self
 
     def generate_recursively(self, node, path: Sequence[Any]):
@@ -322,15 +322,15 @@ class Trie(object):
         :meth:`__repr__`.
         """
         if node is None:
-            return ''
+            return ""
         if node is not self.root:
-            ret = f'\n{padding}{pointer}'
+            ret = f"\n{padding}{pointer}"
             if has_sibling:
-                padding += '│  '
+                padding += "│  "
             else:
-                padding += '   '
+                padding += "   "
         else:
-            ret = f'{pointer}'
+            ret = f"{pointer}"
 
         child_count = 0
         for child in node:
@@ -345,7 +345,7 @@ class Trie(object):
                 else:
                     pointer = "└──"
                     has_sibling = False
-                pointer += f'{child}'
+                pointer += f"{child}"
                 child_count -= 1
                 ret += self._repr_fancy(padding, pointer, node[child], has_sibling)
         return ret
@@ -371,7 +371,7 @@ class Trie(object):
 
         """
         child_count = 0
-        my_rep = ''
+        my_rep = ""
         for child in node:
             if child != self.end:
                 child_count += 1
@@ -383,7 +383,7 @@ class Trie(object):
         if len(my_rep) > 1:
             my_rep = my_rep[:-1]
         if child_count > 1:
-            my_rep = f'[{my_rep}]'
+            my_rep = f"[{my_rep}]"
         return my_rep
 
     def __repr__(self):
@@ -409,10 +409,10 @@ class Trie(object):
                  └──2
 
         """
-        return self._repr_fancy('', '*', self.root, False)
+        return self._repr_fancy("", "*", self.root, False)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

@@ -72,7 +72,7 @@ class PeekingIterator(Iterator):
         if len(self.on_deck) > 0:
             return self.on_deck[0]
         try:
-            item = self.source_iter.__next__()
+            item = next(self.source_iter)
             self.on_deck.append(item)
             return self.peek()
         except StopIteration:
@@ -213,7 +213,7 @@ class SamplingIterator(Iterator):
         return self.resovoir
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

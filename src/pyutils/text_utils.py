@@ -52,8 +52,8 @@ def get_console_rows_columns() -> RowsColumns:
     """
     from pyutils.exec_utils import cmd
 
-    rows: Union[Optional[str], int] = os.environ.get('LINES', None)
-    cols: Union[Optional[str], int] = os.environ.get('COLUMNS', None)
+    rows: Union[Optional[str], int] = os.environ.get("LINES", None)
+    cols: Union[Optional[str], int] = os.environ.get("COLUMNS", None)
     if not rows or not cols:
         try:
             size = os.get_terminal_size()
@@ -64,7 +64,7 @@ def get_console_rows_columns() -> RowsColumns:
             cols = None
 
     if not rows or not cols:
-        logger.debug('Rows: %s, cols: %s, trying stty.', rows, cols)
+        logger.debug("Rows: %s, cols: %s, trying stty.", rows, cols)
         try:
             rows, cols = cmd(
                 "stty size",
@@ -75,7 +75,7 @@ def get_console_rows_columns() -> RowsColumns:
             cols = None
 
     if not rows or not cols:
-        raise Exception('Can\'t determine console size?!')
+        raise Exception("Can't determine console size?!")
     return RowsColumns(int(rows), int(cols))
 
 
@@ -96,12 +96,12 @@ def bar_graph(
     current: int,
     total: int,
     *,
-    width=70,
+    width: int = 70,
     text: BarGraphText = BarGraphText.PERCENTAGE,
-    fgcolor=fg("school bus yellow"),
-    left_end="[",
-    right_end="]",
-    redraw=True,
+    fgcolor: str = fg("school bus yellow"),
+    left_end: str = "[",
+    right_end: str = "]",
+    redraw: bool = True,
 ) -> None:
     """Draws a progress graph at the current cursor position.
 
@@ -143,9 +143,9 @@ def _make_bar_graph_text(
     if text == BarGraphText.NONE:
         return ""
     elif text == BarGraphText.PERCENTAGE:
-        return f'{percentage:.1f}'
+        return f"{percentage:.1f}"
     elif text == BarGraphText.FRACTION:
-        return f'{current} / {total}'
+        return f"{current} / {total}"
     raise ValueError(text)
 
 
@@ -154,11 +154,11 @@ def bar_graph_string(
     total: int,
     *,
     text: BarGraphText = BarGraphText.PERCENTAGE,
-    width=70,
-    fgcolor=fg("school bus yellow"),
-    reset_seq=reset(),
-    left_end="[",
-    right_end="]",
+    width: int = 70,
+    fgcolor: str = fg("school bus yellow"),
+    reset_seq: str = reset(),
+    left_end: str = "[",
+    right_end: str = "]",
 ) -> str:
     """Returns a string containing a bar graph.
 
@@ -185,7 +185,7 @@ def bar_graph_string(
         percentage = 0.0
     if percentage < 0.0 or percentage > 1.0:
         raise ValueError(percentage)
-    text = _make_bar_graph_text(text, current, total, percentage)
+    txt = _make_bar_graph_text(text, current, total, percentage)
     whole_width = math.floor(percentage * width)
     if whole_width == width:
         whole_width -= 1
@@ -205,7 +205,7 @@ def bar_graph_string(
         + reset_seq
         + right_end
         + " "
-        + text
+        + txt
     )
 
 
@@ -232,12 +232,12 @@ def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
     (73, 104, '█▇▆▆▃▂▄▁')
 
     """
-    _bar = '▁▂▃▄▅▆▇█'  # Unicode: 9601, 9602, 9603, 9604, 9605, 9606, 9607, 9608
+    _bar = "▁▂▃▄▅▆▇█"  # Unicode: 9601, 9602, 9603, 9604, 9605, 9606, 9607, 9608
 
     barcount = len(_bar)
     min_num, max_num = min(numbers), max(numbers)
     span = max_num - min_num
-    sline = ''.join(
+    sline = "".join(
         _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in numbers
     )
     return min_num, max_num, sline
@@ -265,11 +265,11 @@ def distribute_strings(
     >>> distribute_strings(['this', 'is', 'a', 'test'], width=40)
     '      this      is      a      test     '
     """
-    ret = ' ' + ' '.join(strings) + ' '
+    ret = " " + " ".join(strings) + " "
     assert len(string_utils.strip_ansi_sequences(ret)) < width
     x = 0
     while len(string_utils.strip_ansi_sequences(ret)) < width:
-        spaces = [m.start() for m in re.finditer(r' ([^ ]|$)', ret)]
+        spaces = [m.start() for m in re.finditer(r" ([^ ]|$)", ret)]
         where = spaces[x]
         before = ret[:where]
         after = ret[where:]
@@ -379,10 +379,10 @@ def justify_text(
     'This  is    a  test  of   the  emergency\\nbroadcast system. This is only a test.'
 
     """
-    retval = ''
-    indent = ''
+    retval = ""
+    indent = ""
     if indent_by > 0:
-        indent += ' ' * indent_by
+        indent += " " * indent_by
     line = indent
 
     for word in text.split():
@@ -392,11 +392,11 @@ def justify_text(
         ) > width:
             line = line[1:]
             line = justify_string(line, width=width, alignment=alignment)
-            retval = retval + '\n' + line
+            retval = retval + "\n" + line
             line = indent
-        line = line + ' ' + word
+        line = line + " " + word
     if len(string_utils.strip_ansi_sequences(line)) > 0:
-        if alignment != 'j':
+        if alignment != "j":
             retval += "\n" + justify_string(line[1:], width=width, alignment=alignment)
         else:
             retval += "\n" + line[1:]
@@ -435,8 +435,8 @@ def generate_padded_columns(text: List[str]) -> Generator:
         out = ""
         for pos, word in enumerate(line.split()):
             width = max_width[pos]
-            word = justify_string(word, width=width, alignment='l')
-            out += f'{word} '
+            word = justify_string(word, width=width, alignment="l")
+            out += f"{word} "
         yield out
 
 
@@ -450,13 +450,13 @@ def wrap_string(text: str, n: int) -> str:
         The wrapped form of text
     """
     chunks = text.split()
-    out = ''
+    out = ""
     width = 0
     for chunk in chunks:
         if width + len(string_utils.strip_ansi_sequences(chunk)) > n:
-            out += '\n'
+            out += "\n"
             width = 0
-        out += chunk + ' '
+        out += chunk + " "
         width += len(string_utils.strip_ansi_sequences(chunk)) + 1
     return out
 
@@ -483,7 +483,7 @@ class Indenter(contextlib.AbstractContextManager):
         self,
         *,
         pad_prefix: Optional[str] = None,
-        pad_char: str = ' ',
+        pad_char: str = " ",
         pad_count: int = 4,
     ):
         """Construct an Indenter.
@@ -497,7 +497,7 @@ class Indenter(contextlib.AbstractContextManager):
         if pad_prefix is not None:
             self.pad_prefix = pad_prefix
         else:
-            self.pad_prefix = ''
+            self.pad_prefix = ""
         self.padding = pad_char * pad_count
 
     def __enter__(self):
@@ -511,8 +511,8 @@ class Indenter(contextlib.AbstractContextManager):
         return False
 
     def print(self, *arg, **kwargs):
-        text = string_utils.sprintf(*arg, **kwargs)
-        print(self.pad_prefix + self.padding * self.level + text, end='')
+        text = string_utils._sprintf(*arg, **kwargs)
+        print(self.pad_prefix + self.padding * self.level + text, end="")
 
 
 def header(
@@ -520,7 +520,7 @@ def header(
     *,
     width: Optional[int] = None,
     align: Optional[str] = None,
-    style: Optional[str] = 'solid',
+    style: Optional[str] = "solid",
     color: Optional[str] = None,
 ):
     """
@@ -531,6 +531,7 @@ def header(
         width: how wide to make the header
         align: "left" or "right"
         style: "ascii", "solid" or "dashed"
+        color: what color to use, if any
 
     Returns:
         The header as a string.
@@ -544,15 +545,15 @@ def header(
         except Exception:
             width = 80
     if not align:
-        align = 'left'
+        align = "left"
     if not style:
-        style = 'ascii'
+        style = "ascii"
 
     text_len = len(string_utils.strip_ansi_sequences(title))
-    if align == 'left':
+    if align == "left":
         left = 4
         right = width - (left + text_len + 4)
-    elif align == 'right':
+    elif align == "right":
         right = 4
         left = width - (right + text_len + 4)
     else:
@@ -561,31 +562,31 @@ def header(
         while left + text_len + 4 + right < width:
             right += 1
 
-    if style == 'solid':
-        line_char = '━'
-        begin = ''
-        end = ''
-    elif style == 'dashed':
-        line_char = '┅'
-        begin = ''
-        end = ''
+    if style == "solid":
+        line_char = "━"
+        begin = ""
+        end = ""
+    elif style == "dashed":
+        line_char = "┅"
+        begin = ""
+        end = ""
     else:
-        line_char = '-'
-        begin = '['
-        end = ']'
+        line_char = "-"
+        begin = "["
+        end = "]"
     if color:
         col = color
         reset_seq = reset()
     else:
-        col = ''
-        reset_seq = ''
+        col = ""
+        reset_seq = ""
     return (
         line_char * left
         + begin
         + col
-        + ' '
+        + " "
         + title
-        + ' '
+        + " "
         + reset_seq
         + end
         + line_char * right
@@ -597,7 +598,7 @@ def box(
     text: Optional[str] = None,
     *,
     width: int = 80,
-    color: str = '',
+    color: str = "",
 ) -> str:
     """
     Make a nice unicode box (optionally with color) around some text.
@@ -623,7 +624,7 @@ def box(
     """
     assert width > 4
     if text is not None:
-        text = justify_text(text, width=width - 4, alignment='l')
+        text = justify_text(text, width=width - 4, alignment="l")
     return preformatted_box(title, text, width=width, color=color)
 
 
@@ -631,8 +632,8 @@ def preformatted_box(
     title: Optional[str] = None,
     text: Optional[str] = None,
     *,
-    width=80,
-    color: str = '',
+    width: int = 80,
+    color: str = "",
 ) -> str:
     """Creates a nice box with rounded corners and returns it as a string.
 
@@ -658,41 +659,41 @@ def preformatted_box(
     ╰──────────────────╯
     """
     assert width > 4
-    ret = ''
-    if color == '':
-        rset = ''
+    ret = ""
+    if color == "":
+        rset = ""
     else:
         rset = reset()
     w = width - 2
-    ret += color + '╭' + '─' * w + '╮' + rset + '\n'
+    ret += color + "╭" + "─" * w + "╮" + rset + "\n"
     if title is not None:
         ret += (
             color
-            + '│'
+            + "│"
             + rset
-            + justify_string(title, width=w, alignment='c')
+            + justify_string(title, width=w, alignment="c")
             + color
-            + '│'
+            + "│"
             + rset
-            + '\n'
+            + "\n"
         )
-        ret += color + '│' + ' ' * w + '│' + rset + '\n'
+        ret += color + "│" + " " * w + "│" + rset + "\n"
     if text is not None:
-        for line in text.split('\n'):
+        for line in text.split("\n"):
             tw = len(string_utils.strip_ansi_sequences(line))
             assert tw <= w
             ret += (
                 color
-                + '│ '
+                + "│ "
                 + rset
                 + line
-                + ' ' * (w - tw - 2)
+                + " " * (w - tw - 2)
                 + color
-                + ' │'
+                + " │"
                 + rset
-                + '\n'
+                + "\n"
             )
-    ret += color + '╰' + '─' * w + '╯' + rset + '\n'
+    ret += color + "╰" + "─" * w + "╯" + rset + "\n"
     return ret
 
 
@@ -701,7 +702,7 @@ def print_box(
     text: Optional[str] = None,
     *,
     width: int = 80,
-    color: str = '',
+    color: str = "",
 ) -> None:
     """Draws a box with nice rounded corners.
 
@@ -731,10 +732,10 @@ def print_box(
     │ OK │
     ╰────╯
     """
-    print(preformatted_box(title, text, width=width, color=color), end='')
+    print(preformatted_box(title, text, width=width, color=color), end="")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

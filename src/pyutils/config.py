@@ -600,7 +600,7 @@ class Config:
         # when the user passes -h or --help, it will be visible on the
         # screen w/o scrolling.  This just makes for a nicer --help screen.
         for arg in sys.argv:
-            if arg in ("--help", "-h"):
+            if arg in {"--help", "-h"}:
                 if entry_module is not None:
                     entry_module = os.path.basename(entry_module)
                 ARGS._action_groups = Config._reorder_arg_action_groups_before_help(

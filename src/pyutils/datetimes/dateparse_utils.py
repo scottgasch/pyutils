@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # type: ignore
-# pylint: disable=W0201
-# pylint: disable=R0904
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-instance-attributes
 
 # © Copyright 2021-2023, Scott Gasch
 
@@ -356,7 +356,9 @@ class DateParser(dateparse_utilsListener):
         """
         return self.time
 
-    def get_datetime(self, *, tz=None) -> Optional[datetime.datetime]:
+    def get_datetime(
+        self, *, tz: Optional[datetime.tzinfo] = None
+    ) -> Optional[datetime.datetime]:
         """Get the datetime of the last :meth:`parse` operation again
         ot None.
 
@@ -439,7 +441,7 @@ class DateParser(dateparse_utilsListener):
         name = DateParser._normalize_special_day_name(self.context['special'])
 
         # Yesterday, today, tomorrow -- ignore any next/last
-        if name in ('today', 'now'):
+        if name in {'today', 'now'}:
             return today
         if name == 'yeste':
             return today + datetime.timedelta(days=-1)
@@ -539,7 +541,7 @@ class DateParser(dateparse_utilsListener):
         # Try constructing an offset in seconds
         try:
             txt_sign = txt[0]
-            if txt_sign in ('-', '+'):
+            if txt_sign in {'-', '+'}:
                 sign = +1 if txt_sign == '+' else -1
                 hour = int(txt[1:3])
                 minute = int(txt[-2:])
@@ -642,7 +644,7 @@ class DateParser(dateparse_utilsListener):
         # Adjust count's sign based on the presence of 'before' or 'after'.
         if 'delta_before_after' in self.context:
             before_after = self.context['delta_before_after'].lower()
-            if before_after in ('before', 'until', 'til', 'to'):
+            if before_after in {'before', 'until', 'til', 'to'}:
                 count = -count
 
         # What are we counting units of?
@@ -678,7 +680,7 @@ class DateParser(dateparse_utilsListener):
         # Adjust count's sign based on the presence of 'before' or 'after'.
         if 'time_delta_before_after' in self.context:
             before_after = self.context['time_delta_before_after'].lower()
-            if before_after in ('before', 'until', 'til', 'to'):
+            if before_after in {'before', 'until', 'til', 'to'}:
                 count = -count
 
         # What are we counting units of... assume minutes.
@@ -1047,7 +1049,7 @@ class DateParser(dateparse_utilsListener):
         except Exception as e:
             raise ParseException(f'Bad special time expression: {ctx.getText()}') from e
         else:
-            if txt in ('noon', 'midday'):
+            if txt in {'noon', 'midday'}:
                 self.context['hour'] = 12
                 self.context['minute'] = 0
                 self.context['seconds'] = 0

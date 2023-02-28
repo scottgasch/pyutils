@@ -270,7 +270,7 @@ Here is the current, full db perf timing distribution:
     return wrapper_perf_monitor
 
 
-def check_all_methods_for_perf_regressions(prefix="test_"):
+def check_all_methods_for_perf_regressions(prefix: str = "test_"):
     """This decorator is meant to apply to classes that subclass from
     :class:`unittest.TestCase` and, when applied, has the affect of
     decorating each method that matches the `prefix` given with the

@@ -38,7 +38,7 @@ def current_thread_id() -> str:
     ppid = os.getppid()
     pid = os.getpid()
     tid = threading.current_thread().name
-    return f'{ppid}/{pid}/{tid}:'
+    return f"{ppid}/{pid}/{tid}:"
 
 
 def is_current_thread_main_thread() -> bool:
@@ -156,13 +156,21 @@ class ThreadWithReturnValue(threading.Thread):
     """
 
     def __init__(
-        self, group=None, target=None, name=None, args=(), kwargs={}, Verbose=None
+        self, group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
     ):
         threading.Thread.__init__(
-            self, group=None, target=target, name=None, args=args, kwargs=kwargs
+            self,
+            group=None,
+            target=target,
+            name=None,
+            args=args,
+            kwargs=kwargs,
+            daemon=daemon,
         )
         self._target = target
         self._return = None
+        self._args = args
+        self._kwargs = kwargs
 
     def run(self) -> None:
         """Create a little wrapper around invoking the real thread entry
@@ -278,7 +286,7 @@ def periodically_invoke(
     return decorator_repeat
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()

@@ -120,7 +120,7 @@ def population_counts(lst: Sequence[Any]) -> Counter:
     return Counter(lst)
 
 
-def most_common(lst: List[Any], *, count=1) -> Any:
+def most_common(lst: List[Any], *, count: int = 1) -> Any:
     """
     Return the N most common item in the list.
 
@@ -147,7 +147,7 @@ def most_common(lst: List[Any], *, count=1) -> Any:
     return remove_list_if_one_element([_[0] for _ in p.most_common()[0:count]])
 
 
-def least_common(lst: List[Any], *, count=1) -> Any:
+def least_common(lst: List[Any], *, count: int = 1) -> Any:
     """
     Return the N least common item in the list.
 
@@ -441,7 +441,7 @@ def powerset(seq: Sequence[Any]) -> Iterator[Sequence[Any]]:
     return chain.from_iterable(combinations(seq, r) for r in range(len(seq) + 1))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
