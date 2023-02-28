@@ -798,6 +798,7 @@ COLOR_NAMES_TO_RGB: Dict[str, Tuple[int, int, int]] = {
     "karaka": (0x1E, 0x16, 0x09),
     "karry": (0xFF, 0xEA, 0xD4),
     "kashmir blue": (0x50, 0x70, 0x96),
+    "kelly green": (0x4C, 0xBB, 0x17),
     "kelp": (0x45, 0x49, 0x36),
     "kenyan copper": (0x7C, 0x1C, 0x05),
     "keppel": (0x3A, 0xB0, 0x9E),
@@ -1766,7 +1767,7 @@ def _is_16color(num: int) -> bool:
     numbers are 128 or 255.  This means this code can be used to
     create 16 colors.
     """
-    return num in (255, 128)
+    return num in {255, 128}
 
 
 def _is_216color(num: int) -> bool:
@@ -2243,7 +2244,7 @@ class _StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
 
     def __init__(self):
         super().__init__()
-        self.saved_stdout: io.TextIO = None
+        self.saved_stdout: io.TextIOWrapper = None
         self.buf = ''
 
     @abstractmethod
@@ -2284,7 +2285,7 @@ class ProgrammableColorizer(_StdoutInterceptor):
 
     def __init__(
         self,
-        patterns: Iterable[Tuple[re.Pattern, Callable[[re.Match[str], str], str]]],
+        patterns: Iterable[Tuple[re.Pattern, Callable[[re.Match[str]], str]]],
     ):
         """
         Setup the programmable colorizing context; tell it how to operate.
