@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A simple graph class that can be optionally directed and weighted and
 some operations on it."""

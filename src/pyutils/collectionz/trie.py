@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """This module contains the implementation of a Trie tree (or prefix
 tree).  See: https://en.wikipedia.org/wiki/Trie.

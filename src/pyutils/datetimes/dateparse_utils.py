@@ -3,7 +3,7 @@
 # pylint: disable=W0201
 # pylint: disable=R0904
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """
 Parse dates / datetimes in a variety of formats.  Some examples:

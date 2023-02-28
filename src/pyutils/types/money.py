@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A class to represent money.  This class represents monetary amounts as Python Decimals
 (see https://docs.python.org/3/library/decimal.html) internally.

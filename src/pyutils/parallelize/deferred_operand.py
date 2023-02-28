@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """This is the base class of
 :class:`pyutils.parallelize.smart_future.SmartFuture`, which is a

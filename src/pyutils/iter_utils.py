@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A collection of :class:`Iterator` subclasses that can be composed
 with another iterator and provide extra functionality:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A simple utility to unpickle some code from the filesystem, run it,
 pickle the results, and save them back on the filesystem.  This file

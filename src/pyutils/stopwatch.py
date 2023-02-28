@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A simple stopwatch decorator / context for timing things.  This was factored out
 of decorator utils so that bootstrap.py can keep its imports lighter."""

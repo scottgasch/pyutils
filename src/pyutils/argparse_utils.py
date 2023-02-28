@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """These are helpers for commandline argument parsing meant to work
 with Python's :mod:`argparse` module from the standard library (See:

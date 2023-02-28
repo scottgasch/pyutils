@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """A decorator to help with simple parallelization.  When decorated
 functions are invoked they execute on a background thread, process or

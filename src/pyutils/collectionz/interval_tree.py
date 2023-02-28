@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """This is an augmented interval tree for storing ranges and identifying overlaps as
 described by: https://en.wikipedia.org/wiki/Interval_tree.

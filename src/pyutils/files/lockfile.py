@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """This is a lockfile implementation I created for use with cronjobs
 on my machine to prevent multiple copies of a job from running in

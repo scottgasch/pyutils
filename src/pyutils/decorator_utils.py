@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 # A portion (marked) below retain the original author's copyright.
 
 """This is a grab bag of, hopefully, useful decorators."""

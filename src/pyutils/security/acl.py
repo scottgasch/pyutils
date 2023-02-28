@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """Right now this package only contains an implementation that allows you to
 define and evaluate Access Control Lists (ACLs) easily.  For example::
