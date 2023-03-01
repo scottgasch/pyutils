@@ -1196,6 +1196,7 @@ def extract_mac_address(in_str: Any, *, separator: str = ":") -> Optional[str]:
     """
     Args:
         in_str: the string from which to extract a MAC address.
+        separator: the MAC address hex byte separator to use.
 
     Returns:
         The first MAC address found in in_str or None to indicate no
