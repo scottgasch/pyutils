@@ -48,6 +48,7 @@ import io
 import logging
 import os
 import sys
+import threading
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
 from typing import Any, Callable, Dict, Iterable, List, Optional
@@ -469,10 +470,52 @@ class OnlyInfoFilter(logging.Filter):
         return record.levelno == logging.INFO
 
 
-class MillisecondAwareFormatter(logging.Formatter):
+def get_current_pidtid() -> str:
+    return f"{os.getpid()}/{threading.get_ident()}"
+
+
+LOGGING_PREFIXES_BY_PIDTID = {}
+
+
+def register_thread_logging_prefix(message: str) -> None:
+    """A function that allows a thread to register a string that
+    should be prepended to every log message it produces from now on.
+    This overwrites any previous message registered to this thread
+    and can be called with None or an empty string to clear any
+    previous message.
     """
-    A formatter for adding milliseconds to log messages which, for
+    pidtid = get_current_pidtid()
+    if message and len(message) > 0:
+        LOGGING_PREFIXES_BY_PIDTID[pidtid] = message
+    elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
+        del LOGGING_PREFIXES_BY_PIDTID[pidtid]
+
+
+LOGGING_SUFFIXES_BY_PIDTID = {}
+
+
+def register_thread_logging_suffix(message: str) -> None:
+    """A function that allows a thread to register a string that
+    should be appended to every log message it produces from now on.
+    This overwrites any previous message registered to this thread
+    and can be called with None or an empty string to clear any
+    previous message.
+    """
+    pidtid = get_current_pidtid()
+    if message and len(message) > 0:
+        LOGGING_SUFFIXES_BY_PIDTID[pidtid] = message
+    elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
+        del LOGGING_SUFFIXES_BY_PIDTID[pidtid]
+
+
+class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
+    """A formatter for adding milliseconds to log messages which, for
     whatever reason, the default Python logger doesn't do.
+
+    This formatter also consults a map of pid+tid -> message from this
+    module allowing threads to optionally and automatically prepend a
+    message to all logging data they output.  If the pid+tid is not
+    found nothing is prepended.
 
     .. note::
 
@@ -480,13 +523,25 @@ class MillisecondAwareFormatter(logging.Formatter):
         wired in under :meth:initialize_logging so that the
         timestamps in log messages have millisecond level
         precision.
+
     """
 
     converter = datetime.datetime.fromtimestamp  # type: ignore
 
     @overrides
+    def format(self, record):
+        pidtid = get_current_pidtid()
+        prefix = LOGGING_PREFIXES_BY_PIDTID.get(pidtid, None)
+        if prefix:
+            record.msg = prefix + record.msg
+        suffix = LOGGING_SUFFIXES_BY_PIDTID.get(pidtid, None)
+        if suffix:
+            record.msg = record.msg + suffix
+        return super().format(record)
+
+    @overrides
     def formatTime(self, record, datefmt=None):
-        ct = MillisecondAwareFormatter.converter(
+        ct = MillisecondAwareOptionallyPrependingFormatter.converter(
             record.created, pytz.timezone("US/Pacific")
         )
         if datefmt:
@@ -653,7 +708,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             assert facility is not None
             handler = SysLogHandler(facility=facility, address="/dev/log")
             handler.setFormatter(
-                MillisecondAwareFormatter(
+                MillisecondAwareOptionallyPrependingFormatter(
                     fmt=fmt,
                     datefmt=config.config["logging_date_format"],
                 )
@@ -674,7 +729,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             backupCount=backup_count,
         )
         handler.setFormatter(
-            MillisecondAwareFormatter(
+            MillisecondAwareOptionallyPrependingFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
@@ -685,7 +740,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     if config.config["logging_console"]:
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
-            MillisecondAwareFormatter(
+            MillisecondAwareOptionallyPrependingFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
