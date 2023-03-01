@@ -520,7 +520,7 @@ class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
     .. note::
 
         You probably don't need to use this directly but it is
-        wired in under :meth:initialize_logging so that the
+        wired in under :meth:`initialize_logging` so that the
         timestamps in log messages have millisecond level
         precision.
 
