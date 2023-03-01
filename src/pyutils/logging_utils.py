@@ -470,21 +470,26 @@ class OnlyInfoFilter(logging.Filter):
         return record.levelno == logging.INFO
 
 
-def get_current_pidtid() -> str:
+def _get_current_pidtid() -> str:
     return f"{os.getpid()}/{threading.get_ident()}"
 
 
 LOGGING_PREFIXES_BY_PIDTID = {}
 
 
-def register_thread_logging_prefix(message: str) -> None:
+def register_thread_logging_prefix(message: Optional[str]) -> None:
     """A function that allows a thread to register a string that
     should be prepended to every log message it produces from now on.
-    This overwrites any previous message registered to this thread
-    and can be called with None or an empty string to clear any
-    previous message.
+    Relies on the :class:`MillisecondAwareOptionallyPrependingFormatter`
+    being used with the logging Handler which is the default if you're
+    using this module.
+
+    Args:
+        message: the message to prepend to all logging done by the
+            current thread.  If None or "", clears any previous
+            message registered.
     """
-    pidtid = get_current_pidtid()
+    pidtid = _get_current_pidtid()
     if message and len(message) > 0:
         LOGGING_PREFIXES_BY_PIDTID[pidtid] = message
     elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
@@ -494,14 +499,19 @@ def register_thread_logging_prefix(message: str) -> None:
 LOGGING_SUFFIXES_BY_PIDTID = {}
 
 
-def register_thread_logging_suffix(message: str) -> None:
+def register_thread_logging_suffix(message: Optional[str]) -> None:
     """A function that allows a thread to register a string that
     should be appended to every log message it produces from now on.
-    This overwrites any previous message registered to this thread
-    and can be called with None or an empty string to clear any
-    previous message.
+    Relies on the :class:`MillisecondAwareOptionallyPrependingFormatter`
+    being used with the logging Handler which is the default if you're
+    using this module.
+
+    Args:
+        message: the message to append to all logging done by the
+            current thread.  If None or "", clears any previous
+            message registered.
     """
-    pidtid = get_current_pidtid()
+    pidtid = _get_current_pidtid()
     if message and len(message) > 0:
         LOGGING_SUFFIXES_BY_PIDTID[pidtid] = message
     elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
@@ -515,7 +525,9 @@ class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
     This formatter also consults a map of pid+tid -> message from this
     module allowing threads to optionally and automatically prepend a
     message to all logging data they output.  If the pid+tid is not
-    found nothing is prepended.
+    found nothing is prepended.  See
+    :meth:`register_thread_logging_prefix` and
+    :meth:`register_thread_logging_suffix` for details.
 
     .. note::
 
@@ -530,7 +542,7 @@ class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
 
     @overrides
     def format(self, record):
-        pidtid = get_current_pidtid()
+        pidtid = _get_current_pidtid()
         prefix = LOGGING_PREFIXES_BY_PIDTID.get(pidtid, None)
         if prefix:
             record.msg = prefix + record.msg
