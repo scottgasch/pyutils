@@ -480,7 +480,7 @@ LOGGING_PREFIXES_BY_PIDTID = {}
 def register_thread_logging_prefix(message: Optional[str]) -> None:
     """A function that allows a thread to register a string that
     should be prepended to every log message it produces from now on.
-    Relies on the :class:`MillisecondAwareOptionallyPrependingFormatter`
+    Relies on the :class:`MillisecondAwareOptionallyAugmentingFormatter`
     being used with the logging Handler which is the default if you're
     using this module.
 
@@ -502,7 +502,7 @@ LOGGING_SUFFIXES_BY_PIDTID = {}
 def register_thread_logging_suffix(message: Optional[str]) -> None:
     """A function that allows a thread to register a string that
     should be appended to every log message it produces from now on.
-    Relies on the :class:`MillisecondAwareOptionallyPrependingFormatter`
+    Relies on the :class:`MillisecondAwareOptionallyAugmentingFormatter`
     being used with the logging Handler which is the default if you're
     using this module.
 
@@ -518,7 +518,7 @@ def register_thread_logging_suffix(message: Optional[str]) -> None:
         del LOGGING_SUFFIXES_BY_PIDTID[pidtid]
 
 
-class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
+class MillisecondAwareOptionallyAugmentingFormatter(logging.Formatter):
     """A formatter for adding milliseconds to log messages which, for
     whatever reason, the default Python logger doesn't do.
 
@@ -553,7 +553,7 @@ class MillisecondAwareOptionallyPrependingFormatter(logging.Formatter):
 
     @overrides
     def formatTime(self, record, datefmt=None):
-        ct = MillisecondAwareOptionallyPrependingFormatter.converter(
+        ct = MillisecondAwareOptionallyAugmentingFormatter.converter(
             record.created, pytz.timezone("US/Pacific")
         )
         if datefmt:
@@ -720,7 +720,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             assert facility is not None
             handler = SysLogHandler(facility=facility, address="/dev/log")
             handler.setFormatter(
-                MillisecondAwareOptionallyPrependingFormatter(
+                MillisecondAwareOptionallyAugmentingFormatter(
                     fmt=fmt,
                     datefmt=config.config["logging_date_format"],
                 )
@@ -741,7 +741,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             backupCount=backup_count,
         )
         handler.setFormatter(
-            MillisecondAwareOptionallyPrependingFormatter(
+            MillisecondAwareOptionallyAugmentingFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
@@ -752,7 +752,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     if config.config["logging_console"]:
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
-            MillisecondAwareOptionallyPrependingFormatter(
+            MillisecondAwareOptionallyAugmentingFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
