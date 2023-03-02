@@ -315,3 +315,35 @@ This version -------- 0.0.1b11
 Previous version ---- 0.0.1b10
 Total commits -------       20
 ```
+# 🎁 Release notes (`0.0.1b12`)
+
+## Changes
+- Do this logging stuff the right way.
+- Cut version 0.0.1b11
+- Rename that class; it doesn't just prepend...
+- Improve pydocs.
+- Fix pydocs
+- Create methods to dynamically prepend or append messages to all log messages produced by the current thread.
+- Update docs.
+- Cut version 0.0.1b10
+- More cleanup.
+- More spring cleaning.
+- I guess it's 2023 now...
+- Adds a new color.
+- Augment logging at startup in debug mode; fix a bug in config.
+- Fix logger.exception messages in example code.
+- Fix logger.exception() calls.
+- Use full path for grep.
+- Make logging use execute_probabilstically.
+- Improve docs and add a doctest.
+- Adds execute_probabilistically.
+- Minor tweaks.
+- Adds CreateFileWithMode helper to create a new file with a given mode more easily.
+- Cut version 0.0.1b9
+
+## Metadata
+```
+This version -------- 0.0.1b12
+Previous version ---- 0.0.1b11
+Total commits -------       22
+```
