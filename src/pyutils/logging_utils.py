@@ -48,7 +48,6 @@ import io
 import logging
 import os
 import sys
-import threading
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
 from typing import Any, Callable, Dict, Iterable, List, Optional
@@ -470,64 +469,89 @@ class OnlyInfoFilter(logging.Filter):
         return record.levelno == logging.INFO
 
 
-def _get_current_pidtid() -> str:
-    return f"{os.getpid()}/{threading.get_ident()}"
-
-
-LOGGING_PREFIXES_BY_PIDTID = {}
-
-
-def register_thread_logging_prefix(message: Optional[str]) -> None:
-    """A function that allows a thread to register a string that
-    should be prepended to every log message it produces from now on.
-    Relies on the :class:`MillisecondAwareOptionallyAugmentingFormatter`
-    being used with the logging Handler which is the default if you're
-    using this module.
+def prepend_all_logger_messages(
+    prefix: str, logger: logging.Logger
+) -> logging.LoggerAdapter:
+    """Helper method around the creation of a LogAdapter that prepends
+    a given string to every log message produced.
 
     Args:
-        message: the message to prepend to all logging done by the
-            current thread.  If None or "", clears any previous
-            message registered.
+        prefix: the message to prepend to every log message.
+        logger: the logger whose messages to modify.
+
+    Returns:
+        A new logger wrapping the old one with the given behavior.
+        The old logger will continue to behave as usual; simply drop
+        the reference to this wrapper when it's no longer needed.
     """
-    pidtid = _get_current_pidtid()
-    if message and len(message) > 0:
-        LOGGING_PREFIXES_BY_PIDTID[pidtid] = message
-    elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
-        del LOGGING_PREFIXES_BY_PIDTID[pidtid]
+    return PrependingLogAdapter.wrap_logger(prefix, logger)
 
 
-LOGGING_SUFFIXES_BY_PIDTID = {}
+class PrependingLogAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        return f'{self.extra.get("prefix", "")}{msg}', kwargs
+
+    @staticmethod
+    def wrap_logger(prefix: str, logger: logging.Logger) -> logging.LoggerAdapter:
+        """Helper method around the creation of a LogAdapter that prepends
+        a given string to every log message produced.
+
+        Args:
+            prefix: the message to prepend to every log message.
+            logger: the logger whose messages to modify.
+
+        Returns:
+            A new logger wrapping the old one with the given behavior.
+            The old logger will continue to behave as usual; simply drop
+            the reference to this wrapper when it's no longer needed.
+        """
+        assert prefix
+        return PrependingLogAdapter(logger, {"prefix": prefix})
 
 
-def register_thread_logging_suffix(message: Optional[str]) -> None:
-    """A function that allows a thread to register a string that
-    should be appended to every log message it produces from now on.
-    Relies on the :class:`MillisecondAwareOptionallyAugmentingFormatter`
-    being used with the logging Handler which is the default if you're
-    using this module.
+def append_all_logger_messages(
+    suffix: str, logger: logging.Logger
+) -> logging.LoggerAdapter:
+    """Helper method around the creation of a LogAdapter that appends
+    a given string to every log message produced.
 
     Args:
-        message: the message to append to all logging done by the
-            current thread.  If None or "", clears any previous
-            message registered.
+        suffix: the message to prepend to every log message.
+        logger: the logger whose messages to modify.
+
+    Returns:
+        A new logger wrapping the old one with the given behavior.
+        The old logger will continue to behave as usual; simply drop
+        the reference to this wrapper when it's no longer needed.
     """
-    pidtid = _get_current_pidtid()
-    if message and len(message) > 0:
-        LOGGING_SUFFIXES_BY_PIDTID[pidtid] = message
-    elif pidtid in LOGGING_PREFIXES_BY_PIDTID:
-        del LOGGING_SUFFIXES_BY_PIDTID[pidtid]
+    return AppendingLogAdapter.wrap_logger(suffix, logger)
 
 
-class MillisecondAwareOptionallyAugmentingFormatter(logging.Formatter):
+class AppendingLogAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        return f'{msg}{self.extra.get("suffix", "")}', kwargs
+
+    @staticmethod
+    def wrap_logger(suffix: str, logger: logging.Logger) -> logging.LoggerAdapter:
+        """Helper method around the creation of a LogAdapter that appends
+        a given string to every log message produced.
+
+        Args:
+            suffix: the message to prepend to every log message.
+            logger: the logger whose messages to modify.
+
+        Returns:
+            A new logger wrapping the old one with the given behavior.
+            The old logger will continue to behave as usual; simply drop
+            the reference to this wrapper when it's no longer needed.
+        """
+        assert suffix
+        return AppendingLogAdapter(logger, {"suffix": suffix})
+
+
+class MillisecondAwareFormatter(logging.Formatter):
     """A formatter for adding milliseconds to log messages which, for
     whatever reason, the default Python logger doesn't do.
-
-    This formatter also consults a map of pid+tid -> message from this
-    module allowing threads to optionally and automatically prepend a
-    message to all logging data they output.  If the pid+tid is not
-    found nothing is prepended.  See
-    :meth:`register_thread_logging_prefix` and
-    :meth:`register_thread_logging_suffix` for details.
 
     .. note::
 
@@ -541,19 +565,8 @@ class MillisecondAwareOptionallyAugmentingFormatter(logging.Formatter):
     converter = datetime.datetime.fromtimestamp  # type: ignore
 
     @overrides
-    def format(self, record):
-        pidtid = _get_current_pidtid()
-        prefix = LOGGING_PREFIXES_BY_PIDTID.get(pidtid, None)
-        if prefix:
-            record.msg = prefix + record.msg
-        suffix = LOGGING_SUFFIXES_BY_PIDTID.get(pidtid, None)
-        if suffix:
-            record.msg = record.msg + suffix
-        return super().format(record)
-
-    @overrides
     def formatTime(self, record, datefmt=None):
-        ct = MillisecondAwareOptionallyAugmentingFormatter.converter(
+        ct = MillisecondAwareFormatter.converter(
             record.created, pytz.timezone("US/Pacific")
         )
         if datefmt:
@@ -720,7 +733,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             assert facility is not None
             handler = SysLogHandler(facility=facility, address="/dev/log")
             handler.setFormatter(
-                MillisecondAwareOptionallyAugmentingFormatter(
+                MillisecondAwareFormatter(
                     fmt=fmt,
                     datefmt=config.config["logging_date_format"],
                 )
@@ -741,7 +754,7 @@ def initialize_logging(logger=None) -> logging.Logger:
             backupCount=backup_count,
         )
         handler.setFormatter(
-            MillisecondAwareOptionallyAugmentingFormatter(
+            MillisecondAwareFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
@@ -752,7 +765,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     if config.config["logging_console"]:
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(
-            MillisecondAwareOptionallyAugmentingFormatter(
+            MillisecondAwareFormatter(
                 fmt=fmt,
                 datefmt=config.config["logging_date_format"],
             )
