@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# pylint: disable=redefined-variable-type
 
 # © Copyright 2021-2023, Scott Gasch
 
@@ -50,7 +51,7 @@ import os
 import sys
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import pytz
 from overrides import overrides
@@ -472,7 +473,7 @@ class OnlyInfoFilter(logging.Filter):
 def prepend_all_logger_messages(
     prefix: str, logger: logging.Logger
 ) -> logging.LoggerAdapter:
-    """Helper method around the creation of a LogAdapter that prepends
+    """Helper method around the creation of a LoggerAdapter that prepends
     a given string to every log message produced.
 
     Args:
@@ -512,7 +513,7 @@ class PrependingLogAdapter(logging.LoggerAdapter):
 def append_all_logger_messages(
     suffix: str, logger: logging.Logger
 ) -> logging.LoggerAdapter:
-    """Helper method around the creation of a LogAdapter that appends
+    """Helper method around the creation of a LoggerAdapter that appends
     a given string to every log message produced.
 
     Args:
@@ -533,7 +534,7 @@ class AppendingLogAdapter(logging.LoggerAdapter):
 
     @staticmethod
     def wrap_logger(suffix: str, logger: logging.Logger) -> logging.LoggerAdapter:
-        """Helper method around the creation of a LogAdapter that appends
+        """Helper method around the creation of a LoggerAdapter that appends
         a given string to every log message produced.
 
         Args:
@@ -547,6 +548,69 @@ class AppendingLogAdapter(logging.LoggerAdapter):
         """
         assert suffix
         return AppendingLogAdapter(logger, {"suffix": suffix})
+
+
+class LoggingContext(contextlib.ContextDecorator):
+    def __init__(
+        self,
+        logger: logging.Logger,
+        *,
+        handlers: Optional[List[logging.Handler]] = None,
+        prefix: Optional[str] = None,
+        suffix: Optional[str] = None,
+    ):
+        """This is a logging context that can be used to temporarily change logging:
+
+            * Change the destination of log messages (by adding temporary handlers)
+            * Add a prefix string to log messages
+            * Add a suffix string to log messages
+
+        .. warning::
+
+            Unfortunately this can't be used to dynamically change the
+            defaut logging level because of a conflict with
+            :class:`DynamicPerScopeLoggingLevelFilter` which, to work,
+            must see every logging message.  I love the ability to set
+            logging per module from the commandline and am not willing
+            to lose it in return for the ability to dynamically change
+            the logging level in code.
+
+        Sample usage:
+
+            >>> logging.root.setLevel(0)
+            >>> logger = logging.getLogger(__name__)
+            >>> logger.addHandler(logging.StreamHandler(sys.stdout))
+            >>> logger.info("Hello!")
+            Hello!
+
+            >>> with LoggingContext(logger, prefix="REQUEST#12345>") as log:
+            ...     log.info("This is a test %d", 123)
+            REQUEST#12345>This is a test 123
+
+        """
+        self.logger = logger
+        self.handlers = handlers
+        self.prefix = prefix
+        self.suffix = suffix
+
+    def __enter__(self) -> Union[logging.Logger, logging.LoggerAdapter]:
+        assert self.logger
+        self.log: Union[logging.Logger, logging.LoggerAdapter] = self.logger
+        if self.handlers:
+            for handler in self.handlers:
+                self.log.addHandler(handler)
+        if self.prefix:
+            self.log = PrependingLogAdapter(self.log, {"prefix": self.prefix})
+        if self.suffix:
+            self.log = AppendingLogAdapter(self.log, {"suffix": self.suffix})
+        return self.log
+
+    def __exit__(self, et, ev, tb) -> None:
+        if self.handlers:
+            for handler in self.handlers:
+                self.logger.removeHandler(handler)
+                handler.close()
+        return None  # propagate exceptions out
 
 
 class MillisecondAwareFormatter(logging.Formatter):
