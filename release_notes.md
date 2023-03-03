@@ -347,3 +347,41 @@ This version -------- 0.0.1b12
 Previous version ---- 0.0.1b11
 Total commits -------       22
 ```
+# 🎁 Release notes (`0.0.1b13`)
+
+## Changes
+- Remove tprint, add docs.
+- Document this logging stuff.
+- Removes my hacky --lmodule which I will miss dearly but it was preventing the cool LoggingContext which is now added.
+- Cleanup.
+- Adds LoggingContext.
+- Cut version 0.0.1b12
+- Do this logging stuff the right way.
+- Cut version 0.0.1b11
+- Rename that class; it doesn't just prepend...
+- Improve pydocs.
+- Fix pydocs
+- Create methods to dynamically prepend or append messages to all log messages produced by the current thread.
+- Update docs.
+- Cut version 0.0.1b10
+- More cleanup.
+- More spring cleaning.
+- I guess it's 2023 now...
+- Adds a new color.
+- Augment logging at startup in debug mode; fix a bug in config.
+- Fix logger.exception messages in example code.
+- Fix logger.exception() calls.
+- Use full path for grep.
+- Make logging use execute_probabilstically.
+- Improve docs and add a doctest.
+- Adds execute_probabilistically.
+- Minor tweaks.
+- Adds CreateFileWithMode helper to create a new file with a given mode more easily.
+- Cut version 0.0.1b9
+
+## Metadata
+```
+This version -------- 0.0.1b13
+Previous version ---- 0.0.1b12
+Total commits -------       28
+```
