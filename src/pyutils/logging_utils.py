@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=redefined-variable-type
 
 # © Copyright 2021-2023, Scott Gasch
 
@@ -12,8 +11,9 @@ to do things such as:
 
     * Set the logging default level (debug, info, warning, error, critical)
       of the whole program (see: :code:`--logging_level`)... and to override
-      the logging level for individual modules/functions based on their names
-      (see :code:`--lmodule`),
+      the logging level with :class:`LoggingContext`.
+    * Prepend or append a message to every log record also with
+      :class:`LoggingContext`.
     * define the logging message format (see :code:`--logging_format` and
       :code:`--logging_date_format`) including easily adding a PID/TID
       marker on all messages to help with multithreaded debugging
@@ -74,7 +74,7 @@ cfg.add_argument(
     default="INFO",
     choices=["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
     metavar="LEVEL",
-    help="The global default level below which to squelch log messages; see also --lmodule",
+    help="The global default level below which to squelch log messages",
 )
 cfg.add_argument(
     "--logging_format",
@@ -190,16 +190,6 @@ cfg.add_argument(
     help="When calling print, also log.info automatically.",
 )
 cfg.add_argument(
-    "--lmodule",
-    type=str,
-    metavar="<SCOPE>=<LEVEL>[,<SCOPE>=<LEVEL>...]",
-    help=(
-        "Allows per-scope logging levels which override the global level set with --logging-level."
-        + "Pass a space separated list of <scope>=<level> where <scope> is one of: module, "
-        + "module:function, or :function and <level> is a logging level (e.g. INFO, DEBUG...)"
-    ),
-)
-cfg.add_argument(
     "--logging_clear_preexisting_handlers",
     action=argparse_utils.ActionNoYes,
     default=True,
@@ -307,103 +297,6 @@ class SquelchRepeatedMessagesFilter(logging.Filter):
         return count < threshold
 
 
-class DynamicPerScopeLoggingLevelFilter(logging.Filter):
-    """This filter only allows logging messages from an allow list of
-    module names or `module:function` names.  Blocks all others.  This
-    filter is used to implement the :code:`--lmodule` commandline option.
-
-    .. note::
-
-        You probably don't need to use this directly, just use
-        :code:`--lmodule`.  For example, to set logging level to INFO
-        everywhere except "module:function" where it should be DEBUG::
-
-            # myprogram.py --logging_level=INFO --lmodule=module:function=DEBUG
-
-    """
-
-    @staticmethod
-    def level_name_to_level(name: str) -> int:
-        """Given a level name, return its numberic value."""
-        numeric_level = getattr(logging, name, None)
-        if not isinstance(numeric_level, int):
-            raise ValueError(f"Invalid level: {name}")
-        return numeric_level
-
-    def __init__(
-        self,
-        default_logging_level: int,
-        per_scope_logging_levels: Optional[str],
-    ) -> None:
-        """Construct the Filter.
-
-        Args:
-            default_logging_level: the logging level of the whole program
-            per_scope_logging_levels: optional, comma separated overrides of
-                logging level per scope of the format scope=level where
-                scope is of the form "module:function" or ":function" and
-                level is one of NOTSET, DEBUG, INFO, WARNING, ERROR or
-                CRITICAL.
-        """
-        super().__init__()
-        self.valid_levels = set(
-            ["NOTSET", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        )
-        self.default_logging_level = default_logging_level
-        self.level_by_scope = {}
-        if per_scope_logging_levels is not None:
-            for chunk in per_scope_logging_levels.split(","):
-                if "=" not in chunk:
-                    print(
-                        f'Malformed lmodule directive: "{chunk}", missing "=".  Ignored.',
-                        file=sys.stderr,
-                    )
-                    continue
-                try:
-                    (scope, level) = chunk.split("=")
-                except ValueError:
-                    print(
-                        f'Malformed lmodule directive: "{chunk}".  Ignored.',
-                        file=sys.stderr,
-                    )
-                    continue
-                scope = scope.strip()
-                level = level.strip().upper()
-                if level not in self.valid_levels:
-                    print(
-                        f'Malformed lmodule directive: "{chunk}", bad level.  Ignored.',
-                        file=sys.stderr,
-                    )
-                    continue
-                self.level_by_scope[
-                    scope
-                ] = DynamicPerScopeLoggingLevelFilter.level_name_to_level(level)
-
-    @overrides
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Decides whether or not to log based on an allow list."""
-
-        # First try to find a logging level by scope (--lmodule)
-        if len(self.level_by_scope) > 0:
-            min_level = None
-            for scope in (
-                record.module,
-                f"{record.module}:{record.funcName}",
-                f":{record.funcName}",
-            ):
-                level = self.level_by_scope.get(scope, None)
-                if level is not None:
-                    if min_level is None or level < min_level:
-                        min_level = level
-
-            # If we found one, use it instead of the global default level.
-            if min_level is not None:
-                return record.levelno >= min_level
-
-        # Otherwise, use the global logging level (--logging_level)
-        return record.levelno >= self.default_logging_level
-
-
 # A map from function_identifier -> probability of logging (0.0%..100.0%)
 probabilistic_logging_levels: Dict[str, float] = {}
 
@@ -470,6 +363,40 @@ class OnlyInfoFilter(logging.Filter):
         return record.levelno == logging.INFO
 
 
+class PrefixAddingFilter(logging.Filter):
+    def __init__(self, prefix: str, klobber: bool = False):
+        super().__init__()
+        if prefix:
+            self.prefix = prefix
+        else:
+            self.prefix = ""
+        self.klobber = klobber
+
+    def filter(self, record: logging.LogRecord):
+        if self.klobber:
+            record.prefix = self.prefix
+        elif "prefix" not in record.__dict__:
+            record.prefix = self.prefix
+        return True
+
+
+class SuffixAddingFilter(logging.Filter):
+    def __init__(self, suffix: str, klobber: bool = False):
+        super().__init__()
+        if suffix:
+            self.suffix = suffix
+        else:
+            self.suffix = ""
+        self.klobber = klobber
+
+    def filter(self, record: logging.LogRecord):
+        if self.klobber:
+            record.suffix = self.suffix
+        elif "suffix" not in record.__dict__:
+            record.suffix = self.suffix
+        return True
+
+
 class PrependingLogAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         return f'{self.extra.get("prefix", "")}{msg}', kwargs
@@ -519,61 +446,149 @@ class LoggingContext(contextlib.ContextDecorator):
         self,
         logger: logging.Logger,
         *,
+        level: Optional[int] = None,
         handlers: Optional[List[logging.Handler]] = None,
         prefix: Optional[str] = None,
         suffix: Optional[str] = None,
     ):
-        """This is a logging context that can be used to temporarily change logging:
+        """This is a logging context that can be used to temporarily change the
+        way we are logging within its scope.  Logging changes may include:
 
-            * Change the destination of log messages (by adding temporary handlers)
-            * Add a prefix string to log messages
-            * Add a suffix string to log messages
+            - Changing the logging level (e.g. from INFO to DEBUG)
+            - Adding a prefix or suffix to every log message produced
+            - Adding temporary Handlers to direct the logging output elsewhere
 
-        .. note::
+        Setup for doctest / examples.  This will normally be taken care of
+        by code in :meth:`initialize_logging` so you don't have to worry
+        about it.
 
-            Unfortunately this can't be used to dynamically change the
-            defaut logging level because of a conflict with
-            :class:`DynamicPerScopeLoggingLevelFilter` which, to work,
-            must see every logging message.  I love the ability to set
-            logging per module from the commandline and am not willing
-            to lose it in return for the ability to dynamically change
-            the logging level in code.
-
-        Sample usage:
-
-            >>> logging.root.setLevel(0)
+            >>> logging_format = "%(prefix)s%(message)s%(suffix)s"
             >>> logger = logging.getLogger(__name__)
-            >>> logger.addHandler(logging.StreamHandler(sys.stdout))
-            >>> logger.info("Hello!")
-            Hello!
+            >>> logger.setLevel(logging.INFO)
+            >>> handler = logging.StreamHandler(sys.stdout)
+            >>> handler.setFormatter(
+            ...     MillisecondAwareFormatter(
+            ...         fmt=logging_format,
+            ...         datefmt='',
+            ...     )
+            ... )
+            >>> logger.addHandler(handler)
+            >>> logger.addFilter(PrefixAddingFilter(None))
+            >>> logger.addFilter(SuffixAddingFilter(None))
 
-            >>> with LoggingContext(logger, prefix="REQUEST#12345>") as log:
-            ...     log.info("This is a test %d", 123)
-            REQUEST#12345>This is a test 123
+        First, this logger should be currently be configured to send
+        INFO+ messages to sys.stdout.  Let's see it in action:
+
+            >>> logger.info("Hello world!")
+            Hello world!
+            >>> logger.debug("You should not see this")
+
+        The first example is to simply change the level of the logger.
+        Here we temporarily change it to DEBUG within the body of the
+        :class:`LoggingContext`:
+
+            >>> with LoggingContext(logger, level=logging.DEBUG):
+            ...     logger.debug("You should see this now")
+            ...     logger.info("Of course you should still see this too")
+            You should see this now
+            Of course you should still see this too
+
+            >>> logger.debug("Outside of the context we are at INFO again")
+            >>> logger.debug("(which is why you don't see these)")
+            >>> logger.info("But you should see this at INFO level")
+            But you should see this at INFO level
+
+        The prefix and suffix argument prepend or append a message to
+        all log output.  To do this, you need %(prefix)s and
+        %(suffix)s placeholders in your logger format string
+        indicating where to insert the data.  This is useful, for
+        example, to add an active request identifier to the set of log
+        messages produced while processing it.
+
+            >>> logger.info("About to work on a new request")
+            About to work on a new request
+
+            >>> with LoggingContext(logger, prefix='10.0.0.13> '):
+            ...     logger.info("Working on it now")
+            10.0.0.13> Working on it now
+
+            logger.info("Done with that request")
+            Done with that request
+
+        LoggingContext can also be used to add temporary handler(s).
+        This code temporarily uses two stdout handlers to double the
+        output for testing purporses but you could also temporarily,
+        e.g., add a RotatingFileHandler or SysLogHandler etc...
+
+            >>> with LoggingContext(logger, handlers=[logging.StreamHandler(sys.stdout)]):
+            ...     logger.info("TEST")
+            TEST
+            TEST
+
+        Once leaving the context, logger's behavior is restored.  In
+        this case, the extra handler is removed so output will not
+        longer be doubled.
+
+            >>> logger.info("OUTSIDE")
+            OUTSIDE
+
+        LoggingContext can also be used as a decorator if that is more
+        convenient:
+
+            >>> @LoggingContext(logger, level=logging.DEBUG)
+            ... def log_stuff(logger):
+            ...     logger.debug("But inside, the decorator has changed us to DEBUG")
+
+            >>> logger.debug("Outside, we're at INFO level and you don't see this")
+            >>> log_stuff(logger)
+            But inside, the decorator has changed us to DEBUG
+            >>> logger.debug("And, of course, out here we're still at INFO afterwards")
 
         """
         self.logger = logger
+        self.level = level
+        self.old_level: Optional[int] = None
         self.handlers = handlers
-        self.prefix = prefix
-        self.suffix = suffix
+        if prefix:
+            self.prefix: Optional[logging.Filter] = PrefixAddingFilter(prefix, True)
+        else:
+            self.prefix = None
+        if suffix:
+            self.suffix: Optional[logging.Filter] = SuffixAddingFilter(suffix, True)
+        else:
+            self.suffix = None
 
     def __enter__(self) -> Union[logging.Logger, logging.LoggerAdapter]:
         assert self.logger
-        self.log: Union[logging.Logger, logging.LoggerAdapter] = self.logger
+        if self.level:
+            self.old_level = self.logger.level
+            self.logger.setLevel(self.level)
+
         if self.handlers:
             for handler in self.handlers:
-                self.log.addHandler(handler)
+                self.logger.addHandler(handler)
+
         if self.prefix:
-            self.log = PrependingLogAdapter(self.log, {"prefix": self.prefix})
+            self.logger.addFilter(self.prefix)
+
         if self.suffix:
-            self.log = AppendingLogAdapter(self.log, {"suffix": self.suffix})
-        return self.log
+            self.logger.addFilter(self.suffix)
+        return self.logger
 
     def __exit__(self, et, ev, tb) -> None:
+        if self.suffix:
+            self.logger.removeFilter(self.suffix)
+
+        if self.prefix:
+            self.logger.removeFilter(self.prefix)
+
         if self.handlers:
             for handler in self.handlers:
                 self.logger.removeHandler(handler)
                 handler.close()
+
+        if self.old_level:
+            self.logger.setLevel(self.old_level)
         return None  # propagate exceptions out
 
 
@@ -677,14 +692,126 @@ def _log_about_logging(
         logger.debug(
             "Logging code is forbidden to request probabilistic logging; messages always logged. (--no_logging_probabilistically)"
         )
-    if config.config["lmodule"]:
-        logger.debug(
-            f'Logging dynamic per-module logging enabled. (--lmodule={config.config["lmodule"]})'
-        )
     if config.config["logging_captures_prints"]:
         logger.debug(
             "Logging will capture printed data as logger.info messages. (--logging_captures_prints)"
         )
+
+
+def _construct_logging_format() -> str:
+    # Custom or default --logging_format?
+    if config.config["logging_format"]:
+        fmt = config.config["logging_format"]
+    elif config.config["logging_syslog"]:
+        fmt = "%(levelname).1s:%(filename)s[%(process)d]: "
+    else:
+        fmt = "%(levelname).1s:%(asctime)s: "
+
+    fmt += "%(prefix)s%(message)s%(suffix)s"
+
+    # --logging_debug_threads and --logging_debug_modules both affect
+    # the format by prepending information about the pid/tid or
+    # file/function.
+    if config.config["logging_debug_threads"]:
+        fmt = f"%(process)d.%(thread)d|{fmt}"
+    if config.config["logging_debug_modules"]:
+        fmt = f"%(filename)s:%(funcName)s:%(lineno)s|{fmt}"
+    return fmt
+
+
+def _construct_handlers_list(
+    logging_format: str, facility_name: Optional[str]
+) -> List[logging.Handler]:
+    retval: List[logging.Handler] = []
+
+    # --logging_syslog (optionally with --logging_syslog_facility)
+    # sets up for logging to use the standard system syslogd as a
+    # sink.
+    if config.config["logging_syslog"]:
+        if sys.platform not in ("win32", "cygwin"):
+            assert facility_name
+            facility = SysLogHandler.__dict__.get(facility_name, SysLogHandler.LOG_USER)
+            assert facility
+            syslog_handler = SysLogHandler(facility=facility, address="/dev/log")
+            syslog_handler.setFormatter(
+                MillisecondAwareFormatter(
+                    fmt=logging_format,
+                    datefmt=config.config["logging_date_format"],
+                )
+            )
+            retval.append(syslog_handler)
+
+    # --logging_filename (with friends --logging_filename_count and
+    # --logging_filename_maxsize) set up logging to a file on the
+    # filesystem with automatic rotation when it gets too big.
+    if config.config["logging_filename"]:
+        max_bytes = config.config["logging_filename_maxsize"]
+        assert max_bytes and isinstance(max_bytes, int)
+        backup_count = config.config["logging_filename_count"]
+        assert backup_count and isinstance(backup_count, int)
+        file_handler = RotatingFileHandler(
+            config.config["logging_filename"],
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+        )
+        file_handler.setFormatter(
+            MillisecondAwareFormatter(
+                fmt=logging_format,
+                datefmt=config.config["logging_date_format"],
+            )
+        )
+        retval.append(file_handler)
+
+    # --logging_console is, ahem, logging to the console.
+    if config.config["logging_console"]:
+        console_handler = logging.StreamHandler(sys.stderr)
+        console_handler.setFormatter(
+            MillisecondAwareFormatter(
+                fmt=logging_format,
+                datefmt=config.config["logging_date_format"],
+            )
+        )
+        retval.append(console_handler)
+
+    if len(retval) == 0:
+        retval.append(logging.NullHandler())
+    return retval
+
+
+def _add_logging_handlers_and_filters(
+    logger: logging.Logger, handlers: List[logging.Handler]
+) -> None:
+
+    for handler in handlers:
+        # These two are always present and set %(prefix) and %(suffix)
+        # if appropriate (see :class:`LoggingContext`) or make them
+        # empty string.
+        handler.addFilter(PrefixAddingFilter(""))
+        handler.addFilter(SuffixAddingFilter(""))
+
+        # --logging_squelch_repeats allows code to request repeat logging
+        # messages (identical log site and message contents) to be
+        # silenced.  Logging code must request this explicitly, it isn't
+        # automatic.  This option just allows the silencing to happen.
+        if config.config["logging_squelch_repeats"]:
+            handler.addFilter(SquelchRepeatedMessagesFilter())
+
+        # --logging_probabilistically allows code to request
+        # non-deterministic logging where messages have some probability
+        # of being produced.  Logging code must request this explicitly.
+        # This option just allows the non-deterministic behavior to
+        # happen.  Disabling it will cause every log message to be
+        # produced.
+        if config.config["logging_probabilistically"]:
+            handler.addFilter(ProbabilisticFilter())
+        logger.addHandler(handler)
+
+    # --logging_info_is_print echoes any message to logger.info(x) as
+    # a print statement on stdout.
+    if config.config["logging_info_is_print"]:
+        handler = logging.StreamHandler(sys.stdout)
+        handler.addFilter(OnlyInfoFilter())
+        logger.addHandler(handler)
 
 
 def initialize_logging(logger=None) -> logging.Logger:
@@ -702,27 +829,26 @@ def initialize_logging(logger=None) -> logging.Logger:
         return logging.getLogger()
     LOGGING_INITIALIZED = True
 
-    if logger is None:
-        logger = logging.getLogger()
-
-    # --logging_clear_preexisting_handlers removes logging handlers
-    # that were registered by global statements during imported module
-    # setup.
     preexisting_handlers_count = 0
-    assert config.has_been_parsed()
-    if config.config["logging_clear_preexisting_handlers"]:
-        while logger.hasHandlers():
-            logger.removeHandler(logger.handlers[0])
-            preexisting_handlers_count += 1
+    if logger is None:
+        # --logging_clear_preexisting_handlers removes logging handlers
+        # that were registered by global statements during imported module
+        # setup.
+        if config.config["logging_clear_preexisting_handlers"]:
+            logging.basicConfig(force=True)
+            logger = logging.getLogger()
+            while logger.hasHandlers():
+                logger.removeHandler(logger.handlers[0])
+                preexisting_handlers_count += 1
+        else:
+            logging.basicConfig()
+            logger = logging.getLogger()
 
     # --logging_config_file pulls logging settings from a config file
     # skipping the rest of this setup.
     if config.config["logging_config_file"] is not None:
         fileConfig(config.config["logging_config_file"])
         return logger
-
-    handlers: List[logging.Handler] = []
-    handler: Optional[logging.Handler] = None
 
     # Global default logging level (--logging_level); messages below
     # this level will be silenced.
@@ -732,116 +858,18 @@ def initialize_logging(logger=None) -> logging.Logger:
     default_logging_level = getattr(logging, logging_level, None)
     if not isinstance(default_logging_level, int):
         raise ValueError(f'Invalid level: {config.config["logging_level"]}')
+    logger.setLevel(default_logging_level)
 
-    # Custom or default --logging_format?
-    if config.config["logging_format"]:
-        fmt = config.config["logging_format"]
-    elif config.config["logging_syslog"]:
-        fmt = "%(levelname).1s:%(filename)s[%(process)d]: %(message)s"
-    else:
-        fmt = "%(levelname).1s:%(asctime)s: %(message)s"
-
-    # --logging_debug_threads and --logging_debug_modules both affect
-    # the format by prepending information about the pid/tid or
-    # file/function.
-    if config.config["logging_debug_threads"]:
-        fmt = f"%(process)d.%(thread)d|{fmt}"
-    if config.config["logging_debug_modules"]:
-        fmt = f"%(filename)s:%(funcName)s:%(lineno)s|{fmt}"
-
-    # --logging_syslog (optionally with --logging_syslog_facility)
-    # sets up for logging to use the standard system syslogd as a
-    # sink.
+    logging_format = _construct_logging_format()
     facility_name = None
     if config.config["logging_syslog"]:
         if sys.platform not in ("win32", "cygwin"):
             if config.config["logging_syslog_facility"]:
                 facility_name = "LOG_" + config.config["logging_syslog_facility"]
-            facility = SysLogHandler.__dict__.get(facility_name, SysLogHandler.LOG_USER)  # type: ignore
-            assert facility is not None
-            handler = SysLogHandler(facility=facility, address="/dev/log")
-            handler.setFormatter(
-                MillisecondAwareFormatter(
-                    fmt=fmt,
-                    datefmt=config.config["logging_date_format"],
-                )
-            )
-            handlers.append(handler)
-
-    # --logging_filename (with friends --logging_filename_count and
-    # --logging_filename_maxsize) set up logging to a file on the
-    # filesystem with automatic rotation when it gets too big.
-    if config.config["logging_filename"]:
-        max_bytes = config.config["logging_filename_maxsize"]
-        assert max_bytes and isinstance(max_bytes, int)
-        backup_count = config.config["logging_filename_count"]
-        assert backup_count and isinstance(backup_count, int)
-        handler = RotatingFileHandler(
-            config.config["logging_filename"],
-            maxBytes=max_bytes,
-            backupCount=backup_count,
-        )
-        handler.setFormatter(
-            MillisecondAwareFormatter(
-                fmt=fmt,
-                datefmt=config.config["logging_date_format"],
-            )
-        )
-        handlers.append(handler)
-
-    # --logging_console is, ahem, logging to the console.
-    if config.config["logging_console"]:
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setFormatter(
-            MillisecondAwareFormatter(
-                fmt=fmt,
-                datefmt=config.config["logging_date_format"],
-            )
-        )
-        handlers.append(handler)
-
-    if len(handlers) == 0:
-        handlers.append(logging.NullHandler())
-    for handler in handlers:
-        logger.addHandler(handler)
-
-    # --logging_info_is_print echoes any message to logger.info(x) as
-    # a print statement on stdout.
-    if config.config["logging_info_is_print"]:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.addFilter(OnlyInfoFilter())
-        logger.addHandler(handler)
-
-    # --logging_squelch_repeats allows code to request repeat logging
-    # messages (identical log site and message contents) to be
-    # silenced.  Logging code must request this explicitly, it isn't
-    # automatic.  This option just allows the silencing to happen.
-    if config.config["logging_squelch_repeats"]:
-        for handler in handlers:
-            handler.addFilter(SquelchRepeatedMessagesFilter())
-
-    # --logging_probabilistically allows code to request
-    # non-deterministic logging where messages have some probability
-    # of being produced.  Logging code must request this explicitly.
-    # This option just allows the non-deterministic behavior to
-    # happen.  Disabling it will cause every log message to be
-    # produced.
-    if config.config["logging_probabilistically"]:
-        for handler in handlers:
-            handler.addFilter(ProbabilisticFilter())
-
-    # --lmodule is a way to have a special logging level for just on
-    # module or one set of modules that is different than the one set
-    # globally via --logging_level.
-    for handler in handlers:
-        handler.addFilter(
-            DynamicPerScopeLoggingLevelFilter(
-                default_logging_level,
-                config.config["lmodule"],
-            )
-        )
-    logger.setLevel(0)
-    logger.propagate = False
+    handlers: List[logging.Handler] = _construct_handlers_list(
+        logging_format, facility_name
+    )
+    _add_logging_handlers_and_filters(logger, handlers)
 
     # --logging_captures_prints, if set, will capture and log.info
     # anything printed on stdout.
@@ -864,7 +892,7 @@ def initialize_logging(logger=None) -> logging.Logger:
         logger,
         default_logging_level,
         preexisting_handlers_count,
-        fmt,
+        logging_format,
         facility_name,
     )
     return logger
