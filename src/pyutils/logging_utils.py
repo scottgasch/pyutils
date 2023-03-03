@@ -470,24 +470,6 @@ class OnlyInfoFilter(logging.Filter):
         return record.levelno == logging.INFO
 
 
-def prepend_all_logger_messages(
-    prefix: str, logger: logging.Logger
-) -> logging.LoggerAdapter:
-    """Helper method around the creation of a LoggerAdapter that prepends
-    a given string to every log message produced.
-
-    Args:
-        prefix: the message to prepend to every log message.
-        logger: the logger whose messages to modify.
-
-    Returns:
-        A new logger wrapping the old one with the given behavior.
-        The old logger will continue to behave as usual; simply drop
-        the reference to this wrapper when it's no longer needed.
-    """
-    return PrependingLogAdapter.wrap_logger(prefix, logger)
-
-
 class PrependingLogAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
         return f'{self.extra.get("prefix", "")}{msg}', kwargs
@@ -508,24 +490,6 @@ class PrependingLogAdapter(logging.LoggerAdapter):
         """
         assert prefix
         return PrependingLogAdapter(logger, {"prefix": prefix})
-
-
-def append_all_logger_messages(
-    suffix: str, logger: logging.Logger
-) -> logging.LoggerAdapter:
-    """Helper method around the creation of a LoggerAdapter that appends
-    a given string to every log message produced.
-
-    Args:
-        suffix: the message to prepend to every log message.
-        logger: the logger whose messages to modify.
-
-    Returns:
-        A new logger wrapping the old one with the given behavior.
-        The old logger will continue to behave as usual; simply drop
-        the reference to this wrapper when it's no longer needed.
-    """
-    return AppendingLogAdapter.wrap_logger(suffix, logger)
 
 
 class AppendingLogAdapter(logging.LoggerAdapter):
@@ -565,7 +529,7 @@ class LoggingContext(contextlib.ContextDecorator):
             * Add a prefix string to log messages
             * Add a suffix string to log messages
 
-        .. warning::
+        .. note::
 
             Unfortunately this can't be used to dynamically change the
             defaut logging level because of a conflict with
