@@ -34,6 +34,9 @@ to do things such as:
     * capture printed messages into the info log (:code:`--logging_captures_prints`),
     * and optionally clear unwanted logging handlers added by other imports
       before this one (:code:`--logging_clear_preexisting_handlers`).
+    * There are also :class:`LoggerAdapter` classes to implement prefix/suffix
+      functionality without using :class:`LoggingContext` by wrapping the
+      logger included.
 
 To use this functionality, call :meth:`initialize_logging` early
 in your program entry point.  If you use the
@@ -364,6 +367,11 @@ class OnlyInfoFilter(logging.Filter):
 
 
 class PrefixAddingFilter(logging.Filter):
+    """A filter that adds a string prefix to the log record for the
+    formatter to later fill in.  Requires a %(prefix)s in the format
+    string.
+    """
+
     def __init__(self, prefix: str, klobber: bool = False):
         super().__init__()
         if prefix:
@@ -372,6 +380,7 @@ class PrefixAddingFilter(logging.Filter):
             self.prefix = ""
         self.klobber = klobber
 
+    @overrides
     def filter(self, record: logging.LogRecord):
         if self.klobber:
             record.prefix = self.prefix
@@ -381,6 +390,11 @@ class PrefixAddingFilter(logging.Filter):
 
 
 class SuffixAddingFilter(logging.Filter):
+    """A filter that adds a string suffix to the log record for the
+    formatter to later fill in.  Requires a %(suffix)s in the format
+    string.
+    """
+
     def __init__(self, suffix: str, klobber: bool = False):
         super().__init__()
         if suffix:
@@ -389,6 +403,7 @@ class SuffixAddingFilter(logging.Filter):
             self.suffix = ""
         self.klobber = klobber
 
+    @overrides
     def filter(self, record: logging.LogRecord):
         if self.klobber:
             record.suffix = self.suffix
@@ -398,6 +413,36 @@ class SuffixAddingFilter(logging.Filter):
 
 
 class PrependingLogAdapter(logging.LoggerAdapter):
+    """:class:`LoggingContext` adds prefixes and suffixes using a
+    logging.Filter that must insert "prefix" or "suffix" members into
+    each log record by using :class:`PrefixAddingFilter` and
+    :class:`SuffixAddingFilter`.  This relies on the logging format
+    string containing a %(prefix)s and a %(suffix)s to work correctly.
+
+    This is an alternate approach that basically just wraps the logger
+    in a class that has the same interface and thunks most calls down
+    to the wrapped logger.  It might be useful if you don't want to use
+    :class:`LoggingContext` or its friends.
+
+        >>> logger = logging.getLogger(__name__ + ".PrependingLogAdapter")
+        >>> logger.setLevel(logging.INFO)
+        >>> logger.addHandler(logging.StreamHandler(sys.stdout))
+
+    At this point logger doesn't have any format string and so it is
+    missing %(prefix)s and %(suffix)s.  It also doesn't have a
+    :class:`PrefixAddingFilter` or :class:`SuffixAddingFilter` added.
+    So using it in a :class:`LoggingContext` will not work.
+
+    But we can still add a prefix or suffix by just wrapping it:
+
+        >>> logger.info("TEST")
+        TEST
+
+        >>> log = PrependingLogAdapter.wrap_logger('prefix> ', logger)
+        >>> log.info("TEST")
+        prefix> TEST
+    """
+
     def process(self, msg, kwargs):
         return f'{self.extra.get("prefix", "")}{msg}', kwargs
 
@@ -420,6 +465,36 @@ class PrependingLogAdapter(logging.LoggerAdapter):
 
 
 class AppendingLogAdapter(logging.LoggerAdapter):
+    """:class:`LoggingContext` adds prefixes and suffixes using a
+    logging.Filter that must insert "prefix" or "suffix" members into
+    each log record by using :class:`PrefixAddingFilter` and
+    :class:`SuffixAddingFilter`.  This relies on the logging format
+    string containing a %(prefix)s and a %(suffix)s to work correctly.
+
+    This is an alternate approach that basically just wraps the logger
+    in a class that has the same interface and thunks most calls down
+    to the wrapped logger.  It might be useful if you don't want to use
+    :class:`LoggingContext` or its friends.
+
+        >>> logger = logging.getLogger(__name__ + ".AppendingLogAdapter")
+        >>> logger.setLevel(logging.INFO)
+        >>> logger.addHandler(logging.StreamHandler(sys.stdout))
+
+    At this point logger doesn't have any format string and so it is
+    missing %(prefix)s and %(suffix)s.  It also doesn't have a
+    :class:`PrefixAddingFilter` or :class:`SuffixAddingFilter` added.
+    So using it in a :class:`LoggingContext` will not work.
+
+    But we can still add a prefix or suffix by just wrapping it:
+
+        >>> logger.info("TEST")
+        TEST
+
+        >>> log = AppendingLogAdapter.wrap_logger('!!!', logger)
+        >>> log.info("TEST")
+        TEST!!!
+    """
+
     def process(self, msg, kwargs):
         return f'{msg}{self.extra.get("suffix", "")}', kwargs
 
@@ -463,7 +538,7 @@ class LoggingContext(contextlib.ContextDecorator):
         about it.
 
             >>> logging_format = "%(prefix)s%(message)s%(suffix)s"
-            >>> logger = logging.getLogger(__name__)
+            >>> logger = logging.getLogger(__name__ + ".LoggingContext")
             >>> logger.setLevel(logging.INFO)
             >>> handler = logging.StreamHandler(sys.stdout)
             >>> handler.setFormatter(
@@ -602,7 +677,6 @@ class MillisecondAwareFormatter(logging.Formatter):
         wired in under :meth:`initialize_logging` so that the
         timestamps in log messages have millisecond level
         precision.
-
     """
 
     converter = datetime.datetime.fromtimestamp  # type: ignore
@@ -699,6 +773,8 @@ def _log_about_logging(
 
 
 def _construct_logging_format() -> str:
+    """Figure out the root logging format string based on commandling args."""
+
     # Custom or default --logging_format?
     if config.config["logging_format"]:
         fmt = config.config["logging_format"]
@@ -722,6 +798,10 @@ def _construct_logging_format() -> str:
 def _construct_handlers_list(
     logging_format: str, facility_name: Optional[str]
 ) -> List[logging.Handler]:
+    """Create the list of handlers to be added to the root logger
+    based on commandline flags.
+    """
+
     retval: List[logging.Handler] = []
 
     # --logging_syslog (optionally with --logging_syslog_facility)
@@ -773,6 +853,13 @@ def _construct_handlers_list(
         )
         retval.append(console_handler)
 
+    # --logging_info_is_print echoes any message to logger.info(x) as
+    # a print statement on stdout.
+    if config.config["logging_info_is_print"]:
+        print_handler = logging.StreamHandler(sys.stdout)
+        print_handler.addFilter(OnlyInfoFilter())
+        retval.append(print_handler)
+
     if len(retval) == 0:
         retval.append(logging.NullHandler())
     return retval
@@ -781,13 +868,14 @@ def _construct_handlers_list(
 def _add_logging_handlers_and_filters(
     logger: logging.Logger, handlers: List[logging.Handler]
 ) -> None:
+    """Adds a list of handlers to the root logger."""
 
     for handler in handlers:
         # These two are always present and set %(prefix) and %(suffix)
         # if appropriate (see :class:`LoggingContext`) or make them
         # empty string.
-        handler.addFilter(PrefixAddingFilter(""))
-        handler.addFilter(SuffixAddingFilter(""))
+        handler.addFilter(PrefixAddingFilter("", False))
+        handler.addFilter(SuffixAddingFilter("", False))
 
         # --logging_squelch_repeats allows code to request repeat logging
         # messages (identical log site and message contents) to be
@@ -806,13 +894,6 @@ def _add_logging_handlers_and_filters(
             handler.addFilter(ProbabilisticFilter())
         logger.addHandler(handler)
 
-    # --logging_info_is_print echoes any message to logger.info(x) as
-    # a print statement on stdout.
-    if config.config["logging_info_is_print"]:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.addFilter(OnlyInfoFilter())
-        logger.addHandler(handler)
-
 
 def initialize_logging(logger=None) -> logging.Logger:
     """Initialize logging for the program.  See module level comments
@@ -824,6 +905,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     it will call this for you.  See :meth:`pyutils.bootstrap.initialize`
     for more details.
     """
+
     global LOGGING_INITIALIZED
     if LOGGING_INITIALIZED:
         return logging.getLogger()
