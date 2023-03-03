@@ -373,6 +373,11 @@ class PrefixAddingFilter(logging.Filter):
     """
 
     def __init__(self, prefix: str, klobber: bool = False):
+        """
+        Args:
+            prefix: the prefix string to add
+            klobber: should we overwrite other prefixes?
+        """
         super().__init__()
         if prefix:
             self.prefix = prefix
@@ -396,6 +401,11 @@ class SuffixAddingFilter(logging.Filter):
     """
 
     def __init__(self, suffix: str, klobber: bool = False):
+        """
+        Args:
+            suffix: the suffix string to add
+            klobber: should we overwrite other suffixes?
+        """
         super().__init__()
         if suffix:
             self.suffix = suffix
@@ -984,20 +994,6 @@ def get_logger(name: str = ""):
     """Get the global logger"""
     logger = logging.getLogger(name)
     return initialize_logging(logger)
-
-
-def tprint(*args, **kwargs) -> None:
-    """Legacy function for printing a message augmented with thread id
-    still needed by some code.  Please use --logging_debug_threads in
-    new code.
-    """
-    if config.config["logging_debug_threads"]:
-        from pyutils.parallelize.thread_utils import current_thread_id
-
-        print(f"{current_thread_id()}", end="")
-        print(*args, **kwargs)
-    else:
-        pass
 
 
 class OutputMultiplexer(object):
