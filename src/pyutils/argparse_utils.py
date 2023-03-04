@@ -459,6 +459,71 @@ def valid_duration(txt: str) -> datetime.timedelta:
         raise argparse.ArgumentTypeError(e) from e
 
 
+def valid_byte_count(txt: str) -> int:
+    """If the string is a valid number of bytes, return an integer
+    representing the requested byte count.  This method uses
+    :meth:`string_utils.suffix_string_to_number` to parse and and
+    accepts / understands:
+
+        - plain numbers (123456)
+        - numbers with ISO suffixes (Mb, Gb, Pb, etc...)
+
+    If the byte count is not parsable, raise an ArgumentTypeError.
+
+    Args:
+        txt: data passed to a commandline arg expecting a duration.
+
+    Returns:
+        An integer number of bytes or raises ArgumentTypeError on
+        error.
+
+    Sample usage::
+
+        cfg.add_argument(
+            '--max_file_size',
+            type=argparse_utils.valid_byte_count,
+            default=(1024 * 1024),
+            metavar='NUM_BYTES',
+            help='The largest file we may create',
+        )
+
+    >>> valid_byte_count('1Mb')
+    1048576
+
+    >>> valid_byte_count("1234567")
+    1234567
+
+    >>> valid_byte_count("1.2Gb")
+    1288490188
+
+    >>> valid_byte_count('1.2')      # <--- contains a decimal
+    Traceback (most recent call last):
+    ...
+    argparse.ArgumentTypeError: Invalid byte count: 1.2
+
+    >>> valid_byte_count(1234567)    # <--- not a string
+    Traceback (most recent call last):
+    ...
+    argparse.ArgumentTypeError: Invalid byte count: 1234567
+
+    >>> valid_byte_count('On a dark and stormy night')
+    Traceback (most recent call last):
+    ...
+    argparse.ArgumentTypeError: Invalid byte count: On a dark and stormy night
+
+    """
+    from pyutils.string_utils import suffix_string_to_number
+
+    try:
+        num_bytes = suffix_string_to_number(txt)
+        if num_bytes:
+            return num_bytes
+        raise argparse.ArgumentTypeError(f"Invalid byte count: {txt}")
+    except Exception as e:
+        logger.exception("Exception while parsing a supposed byte count: %s", txt)
+        raise argparse.ArgumentTypeError(e) from e
+
+
 if __name__ == "__main__":
     import doctest
 

@@ -827,6 +827,11 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     1048576
     >>> suffix_string_to_number('13.1Gb')
     14066017894
+    >>> suffix_string_to_number('12345')
+    12345
+    >>> x = suffix_string_to_number('a lot')
+    >>> x is None
+    True
     """
 
     def suffix_capitalize(s: str) -> str:

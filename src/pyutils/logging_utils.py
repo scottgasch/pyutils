@@ -107,7 +107,7 @@ cfg.add_argument(
 )
 cfg.add_argument(
     "--logging_filename_maxsize",
-    type=int,
+    type=argparse_utils.valid_byte_count,
     default=(1024 * 1024),
     metavar="#BYTES",
     help="The maximum size (in bytes) to write to the logging_filename.",
