@@ -1,57 +1,57 @@
-pyutils.types package
+pyutils.typez package
 =====================
 
 Submodules
 ----------
 
-pyutils.types.centcount module
+pyutils.typez.centcount module
 ------------------------------
 
-.. automodule:: pyutils.types.centcount
+.. automodule:: pyutils.typez.centcount
    :members:
    :undoc-members:
    :exclude-members:  CENTCOUNT_RE,
                       CURRENCY_RE
    :show-inheritance:
 
-pyutils.types.histogram module
+pyutils.typez.histogram module
 ------------------------------
 
-.. automodule:: pyutils.types.histogram
+.. automodule:: pyutils.typez.histogram
    :members:
    :undoc-members:
    :show-inheritance:
 
-pyutils.types.money module
+pyutils.typez.money module
 --------------------------
 
-.. automodule:: pyutils.types.money
+.. automodule:: pyutils.typez.money
    :members:
    :undoc-members:
    :exclude-members:  CENTCOUNT_RE,
                       CURRENCY_RE
    :show-inheritance:
 
-pyutils.types.rate module
+pyutils.typez.rate module
 -------------------------
 
-.. automodule:: pyutils.types.rate
+.. automodule:: pyutils.typez.rate
    :members:
    :undoc-members:
    :show-inheritance:
 
-pyutils.types.simple module
+pyutils.typez.simple module
 ---------------------------
 
-.. automodule:: pyutils.types.simple
+.. automodule:: pyutils.typez.simple
    :members:
    :undoc-members:
    :show-inheritance:
 
-pyutils.types.type\_utils module
+pyutils.typez.type\_utils module
 --------------------------------
 
-.. automodule:: pyutils.types.type_utils
+.. automodule:: pyutils.typez.type_utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -59,7 +59,7 @@ pyutils.types.type\_utils module
 Module contents
 ---------------
 
-.. automodule:: pyutils.types
+.. automodule:: pyutils.typez
    :members:
    :undoc-members:
    :show-inheritance:
