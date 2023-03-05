@@ -493,6 +493,9 @@ def valid_byte_count(txt: str) -> int:
     >>> valid_byte_count("1234567")
     1234567
 
+    >>> valid_byte_count("1M")
+    1048576
+
     >>> valid_byte_count("1.2Gb")
     1288490188
 
