@@ -7,7 +7,7 @@
 import unittest
 
 from pyutils import unittest_utils
-from pyutils.types.centcount import CentCount
+from pyutils.typez.centcount import CentCount
 
 
 class TestCentCount(unittest.TestCase):

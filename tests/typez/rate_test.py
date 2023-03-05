@@ -7,8 +7,8 @@
 import unittest
 
 from pyutils import unittest_utils
-from pyutils.types.money import Money
-from pyutils.types.rate import Rate
+from pyutils.typez.money import Money
+from pyutils.typez.rate import Rate
 
 
 class TestRate(unittest.TestCase):

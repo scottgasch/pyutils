@@ -55,7 +55,7 @@ Most code includes inline documentation and doctests.  I've tried to
 organize it into logical packages based on the code's functionality.
 Note that when words would collide with a Python standard library or
 reserved keyword I've used a 'z' at the end, e.g. 'collectionz'
-instead of 'collections'.
+instead of 'collections' and 'typez' instead of 'types'.
 
 There's some example code that uses various features of this project checked
 in under `examples/ <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=examples;h=d9744bf2b171ba7a9ff21ae1d3862b673647fff4;hb=HEAD>`_ that you can check out.  See the `README <http://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=examples/README;hb=HEAD>`__ in that directory for more information

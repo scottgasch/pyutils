@@ -24,7 +24,7 @@ from pyutils.files import file_utils
 from pyutils.parallelize import executors
 from pyutils.parallelize import parallelize as par
 from pyutils.parallelize import smart_future
-from pyutils.types import histogram
+from pyutils.typez import histogram
 
 logger = logging.getLogger(__name__)
 args = config.add_commandline_args(
@@ -574,7 +574,7 @@ class AutoPlayer(object):
         self.position_hash = {}
         filename = config.config['hash_file']
         if filename is not None and file_utils.is_readable(filename):
-            logger.debug(f'Initializing position hash from {filename}...')
+            logger.debug('Initializing position hash from %s...', filename)
             with open(filename, 'r') as rf:
                 for line in rf:
                     line = line[:-1]
@@ -589,13 +589,13 @@ class AutoPlayer(object):
                     fprint = fprint.strip()
                     word = word.strip()
                     self.position_hash[(count, fprint)] = word
-            logger.debug(f'...hash contains {len(self.position_hash)} entries.')
+            logger.debug('...hash contains %s entries.', len(self.position_hash))
 
         # All legal solutions pre-sorted by length.
         self.all_possible_solutions_by_length = defaultdict(list)
         filename = config.config['solutions_file']
         if filename is not None and file_utils.is_readable(filename):
-            logger.debug(f'Initializing valid solution word list from {filename}...')
+            logger.debug('Initializing valid solution word list from %s...', filename)
             with open(filename) as rf:
                 for word in rf:
                     word = word[:-1]
@@ -609,7 +609,7 @@ class AutoPlayer(object):
         self.all_possible_guesses_by_length = defaultdict(list)
         filename = config.config['guesses_file']
         if filename is not None and file_utils.is_readable(filename):
-            logger.debug(f'Initializing legal guess word list from {filename}...')
+            logger.debug('Initializing legal guess word list from %s...', filename)
             with open(filename) as rf:
                 for word in rf:
                     word = word[:-1]
@@ -756,7 +756,7 @@ class AutoPlayer(object):
         out = ''
         for letter, weight in sorted(letter_frequency.items(), key=lambda x: -x[1]):
             out += f'{letter}:{weight}, '
-        if len(out):
+        if len(out) > 0:
             out = out[:-2]
             logger.debug(out)
 
@@ -766,7 +766,7 @@ class AutoPlayer(object):
             pop = letter_position_frequency[n]
             for letter, weight in sorted(pop.items(), key=lambda x: -x[1]):
                 out += f'pos{n}:{letter}@{weight:.5f}, '
-        if len(out):
+        if len(out) > 0:
             out = out[:-2]
             logger.debug(out)
 
@@ -780,7 +780,7 @@ class AutoPlayer(object):
         template = self.word_state.get_template()
         possible_solutions = self.get_all_possible_solutions()
         num_possible_solutions = len(possible_solutions)
-        fprint = hashlib.md5(possible_solutions.__repr__().encode('ascii')).hexdigest()
+        fprint = hashlib.md5(repr(possible_solutions).encode('ascii')).hexdigest()
 
         n = num_possible_solutions
         logger.debug(
@@ -797,7 +797,7 @@ class AutoPlayer(object):
                 )
             )
         logger.debug(
-            f'Letter count restrictions: {self.word_state.letters_in_solution}'
+            'Letter count restrictions: %s', self.word_state.letters_in_solution
         )
         if num_possible_solutions == 0:
             logger.error('No possible solutions?!')
@@ -812,7 +812,7 @@ class AutoPlayer(object):
         # Check the hash table for a precomputed best guess.
         elif self.position_in_hash(num_possible_solutions, fprint):
             guess = self.position_hash[(num_possible_solutions, fprint)]
-            logger.debug(f'hash hit: {guess}')
+            logger.debug('hash hit: %s', guess)
             return guess
 
         # If there are just a few solutions possible, brute force the
@@ -821,7 +821,7 @@ class AutoPlayer(object):
         # large numbers of solutions.
         elif num_possible_solutions < 20:
             logger.debug(
-                f'Only {num_possible_solutions} solutions; using brute force strategy.'
+                'Only %d solutions; using brute force strategy.', num_possible_solutions
             )
             return self.brute_force_internal(
                 possible_solutions,
@@ -834,7 +834,7 @@ class AutoPlayer(object):
         # guesses via brute force.
         elif num_possible_solutions < 100:
             logger.debug(
-                f'Only {num_possible_solutions} solutions; using hybrid strategy.'
+                'Only %d solutions; using hybrid strategy.', num_possible_solutions
             )
             return self.hybrid_search(possible_solutions)
 
@@ -842,7 +842,7 @@ class AutoPlayer(object):
         # fast heuristics (i.e. letter frequency).
         else:
             logger.debug(
-                f'There are {num_possible_solutions} solutions; using fast heuristics.'
+                'There are %s solutions; using fast heuristics.', num_possible_solutions
             )
             return self.heuristics_search(possible_solutions)
 
@@ -969,7 +969,7 @@ class AutoPlayer(object):
             elif guess_entropy == best_entropy and best_count < 15:
                 logger.debug(f'{label}: #{n}: {guess} with {guess_entropy:.5f} bits')
                 best_count += 1
-        logger.debug(f'{label}: best guess is {best_guess}.')
+        logger.debug('%s: best guess is %s.', label, best_guess)
         return best_guess
 
     def hybrid_search(self, possible_solutions: List[Word]) -> Optional[Word]:
@@ -1154,7 +1154,7 @@ def cheat():
     if not avoid:
         avoid = ''
     avoid = avoid.lower()
-    letters_to_avoid = set([letter for letter in avoid])
+    letters_to_avoid = set(list(avoid))
 
     # Initialize the set of letters we know are in the solution but
     # not where, yet.
@@ -1528,7 +1528,7 @@ def play() -> None:
         if guess == solution:
             print('Nice!')
             break
-        elif num_guesses >= 6:
+        if num_guesses >= 6:
             print('Better luck next time.')
             print(padding + f'{solution}')
             break

@@ -10,7 +10,7 @@ import math
 from typing import Dict, Generator, List, Optional, Set, Tuple
 
 from pyutils import list_utils
-from pyutils.types.simple import Numeric
+from pyutils.typez.simple import Numeric
 
 
 class Graph(object):

@@ -8,7 +8,7 @@ import unittest
 from decimal import Decimal
 
 from pyutils import unittest_utils
-from pyutils.types.money import Money
+from pyutils.typez.money import Money
 
 
 class TestMoney(unittest.TestCase):

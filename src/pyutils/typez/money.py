@@ -11,7 +11,7 @@ another, and has a strict mode which disallows comparison or
 aggregation with non-:class:`Money` operands (i.e. no comparison or
 aggregation with literal numbers).
 
-See also :class:`pyutils.types.centcount.CentCount` which represents
+See also :class:`pyutils.typez.centcount.CentCount` which represents
 monetary amounts as an integral number of cents.
 """
 

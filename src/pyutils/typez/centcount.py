@@ -41,7 +41,7 @@ numbers).
     of this and decide whether it's suitable for your
     application.
 
-See also the :class:`pyutils.types.Money` class which uses Python
+See also the :class:`pyutils.typez.Money` class which uses Python
 Decimals (see: https://docs.python.org/3/library/decimal.html) to
 represent monetary amounts.
 """

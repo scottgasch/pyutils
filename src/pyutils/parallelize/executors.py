@@ -57,7 +57,7 @@ from typing import Any, Callable, Dict, List, Optional, Set
 import cloudpickle  # type: ignore
 from overrides import overrides
 
-import pyutils.types.histogram as hist
+import pyutils.typez.histogram as hist
 from pyutils import (
     argparse_utils,
     config,
@@ -70,7 +70,7 @@ from pyutils.ansi import bg, fg, reset, underline
 from pyutils.decorator_utils import singleton
 from pyutils.exec_utils import cmd_exitcode, cmd_in_background, run_silently
 from pyutils.parallelize.thread_utils import background_thread
-from pyutils.types import type_utils
+from pyutils.typez import type_utils
 
 logger = logging.getLogger(__name__)
 
