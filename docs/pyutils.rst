@@ -124,7 +124,7 @@ Subpackages
    pyutils.parallelize
    pyutils.search
    pyutils.security
-   pyutils.types
+   pyutils.typez
 
 Submodules
 ----------
