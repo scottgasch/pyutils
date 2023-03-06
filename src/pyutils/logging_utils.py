@@ -921,20 +921,19 @@ def initialize_logging(logger=None) -> logging.Logger:
         return logging.getLogger()
     LOGGING_INITIALIZED = True
 
+    clear_preexisting = config.config["logging_clear_preexisting_handlers"]
     preexisting_handlers_count = 0
     if logger is None:
-        # --logging_clear_preexisting_handlers removes logging handlers
-        # that were registered by global statements during imported module
-        # setup.
-        if config.config["logging_clear_preexisting_handlers"]:
-            logging.basicConfig(force=True)
-            logger = logging.getLogger()
-            while logger.hasHandlers():
-                logger.removeHandler(logger.handlers[0])
-                preexisting_handlers_count += 1
-        else:
-            logging.basicConfig()
-            logger = logging.getLogger()
+        logging.basicConfig(force=clear_preexisting)
+        logger = logging.getLogger()
+
+    # --logging_clear_preexisting_handlers removes logging handlers
+    # that were registered by global statements during imported module
+    # setup.
+    if clear_preexisting:
+        while logger.hasHandlers():
+            logger.removeHandler(logger.handlers[0])
+            preexisting_handlers_count += 1
 
     # --logging_config_file pulls logging settings from a config file
     # skipping the rest of this setup.
