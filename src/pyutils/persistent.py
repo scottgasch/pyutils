@@ -164,6 +164,11 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
     """
 
+    @abstractmethod
+    def __init__(self, data: Optional[Any] = None):
+        """You should override this."""
+        pass
+
     @classmethod
     @overrides
     def load(cls) -> Optional[Any]:
@@ -191,7 +196,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
             try:
                 import pickle
 
-                with open(filename, "wb") as wf:
+                with file_utils.CreateFileWithMode(filename, 0o600, "wb") as wf:
                     pickle.dump(self.get_persistent_data(), wf, pickle.HIGHEST_PROTOCOL)
                 return True
             except Exception as e:
@@ -240,6 +245,11 @@ class JsonFileBasedPersistent(FileBasedPersistent):
         # iff the :meth:`should_we_save_data methods` says to.
         c = MyClass()
     """
+
+    @abstractmethod
+    def __init__(self, data: Optional[Any]):
+        """You should override this."""
+        pass
 
     @classmethod
     @overrides
