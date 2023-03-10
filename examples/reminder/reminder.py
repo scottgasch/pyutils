@@ -259,7 +259,9 @@ class Reminder(object):
     def save(self):
         import pickle
 
-        with open(config.config["reminder_cache_file"], "wb") as wf:
+        with file_utils.CreateFileWithMode(
+            config.config["reminder_cache_file"], filesystem_mode=0o600, open_mode="wb"
+        ) as wf:
             pickle.dump(
                 self.label_by_date,
                 wf,
