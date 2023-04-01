@@ -141,7 +141,7 @@ def main() -> int:
         logger.debug("Timeout is %ss", timeout)
         lockfile_expiration = datetime.datetime.now().timestamp() + timeout
     else:
-        logger.debug("Timeout not specified; no lockfile expiration.")
+        logger.warning("Timeout not specified; no lockfile expiration.")
         lockfile_expiration = None
 
     lockfile_path = config.config["lockfile"]
