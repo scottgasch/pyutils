@@ -153,10 +153,13 @@ class LockFile(contextlib.AbstractContextManager):
         identifier = f"Lockfile for pid={os.getpid()} on machine {platform.node()}"
         if self.override_command:
             identifier += f" running {self.override_command}"
+        expiration_delta_seconds_from_now = (
+            self.expiration_timestamp - datetime.datetime.now().timestamp()
+        )
         self.zk_lease = zookeeper.RenewableReleasableLease(
             self.zk_client,
             self.lockfile,
-            datetime.timedelta(seconds=self.expiration_timestamp),
+            datetime.timedelta(seconds=expiration_delta_seconds_from_now),
             identifier,
         )
         return self.zk_lease
