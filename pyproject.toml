@@ -1,6 +1,6 @@
 [project]
 name = "pyutils"
-version = "0.0.1b13"
+version = "0.0.1b14"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
@@ -45,7 +45,7 @@ build-backend = "setuptools.build_meta"
 packages = [
     "pyutils", "pyutils.collectionz", "pyutils.compress",
     "pyutils.datetimes", "pyutils.files", "pyutils.parallelize",
-    "pyutils.search", "pyutils.security", "pyutils.types"
+    "pyutils.search", "pyutils.security", "pyutils.typez"
 ]
 
 [tool.setuptools.package-dir]
