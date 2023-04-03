@@ -51,6 +51,7 @@ import enum
 import io
 import logging
 import os
+import re
 import sys
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
@@ -263,6 +264,10 @@ def squelch_repeated_log_messages(squelch_after_n_repeats: int) -> Callable:
         from pyutils import function_utils
 
         identifier = function_utils.function_identifier(f)
+
+        # Get rid of module paths, e.g. pyutils.ansi:bg -> ansi:bg which
+        # is what we're going to need below.
+        identifier = re.sub(r"[^\.]+\.", "", identifier)
         squelched_logging_counts[identifier] = squelch_after_n_repeats
         return f
 

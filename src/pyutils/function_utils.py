@@ -28,19 +28,19 @@ def function_identifier(f: Callable) -> str:
 
     """
 
-    if f.__module__ == '__main__':
+    if f.__module__ == "__main__":
         from pathlib import Path
 
         import __main__
 
         module = __main__.__file__
         module = Path(module).stem
-        return f'{module}:{f.__name__}'
+        return f"{module}:{f.__name__}"
     else:
-        return f'{f.__module__}:{f.__name__}'
+        return f"{f.__module__}:{f.__name__}"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
