@@ -327,6 +327,7 @@ def initialize(entry_point):
             sys.maxsize,
             sys.byteorder,
         )
+        logger.debug("Python interpreter path: %s", sys.executable)
         logger.debug("Python interpreter version: %s", sys.version)
         logger.debug("Python implementation: %s", sys.implementation)
         logger.debug("Python C API version: %s", sys.api_version)
@@ -334,7 +335,7 @@ def initialize(entry_point):
             logger.debug("Python interpreter running in __debug__ mode.")
         else:
             logger.debug("Python interpreter running in optimized mode.")
-        logger.debug("Python path: %s", sys.path)
+        logger.debug("PYTHONPATH: %s", sys.path)
 
         # Dump some info about the physical machine we're running on
         # if we're ing debug mode.
