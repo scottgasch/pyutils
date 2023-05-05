@@ -113,6 +113,19 @@ class BinarySearchTree(object):
             return self._find(value, node.right)
         return None
 
+    def _find_fuzzy(self, value: Any, node: Node) -> Node:
+        """Find helper that returns the closest node <= the target value."""
+        if value == node.value:
+            return node
+        below = None
+        if value < node.value and node.left is not None:
+            below = self._find_fuzzy(value, node.left)
+        elif value > node.value and node.right is not None:
+            below = self._find_fuzzy(value, node.right)
+        if not below:
+            return node
+        return below
+
     def _parent_path(
         self, current: Optional[Node], target: Node
     ) -> List[Optional[Node]]:
@@ -545,13 +558,14 @@ class BinarySearchTree(object):
         if self.root is not None:
             yield from self._iterate_by_depth(self.root, depth)
 
-    def get_next_node(self, node: Node) -> Node:
+    def get_next_node(self, node: Node) -> Optional[Node]:
         """
         Args:
             node: the node whose next greater successor is desired
 
         Returns:
             Given a tree node, returns the next greater node in the tree.
+            If the given node is the greatest node in the tree, returns None.
 
         >>> t = BinarySearchTree()
         >>> t.insert(50)
@@ -578,6 +592,10 @@ class BinarySearchTree(object):
         >>> t.get_next_node(n).value
         66
 
+        >>> n = t[75]
+        >>> t.get_next_node(n) is None
+        True
+
         """
         if node.right is not None:
             x = node.right
@@ -595,7 +613,40 @@ class BinarySearchTree(object):
             if node != ancestor.right:
                 return ancestor
             node = ancestor
-        raise Exception()
+        return None
+
+    def get_nodes_in_range_inclusive(self, lower: Any, upper: Any):
+        """
+        >>> t = BinarySearchTree()
+        >>> t.insert(50)
+        >>> t.insert(75)
+        >>> t.insert(25)
+        >>> t.insert(66)
+        >>> t.insert(22)
+        >>> t.insert(13)
+        >>> t.insert(23)
+        >>> t
+        50
+        ├──25
+        │  └──22
+        │     ├──13
+        │     └──23
+        └──75
+           └──66
+
+        >>> for node in t.get_nodes_in_range_inclusive(21, 74):
+        ...     print(node.value)
+        22
+        23
+        25
+        50
+        66
+        """
+        node: Optional[Node] = self._find_fuzzy(lower, self.root)
+        while node:
+            if lower <= node.value <= upper:
+                yield node
+            node = self.get_next_node(node)
 
     def _depth(self, node: Node, sofar: int) -> int:
         depth_left = sofar + 1
