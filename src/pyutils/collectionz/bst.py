@@ -113,18 +113,64 @@ class BinarySearchTree(object):
             return self._find(value, node.right)
         return None
 
-    def _find_fuzzy(self, value: Any, node: Node) -> Node:
-        """Find helper that returns the closest node <= the target value."""
-        if value == node.value:
+    def _find_lowest_value_greater_than_or_equal_to(
+        self, target: Any, node: Optional[Node]
+    ) -> Optional[Node]:
+        """Find helper that returns the lowest node that is greater
+        than or equal to the target value.  Returns None if target is
+        greater than the highest node in the tree.
+
+        >>> t = BinarySearchTree()
+        >>> t.insert(50)
+        >>> t.insert(75)
+        >>> t.insert(25)
+        >>> t.insert(66)
+        >>> t.insert(22)
+        >>> t.insert(13)
+        >>> t.insert(85)
+        >>> t
+        50
+        ├──25
+        │  └──22
+        │     └──13
+        └──75
+           ├──66
+           └──85
+
+        >>> t._find_lowest_value_greater_than_or_equal_to(48, t.root).value
+        50
+        >>> t._find_lowest_value_greater_than_or_equal_to(55, t.root).value
+        66
+        >>> t._find_lowest_value_greater_than_or_equal_to(1, t.root).value
+        13
+        >>> t._find_lowest_value_greater_than_or_equal_to(24, t.root).value
+        25
+        >>> t._find_lowest_value_greater_than_or_equal_to(20, t.root).value
+        22
+        >>> t._find_lowest_value_greater_than_or_equal_to(72, t.root).value
+        75
+        >>> t._find_lowest_value_greater_than_or_equal_to(78, t.root).value
+        85
+        >>> t._find_lowest_value_greater_than_or_equal_to(95, t.root) is None
+        True
+
+        """
+
+        if not node:
+            return None
+
+        if target == node.value:
             return node
-        below = None
-        if value < node.value and node.left is not None:
-            below = self._find_fuzzy(value, node.left)
-        elif value > node.value and node.right is not None:
-            below = self._find_fuzzy(value, node.right)
-        if not below:
-            return node
-        return below
+        elif target >= node.value:
+            return self._find_lowest_value_greater_than_or_equal_to(target, node.right)
+        else:
+            assert target < node.value
+            if below := self._find_lowest_value_greater_than_or_equal_to(
+                target, node.left
+            ):
+                return below
+            else:
+                return node
 
     def _parent_path(
         self, current: Optional[Node], target: Node
@@ -642,7 +688,9 @@ class BinarySearchTree(object):
         50
         66
         """
-        node: Optional[Node] = self._find_fuzzy(lower, self.root)
+        node: Optional[Node] = self._find_lowest_value_greater_than_or_equal_to(
+            lower, self.root
+        )
         while node:
             if lower <= node.value <= upper:
                 yield node
