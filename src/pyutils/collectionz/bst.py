@@ -180,10 +180,13 @@ class BinarySearchTree(object):
 
         if target == node.value:
             return node
-        elif target >= node.value:
+
+        elif target > node.value:
             return self._find_lowest_value_greater_than_or_equal_to(target, node.right)
+
+        # If target < this node's value, either this node is the
+        # answer or the answer is in this node's left subtree.
         else:
-            assert target < node.value
             if below := self._find_lowest_value_greater_than_or_equal_to(
                 target, node.left
             ):
