@@ -11,15 +11,15 @@ from typing import Any, Generator, List, Optional, Protocol
 class Comparable(Protocol):
     @abstractmethod
     def __lt__(self, other: Any) -> bool:
-        pass
+        ...
 
     @abstractmethod
     def __le__(self, other: Any) -> bool:
-        pass
+        ...
 
     @abstractmethod
     def __eq__(self, other: Any) -> bool:
-        pass
+        ...
 
 
 class Node:
