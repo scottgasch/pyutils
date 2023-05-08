@@ -9,6 +9,14 @@ from typing import Any, Generator, List, Optional, Protocol
 
 
 class Comparable(Protocol):
+    """Anything that implements basic comparison methods such that it
+    can be compared to other instances of the same type.
+
+    Check out :meth:`functools.total_ordering`
+    (https://docs.python.org/3/library/functools.html#functools.total_ordering)
+    for an easy way to make your type comparable.
+    """
+
     @abstractmethod
     def __lt__(self, other: Any) -> bool:
         ...
@@ -24,14 +32,13 @@ class Comparable(Protocol):
 
 class Node:
     def __init__(self, value: Comparable) -> None:
-        """A BST node.  Note that value can be anything as long as it
-        is comparable with other instances of itself.  Check out
-        :meth:`functools.total_ordering`
-        (https://docs.python.org/3/library/functools.html#functools.total_ordering)
+        """A BST node.  Just a left and right reference along with a
+        value.  Note that value can be anything as long as it
+        is :class:`Comparable` with other instances of itself.
 
         Args:
-            value: a reference to the value of the node.  Must be comparable
-            to other values.
+            value: a reference to the value of the node.  Must be
+                :class:`Comparable` to other values.
 
         """
         self.left: Optional[Node] = None
