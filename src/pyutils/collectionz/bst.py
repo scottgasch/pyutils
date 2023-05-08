@@ -30,7 +30,8 @@ class Node:
         (https://docs.python.org/3/library/functools.html#functools.total_ordering)
 
         Args:
-            value: a reference to the value of the node.
+            value: a reference to the value of the node.  Must be comparable
+            to other values.
 
         """
         self.left: Optional[Node] = None
