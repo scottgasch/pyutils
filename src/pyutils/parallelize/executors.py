@@ -678,7 +678,9 @@ class RemoteWorkerSelectionPolicy(ABC):
         pass
 
     @abstractmethod
-    def acquire_worker(self, machine_to_avoid=None) -> Optional[RemoteWorkerRecord]:
+    def acquire_worker(
+        self, machine_to_avoid: str = None
+    ) -> Optional[RemoteWorkerRecord]:
         pass
 
 
@@ -694,7 +696,9 @@ class WeightedRandomRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
         return False
 
     @overrides
-    def acquire_worker(self, machine_to_avoid=None) -> Optional[RemoteWorkerRecord]:
+    def acquire_worker(
+        self, machine_to_avoid: str = None
+    ) -> Optional[RemoteWorkerRecord]:
         grabbag = []
         if self.workers:
             for worker in self.workers:
@@ -739,6 +743,13 @@ class RoundRobinRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
                     return True
         return False
 
+    def _increment_index(self, index: int) -> None:
+        if self.workers:
+            index += 1
+            if index >= len(self.workers):
+                index = 0
+            self.index = index
+
     @overrides
     def acquire_worker(
         self, machine_to_avoid: str = None
@@ -747,12 +758,9 @@ class RoundRobinRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
             x = self.index
             while True:
                 worker = self.workers[x]
-                if worker.count > 0:
+                if worker.machine != machine_to_avoid and worker.count > 0:
                     worker.count -= 1
-                    x += 1
-                    if x >= len(self.workers):
-                        x = 0
-                    self.index = x
+                    self._increment_index(x)
                     logger.debug('Selected worker %s', worker)
                     return worker
                 x += 1
