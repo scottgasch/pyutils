@@ -45,6 +45,7 @@ import os
 import sys
 import uuid
 from inspect import stack
+from typing import NoReturn
 
 from pyutils import config, logging_utils
 from pyutils.argparse_utils import ActionNoYes
@@ -178,7 +179,7 @@ class ImportInterceptor(importlib.abc.MetaPathFinder):
     def should_ignore_filename(filename: str) -> bool:
         return "importlib" in filename or "six.py" in filename
 
-    def find_module(self, fullname, path):
+    def find_module(self, fullname, path) -> NoReturn:
         raise Exception(
             "This method has been deprecated since Python 3.4, please upgrade."
         )

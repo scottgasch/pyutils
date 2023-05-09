@@ -18,7 +18,7 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, List, NoReturn, Optional, Union
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
@@ -706,7 +706,7 @@ def thunkify(func):
 # to be bound by the terms and conditions of this License Agreement.
 
 
-def _raise_exception(exception, error_message: Optional[str]):
+def _raise_exception(exception, error_message: Optional[str]) -> NoReturn:
     """Internal.  Raise a deferred exception"""
     if error_message is None:
         raise Exception(exception)

@@ -410,7 +410,7 @@ class Config:
         """
         return in_str.lower() in {"true", "1", "yes", "y", "t", "on"}
 
-    def _process_dynamic_args(self, event):
+    def _process_dynamic_args(self, event) -> None:
         """Invoked as a callback when a zk-based config changed."""
 
         if not self.zk:
