@@ -50,6 +50,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generator,
     Iterable,
     List,
     Literal,
@@ -2220,7 +2221,56 @@ def thify(n: int) -> str:
         return "th"
 
 
-def ngrams(txt: str, n: int):
+get_cardinal_suffix = thify
+
+
+def add_cardinal_suffix(n: int):
+    """
+    Args:
+        n: the number to return as a string with a cardinal suffix.
+
+    Returns:
+        A string containing the number with its cardinal suffix.
+
+    >>> add_cardinal_suffix(123)
+    '123rd'
+
+    >>> add_cardinal_suffix(1)
+    '1st'
+
+    >>> add_cardinal_suffix(0)
+    '0th'
+
+    >>> add_cardinal_suffix(-123)
+    '-123rd'
+    """
+    return f'{n}{get_cardinal_suffix(n)}'
+
+
+def remove_cardinal_suffix(txt: str) -> Optional[str]:
+    """
+    Args:
+        txt: the number with cardinal suffix to strip.
+
+    Returns:
+        The same string with its cardinal suffix removed or None on error.
+
+    >>> remove_cardinal_suffix('123rd')
+    '123'
+
+    >>> remove_cardinal_suffix('-10th')
+    '-10'
+
+    >>> remove_cardinal_suffix('1ero') is None
+    True
+    """
+    suffix = txt[-2:]
+    if suffix in set(['st', 'nd', 'rd', 'th']):
+        return txt[:-2]
+    return None
+
+
+def ngrams(txt: str, n: int) -> Generator[str, str, None]:
     """
     Args:
         txt: the string to create ngrams using
@@ -2242,7 +2292,9 @@ def ngrams(txt: str, n: int):
         yield ret.strip()
 
 
-def ngrams_presplit(words: Sequence[str], n: int):
+def ngrams_presplit(
+    words: Sequence[str], n: int
+) -> Generator[Sequence[str], str, None]:
     """
     Same as :meth:`ngrams` but with the string pre-split.
 
@@ -2251,7 +2303,7 @@ def ngrams_presplit(words: Sequence[str], n: int):
     return list_utils.ngrams(words, n)
 
 
-def bigrams(txt: str):
+def bigrams(txt: str) -> Generator[str, str, None]:
     """Generates the bigrams (n=2) of the given string.
 
     See also :meth:`ngrams`, :meth:`trigrams`.
@@ -2262,7 +2314,7 @@ def bigrams(txt: str):
     return ngrams(txt, 2)
 
 
-def trigrams(txt: str):
+def trigrams(txt: str) -> Generator[str, str, None]:
     """Generates the trigrams (n=3) of the given string.
 
     See also :meth:`ngrams`, :meth:`bigrams`.

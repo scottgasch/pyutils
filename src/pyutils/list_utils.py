@@ -7,7 +7,16 @@
 import random
 from collections import Counter
 from itertools import chain, combinations, islice
-from typing import Any, Iterator, List, MutableSequence, Sequence, Tuple
+from typing import (
+    Any,
+    Generator,
+    Iterator,
+    List,
+    MutableSequence,
+    Sequence,
+    Tuple,
+    TypeVar,
+)
 
 
 def shard(lst: List[Any], size: int) -> Iterator[Any]:
@@ -252,7 +261,10 @@ def transpose(lst: List[Any]) -> List[Any]:
     return [list(_) for _ in transposed]
 
 
-def ngrams(lst: Sequence[Any], n: int):
+T = TypeVar('T')
+
+
+def ngrams(lst: Sequence[T], n: int) -> Generator[Sequence[T], T, None]:
     """
     Return the ngrams in the sequence.
 
@@ -288,7 +300,7 @@ def ngrams(lst: Sequence[Any], n: int):
         yield lst[i : i + n]
 
 
-def permute(seq: str):
+def permute(seq: str) -> Generator[str, str, None]:
     """
     Returns all permutations of a sequence.
 
@@ -314,7 +326,7 @@ def permute(seq: str):
     yield from _permute(seq, "")
 
 
-def _permute(seq: str, path: str):
+def _permute(seq: str, path: str) -> Generator[str, str, None]:
     """Internal helper to permute items recursively."""
     seq_len = len(seq)
     if seq_len == 0:
