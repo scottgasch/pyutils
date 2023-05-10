@@ -180,7 +180,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
             import pickle
 
             try:
-                with open(filename, "rb") as rf:
+                with open(filename, mode="rb") as rf:
                     data = pickle.load(rf)
                     return cls(data)
 
@@ -260,7 +260,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
             import json
 
             try:
-                with open(filename, "r") as rf:
+                with open(filename, mode="r", encoding="utf-8") as rf:
                     lines = rf.readlines()
 
                 # This is probably bad... but I like comments
@@ -290,7 +290,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                 import json
 
                 json_blob = json.dumps(self.get_persistent_data())
-                with open(filename, "w") as wf:
+                with open(filename, mode="w", encoding="utf-8") as wf:
                     wf.writelines(json_blob)
                 return True
             except Exception as e:
@@ -394,12 +394,12 @@ class persistent_autoloaded_singleton(object):
     decorator will intercept attempts to instantiate the class via
     it's c'tor and, instead, invoke the class' :meth:`load` to give it a
     chance to read state from somewhere persistent (disk, db,
-    whatever).  Subsequent calls to construt instances of the wrapped
+    whatever).  Subsequent calls to construct instances of the wrapped
     class will return a single, global instance (i.e. the wrapped
     class is must be a singleton).
 
-    If :meth:`load` fails (returns None), the c'tor is invoked with the
-    original args as a fallback.
+    If :meth:`load` fails (returns None), the class' c'tor is invoked
+    with the original args as a fallback.
 
     Based upon the value of the optional argument
     :code:`persist_at_shutdown` argument, (NEVER, IF_NOT_LOADED,
@@ -413,8 +413,9 @@ class persistent_autoloaded_singleton(object):
         implementation.  Essentially this decorator just handles the
         plumbing of calling your save/load and appropriate times and
         creates a transparent global singleton whose state can be
-        persisted between runs.
-
+        persisted between runs.  See example implementations such as
+        :class:`JsonFileBasedPersistent` and
+        :class:`PicklingFileBasedPersistent`.
     """
 
     def __init__(
