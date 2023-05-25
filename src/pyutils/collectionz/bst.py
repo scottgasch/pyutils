@@ -66,7 +66,7 @@ class BinarySearchTree(object):
 
     def insert(self, value: Comparable) -> None:
         """
-        Insert something into the tree.
+        Insert something into the tree in :math:`O(log_2 n)` time.
 
         Args:
             value: the value to be inserted.
@@ -108,8 +108,9 @@ class BinarySearchTree(object):
 
     def __getitem__(self, value: Comparable) -> Optional[Node]:
         """
-        Find an item in the tree and return its Node.  Returns
-        None if the item is not in the tree.
+        Find an item in the tree and return its Node in
+        :math:`O(log_2 n)` time.  Returns None if the item is not in
+        the tree.
 
         >>> t = BinarySearchTree()
         >>> t[99]
@@ -280,14 +281,14 @@ class BinarySearchTree(object):
             return ret
 
     def parent_path(self, node: Node) -> List[Optional[Node]]:
-        """Get a node's parent path.
+        """Get a node's parent path in :math:`O(log_2 n)` time.
 
         Args:
-            node: the node to check
+            node: the node whose parent path should be returned.
 
         Returns:
             a list of nodes representing the path from
-            the tree's root to the node.
+            the tree's root to the given node.
 
         .. note::
 
@@ -336,7 +337,8 @@ class BinarySearchTree(object):
 
     def __delitem__(self, value: Comparable) -> bool:
         """
-        Delete an item from the tree and preserve the BST property.
+        Delete an item from the tree and preserve the BST property in
+        :math:`O(log_2 n) time`.
 
         Args:
             value: the value of the node to be deleted.
@@ -407,6 +409,9 @@ class BinarySearchTree(object):
         └──85
            └──66
 
+        >>> t.__delitem__(85)
+        True
+
         >>> t.__delitem__(99)
         False
 
@@ -463,14 +468,18 @@ class BinarySearchTree(object):
                 self._on_delete(parent, node)
                 return True
 
-            # Node has both a left and right.
+            # Node has both a left and right; get the successor node
+            # to this one and put it here (deleting the successor's
+            # old node).  Because these operations are happening only
+            # in the subtree underneath of node, I'm still calling
+            # this delete an O(log_2 n) operation in the docs.
             else:
                 assert node.left is not None and node.right is not None
-                descendent = node.right
-                while descendent.left is not None:
-                    descendent = descendent.left
-                node.value = descendent.value
+                successor = self.get_next_node(node)
+                assert successor is not None
+                node.value = successor.value
                 return self._delete(node.value, node, node.right)
+
         elif value < node.value and node.left is not None:
             return self._delete(value, node, node.left)
         elif value > node.value and node.right is not None:
@@ -480,7 +489,7 @@ class BinarySearchTree(object):
     def __len__(self):
         """
         Returns:
-            The count of items in the tree.
+            The count of items in the tree in :math:`O(1)` time.
 
         >>> t = BinarySearchTree()
         >>> len(t)
@@ -634,7 +643,7 @@ class BinarySearchTree(object):
     def iterate_leaves(self):
         """
         Returns:
-            A Gemerator that yielde only the leaf nodes in the
+            A Generator that yields only the leaf nodes in the
             tree.
 
         >>> t = BinarySearchTree()
@@ -751,8 +760,17 @@ class BinarySearchTree(object):
             node = ancestor
         return None
 
-    def get_nodes_in_range_inclusive(self, lower: Comparable, upper: Comparable):
+    def get_nodes_in_range_inclusive(
+        self, lower: Comparable, upper: Comparable
+    ) -> Generator[Node, None, None]:
         """
+        Args:
+            lower: the lower bound of the desired range.
+            upper: the upper bound of the desired range.
+
+        Returns:
+            Generates a sequence of nodes in the desired range.
+
         >>> t = BinarySearchTree()
         >>> t.insert(50)
         >>> t.insert(75)
@@ -799,7 +817,7 @@ class BinarySearchTree(object):
         """
         Returns:
             The max height (depth) of the tree in plies (edge distance
-            from root).
+            from root) in :math:`O(log_2 n)` time.
 
         >>> t = BinarySearchTree()
         >>> t.depth()
