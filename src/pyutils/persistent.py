@@ -36,7 +36,7 @@ import functools
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
 from overrides import overrides
 
@@ -62,7 +62,7 @@ class Persistent(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls: Type[Persistent]) -> Optional[Persistent]:
+    def load(cls: type[Persistent]) -> Optional[Persistent]:
         """Load this thing from somewhere and give back an instance which
         will become the global singleton and which may (see
         below) be saved (via :meth:`save`) at program exit time.
@@ -182,7 +182,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
     @classmethod
     @overrides
     def load(
-        cls: Type[PicklingFileBasedPersistent],
+        cls: type[PicklingFileBasedPersistent],
     ) -> Optional[PicklingFileBasedPersistent]:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
@@ -265,7 +265,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
     @classmethod
     @overrides
-    def load(cls: Type[JsonFileBasedPersistent]) -> Optional[JsonFileBasedPersistent]:
+    def load(cls: type[JsonFileBasedPersistent]) -> Optional[JsonFileBasedPersistent]:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Trying to load state from %s", filename)
