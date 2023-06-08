@@ -5,14 +5,17 @@
 """This module contains helper functions for dealing with Python dictionaries."""
 
 from itertools import islice
-from typing import Any, Callable, Dict, Iterator, List, Tuple
+from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple
 
 from pyutils import dataclass_utils
+from pyutils.typez.typing import Comparable
+
+AnyDict = Dict[Hashable, Any]
 
 
 def init_or_inc(
-    d: Dict[Any, Any],
-    key: Any,
+    d: AnyDict,
+    key: Hashable,
     *,
     init_value: Any = 1,
     inc_function: Callable[..., Any] = lambda x: x + 1,
@@ -50,7 +53,7 @@ def init_or_inc(
     return False
 
 
-def shard(d: Dict[Any, Any], size: int) -> Iterator[Dict[Any, Any]]:
+def shard(d: AnyDict, size: int) -> Iterator[AnyDict]:
     """
     Shards (i.e. splits) a dict into N subdicts which, together,
     contain all keys/values from the original unsharded dict.
@@ -117,10 +120,10 @@ def raise_on_duplicated_keys(key, new_value, old_value):
 
 
 def coalesce(
-    inputs: Iterator[Dict[Any, Any]],
+    inputs: Iterator[AnyDict],
     *,
     aggregation_function: Callable[[Any, Any, Any], Any] = coalesce_by_creating_list,
-) -> Dict[Any, Any]:
+) -> AnyDict:
     """Coalesce (i.e. combine) N input dicts into one output dict
     ontaining the union of all keys / values in every input dict.
     When keys collide, apply the aggregation_function which, by
@@ -163,7 +166,7 @@ def coalesce(
     ...
     Exception: Key b is duplicated in more than one input dict.
     """
-    out: Dict[Any, Any] = {}
+    out: AnyDict = {}
     for d in inputs:
         for key in d:
             if key in out:
@@ -174,7 +177,7 @@ def coalesce(
     return out
 
 
-def item_with_max_value(d: Dict[Any, Any]) -> Tuple[Any, Any]:
+def item_with_max_value(d: AnyDict) -> Tuple[Hashable, Any]:
     """
     Args:
         d: a dict with comparable values
@@ -195,7 +198,7 @@ def item_with_max_value(d: Dict[Any, Any]) -> Tuple[Any, Any]:
     return max(d.items(), key=lambda _: _[1])
 
 
-def item_with_min_value(d: Dict[Any, Any]) -> Tuple[Any, Any]:
+def item_with_min_value(d: AnyDict) -> Tuple[Hashable, Any]:
     """
     Args:
         d: a dict with comparable values
@@ -212,7 +215,7 @@ def item_with_min_value(d: Dict[Any, Any]) -> Tuple[Any, Any]:
     return min(d.items(), key=lambda _: _[1])
 
 
-def key_with_max_value(d: Dict[Any, Any]) -> Any:
+def key_with_max_value(d: AnyDict) -> Hashable:
     """
     Args:
         d: a dict with comparable keys
@@ -232,7 +235,7 @@ def key_with_max_value(d: Dict[Any, Any]) -> Any:
     return item_with_max_value(d)[0]
 
 
-def key_with_min_value(d: Dict[Any, Any]) -> Any:
+def key_with_min_value(d: AnyDict) -> Hashable:
     """
     Args:
         d: a dict with comparable keys
@@ -252,7 +255,7 @@ def key_with_min_value(d: Dict[Any, Any]) -> Any:
     return item_with_min_value(d)[0]
 
 
-def max_value(d: Dict[Any, Any]) -> Any:
+def max_value(d: AnyDict) -> Any:
     """
     Args:
         d: a dict with compatable values
@@ -267,7 +270,7 @@ def max_value(d: Dict[Any, Any]) -> Any:
     return item_with_max_value(d)[1]
 
 
-def min_value(d: Dict[Any, Any]) -> Any:
+def min_value(d: AnyDict) -> Any:
     """
     Args:
         d: a dict with comparable values
@@ -282,7 +285,7 @@ def min_value(d: Dict[Any, Any]) -> Any:
     return item_with_min_value(d)[1]
 
 
-def max_key(d: Dict[Any, Any]) -> Any:
+def max_key(d: Dict[Comparable, Any]) -> Comparable:
     """
     Args:
         d: a dict with comparable keys
@@ -300,7 +303,7 @@ def max_key(d: Dict[Any, Any]) -> Any:
     return max(d.keys())
 
 
-def min_key(d: Dict[Any, Any]) -> Any:
+def min_key(d: Dict[Comparable, Any]) -> Comparable:
     """
     Args:
         d: a dict with comparable keys
@@ -318,7 +321,7 @@ def min_key(d: Dict[Any, Any]) -> Any:
     return min(d.keys())
 
 
-def parallel_lists_to_dict(keys: List[Any], values: List[Any]) -> Dict[Any, Any]:
+def parallel_lists_to_dict(keys: List[Hashable], values: List[Any]) -> AnyDict:
     """Given two parallel lists (keys and values), create and return
     a dict.
 
@@ -339,7 +342,7 @@ def parallel_lists_to_dict(keys: List[Any], values: List[Any]) -> Dict[Any, Any]
     return dict(zip(keys, values))
 
 
-def dict_to_key_value_lists(d: Dict[Any, Any]) -> Tuple[List[Any], List[Any]]:
+def dict_to_key_value_lists(d: AnyDict) -> Tuple[List[Hashable], List[Any]]:
     """Given a dict, decompose it into a list of keys and values.
 
     Args:
