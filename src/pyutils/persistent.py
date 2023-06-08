@@ -34,7 +34,7 @@ import functools
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from overrides import overrides
 
@@ -60,7 +60,7 @@ class Persistent(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls) -> Any:
+    def load(cls: Type) -> Any:
         """Load this thing from somewhere and give back an instance which
         will become the global singleton and which may (see
         below) be saved (via :meth:`save`) at program exit time.
@@ -253,7 +253,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
     @classmethod
     @overrides
-    def load(cls) -> Any:
+    def load(cls: Type) -> Any:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Trying to load state from %s", filename)
