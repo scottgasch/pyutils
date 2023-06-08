@@ -4,7 +4,7 @@
 friendly wrappers around conversion to/from Dicts."""
 
 import dataclasses
-from typing import Any, Dict, Protocol, Type
+from typing import Any, Dict, Protocol
 
 
 class Dataclass(Protocol):
@@ -22,7 +22,7 @@ class Dataclass(Protocol):
     __dataclass_fields__: Dict
 
 
-def dataclass_from_dict(dataclass: Type[Dataclass], d: Dict[str, Any]) -> Dataclass:
+def dataclass_from_dict(dataclass: type[Dataclass], d: Dict[str, Any]) -> Dataclass:
     """Given a Dataclass type and a dict, return a populated instance.
 
     Args:
