@@ -2330,8 +2330,8 @@ if __name__ == '__main__':
                 xf = fg(None, _[0], _[1], _[2])
                 xb = bg(None, _[0], _[1], _[2])
                 print(
-                    f'{f}{xb}{possibility}{reset()}\t\t\t'
-                    f'{b}{xf}{possibility}{reset()}'
+                    f'{f}{xb}{possibility:<40}{reset()}'
+                    f'{b}{xf}{possibility:<40}{reset()}'
                 )
 
     main()
