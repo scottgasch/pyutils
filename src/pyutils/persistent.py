@@ -27,6 +27,8 @@ etc... Really anything that wants to save/load state from storage and
 not bother with the plumbing to do so.
 """
 
+from __future__ import annotations
+
 import atexit
 import datetime
 import enum
@@ -60,7 +62,7 @@ class Persistent(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls: Type) -> Any:
+    def load(cls: Type[Persistent]) -> Optional[Persistent]:
         """Load this thing from somewhere and give back an instance which
         will become the global singleton and which may (see
         below) be saved (via :meth:`save`) at program exit time.
@@ -79,6 +81,14 @@ class Persistent(ABC):
                 # Load the piece(s) of obj that you want to from somewhere.
                 obj._state = load_from_somewhere(somewhere)
                 return obj
+
+        Args:
+            cls: the class (type) that is being instantiated.  That is, the
+                type to load.
+
+        Returns:
+            An instance of the requested type or None to indicate failure.
+
         """
         pass
 
@@ -171,7 +181,9 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
     @classmethod
     @overrides
-    def load(cls) -> Optional[Any]:
+    def load(
+        cls: Type[PicklingFileBasedPersistent],
+    ) -> Optional[PicklingFileBasedPersistent]:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Attempting to load state from %s", filename)
@@ -253,7 +265,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
     @classmethod
     @overrides
-    def load(cls: Type) -> Any:
+    def load(cls: Type[JsonFileBasedPersistent]) -> Optional[JsonFileBasedPersistent]:
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Trying to load state from %s", filename)
