@@ -12,10 +12,11 @@ import sys
 from collections import defaultdict
 from typing import Dict, List, Optional
 
-from pyutils import argparse_utils, bootstrap, config, persistent, string_utils
+from pyutils import argparse_utils, bootstrap, config, string_utils
 from pyutils.ansi import fg, reset
 from pyutils.datetimes import dateparse_utils as dateparse
 from pyutils.files import file_utils
+from pyutils.typez import persistent
 
 logger = logging.getLogger(__name__)
 cfg = config.add_commandline_args(

@@ -58,19 +58,12 @@ import cloudpickle  # type: ignore
 from overrides import overrides
 
 import pyutils.typez.histogram as hist
-from pyutils import (
-    argparse_utils,
-    config,
-    dataclass_utils,
-    math_utils,
-    persistent,
-    string_utils,
-)
+from pyutils import argparse_utils, config, dataclass_utils, math_utils, string_utils
 from pyutils.ansi import bg, fg, reset, underline
 from pyutils.decorator_utils import singleton
 from pyutils.exec_utils import cmd_exitcode, cmd_in_background, run_silently
 from pyutils.parallelize.thread_utils import background_thread
-from pyutils.typez import type_utils
+from pyutils.typez import persistent, type_utils
 
 logger = logging.getLogger(__name__)
 
