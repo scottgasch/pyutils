@@ -307,6 +307,8 @@ def initialize(entry_point):
             ):
                 entry_filename = entry_point.__globals__["__file__"]
                 entry_descr = entry_filename
+        if not entry_filename:
+            entry_filename = 'UNKNOWN'
         config.parse(entry_filename)
 
         if config.config["trace_memory"]:
@@ -426,10 +428,11 @@ def initialize(entry_point):
         )
 
         # If it doesn't return cleanly, call attention to the return value.
+        base_filename = os.path.basename(entry_filename)
         if ret is not None and ret != 0:
-            logger.error("Exit %s", ret)
+            logger.error("%s: Exit %s", base_filename, ret)
         else:
-            logger.debug("Exit %s", ret)
+            logger.debug("%s: Exit %s", base_filename, ret)
         sys.exit(ret)
 
     return initialize_wrapper
