@@ -8,7 +8,7 @@ import collections
 import functools
 import math
 from heapq import heappop, heappush
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Hashable, List, Optional, Tuple, cast
 
 from pyutils import dict_utils
 from pyutils.typez.typing import Numeric
@@ -119,12 +119,12 @@ class NumericPopulation(object):
             The population mode (most common member in the population)
             in :math:`O(n)` time.
         """
-        count: Dict[Numeric, int] = collections.defaultdict(int)
+        count: Dict[Hashable, int] = collections.defaultdict(int)
         for n in self.lowers:
             count[-n] += 1
         for n in self.highers:
             count[n] += 1
-        return dict_utils.item_with_max_value(count)  # type: ignore
+        return cast(Tuple[Numeric, int], dict_utils.item_with_max_value(count))
 
     def get_stdev(self) -> float:
         """
