@@ -141,7 +141,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
     Example usage::
 
-        import persistent
+        from pyutils.typez import persistent
 
         @persistent.persistent_autoloaded_singleton()
         class MyClass(persistent.PicklingFileBasedPersistent):
@@ -221,7 +221,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
     Example usage::
 
-        import persistent
+        from pyutils.typez import persistent
 
         @persistent.persistent_autoloaded_singleton()
         class MyClass(persistent.JsonFileBasedPersistent):
