@@ -11,6 +11,7 @@ from pyutils import dataclass_utils
 from pyutils.typez.typing import Comparable
 
 AnyDict = Dict[Hashable, Any]
+DictWithComparableKeys = Dict[Comparable, Any]
 
 
 def init_or_inc(
@@ -285,7 +286,7 @@ def min_value(d: AnyDict) -> Any:
     return item_with_min_value(d)[1]
 
 
-def max_key(d: Dict[Comparable, Any]) -> Comparable:
+def max_key(d: DictWithComparableKeys) -> Comparable:
     """
     Args:
         d: a dict with comparable keys
@@ -303,7 +304,7 @@ def max_key(d: Dict[Comparable, Any]) -> Comparable:
     return max(d.keys())
 
 
-def min_key(d: Dict[Comparable, Any]) -> Comparable:
+def min_key(d: DictWithComparableKeys) -> Comparable:
     """
     Args:
         d: a dict with comparable keys
