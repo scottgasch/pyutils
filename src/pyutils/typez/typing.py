@@ -28,3 +28,24 @@ class Comparable(Protocol):
     @abstractmethod
     def __eq__(self, other: Any) -> bool:
         ...
+
+
+class Closable(Protocol):
+    """Something that can be closed."""
+
+    def close(self) -> None:
+        ...
+
+
+class Cloneable(Protocol):
+    """Something that can be cloned."""
+
+    def clone(self) -> None:
+        ...
+
+
+class Runnable(Protocol):
+    """Something that can be run."""
+
+    def run(self) -> None:
+        ...

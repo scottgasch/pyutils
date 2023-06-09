@@ -10,6 +10,8 @@ import os
 import threading
 from typing import Any, Callable, Optional, Tuple
 
+from pyutils.typez.typing import Runnable
+
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
 
@@ -132,7 +134,7 @@ def background_thread(
         return wrapper(_funct)
 
 
-class ThreadWithReturnValue(threading.Thread):
+class ThreadWithReturnValue(threading.Thread, Runnable):
     """A thread whose return value is plumbed back out as the return
     value of :meth:`join`.  Use like a normal thread::
 

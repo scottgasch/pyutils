@@ -48,6 +48,8 @@ from typing import (
     ValuesView,
 )
 
+from pyutils.typez.typing import Closable
+
 
 class PickleSerializer:
     """A serializer that uses pickling.  Used to read/write bytes in the shared
@@ -71,7 +73,7 @@ class PickleSerializer:
 # whole thing?
 
 
-class SharedDict(object):
+class SharedDict(Closable):
     """This class emulates the dict container but uses a
     `Multiprocessing.SharedMemory` region to back the dict such that it
     can be read and written by multiple independent processes at the
