@@ -64,6 +64,14 @@ pyutils.typez.type\_utils module
    :undoc-members:
    :show-inheritance:
 
+pyutils.typez.typing module
+---------------------------
+
+.. automodule:: pyutils.typez.typing
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
