@@ -15,13 +15,13 @@ from pyutils.files import file_utils
 logger = logging.getLogger(__name__)
 parser = config.add_commandline_args(
     f'Dedup Files ({__file__})',
-    'Deduplicate files based on content in a directory or recursively',
+    'Deduplicate files based on their contents below (one or more) directory(ies) [and, optionally, recursively]',
 )
 parser.add_argument(
-    'start_dirs',
+    'root_dir',
     type=str,
-    nargs='*',
-    help='Filespec (glob) of starting directory',
+    nargs='+',
+    help='Filespec (glob) of root directory at which to operate, may include several',
 )
 parser.add_argument(
     '-n',
@@ -33,13 +33,13 @@ parser.add_argument(
     '-R',
     '--recursive',
     action='store_true',
-    help='Traverse recursively',
+    help='Traverse recursively below root directory(ies)',
 )
 parser.add_argument(
     '-l',
     '--link',
     action='store_true',
-    help='Instead of deleting duplicates, create symbolic links',
+    help='Instead of deleting identified duplicates, create symbolic link back to first source',
 )
 
 
@@ -50,7 +50,7 @@ def main() -> int:
     sizes = defaultdict(list)
     dry_size = 0
 
-    for spec in config.config['start_dirs']:
+    for spec in config.config['root_dir']:
         if config.config['recursive']:
             filez = file_utils.get_files_recursive(spec)
         else:
@@ -88,16 +88,21 @@ def main() -> int:
 
                     assert not file_utils.is_symlink(dupe)
                     if config.config['dry_run']:
-                        print(f'{filename} == {dupe}.')
+                        print(f'{filename} == {dupe} (WOULD DELETE {dupe})')
+                        if config.config['link']:
+                            print(
+                                f'{filename} <- {dupe} (WOULD SYMLINK {dupe} to {filename})'
+                            )
                         dry_size += file_utils.get_file_size(dupe)
                     else:
                         assert len(filename) >= len(dupe)
                         saved = filename
                         killed = dupe
-                        print(f'{killed} == {saved} -- DELETED')
+                        print(f'{killed} == {saved} (DELETED {killed})')
                         logger.info('Deleting %s', killed)
                         os.remove(killed)
                         if config.config['link']:
+                            print(f'{saved} <- {killed} (SYMLINK)')
                             logger.info('Creating symlink from %s -> %s', saved, killed)
                             os.symlink(saved, killed)
                         filename = saved

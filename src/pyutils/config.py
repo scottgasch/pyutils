@@ -341,17 +341,30 @@ class Config:
         return False
 
     @staticmethod
-    def print_usage() -> None:
-        """Prints the normal help usage message out."""
-        ARGS.print_help()
-
-    @staticmethod
     def usage() -> str:
         """
         Returns:
-            program usage help text as a string.
+            full program usage help text as a string.
+        """
+        return ARGS.format_help()
+
+    @staticmethod
+    def short_usage() -> str:
+        """
+        Returns:
+            program short usage text as a string.
         """
         return ARGS.format_usage()
+
+    @staticmethod
+    def print_usage() -> None:
+        """Prints the full help usage message out."""
+        print(config.usage())
+
+    @staticmethod
+    def print_short_usage() -> None:
+        """Prints a short usage/help message."""
+        print(config.short_usage())
 
     @staticmethod
     def _reorder_arg_action_groups_before_help(entry_module: Optional[str]):
@@ -763,9 +776,21 @@ def print_usage() -> None:
     Config.print_usage()
 
 
+def print_short_usage() -> None:
+    Config.print_short_usage()
+
+
 def usage() -> str:
     """
     Returns:
         program usage help text as a string.
     """
     return Config.usage()
+
+
+def short_usage() -> str:
+    """
+    Returns:
+        program short usage help text as a string.
+    """
+    return Config.short_usage()
