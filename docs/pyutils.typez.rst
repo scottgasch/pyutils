@@ -32,6 +32,14 @@ pyutils.typez.money module
                       CURRENCY_RE
    :show-inheritance:
 
+pyutils.persistent module
+-------------------------
+
+.. automodule:: pyutils.persistent
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.typez.rate module
 -------------------------
 

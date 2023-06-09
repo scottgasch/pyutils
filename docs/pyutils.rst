@@ -2374,14 +2374,6 @@ pyutils.misc\_utils module
    :undoc-members:
    :show-inheritance:
 
-pyutils.persistent module
--------------------------
-
-.. automodule:: pyutils.persistent
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pyutils.remote\_worker module
 -----------------------------
 
