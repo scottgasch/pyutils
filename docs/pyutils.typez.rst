@@ -48,14 +48,6 @@ pyutils.typez.rate module
    :undoc-members:
    :show-inheritance:
 
-pyutils.typez.simple module
----------------------------
-
-.. automodule:: pyutils.typez.simple
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pyutils.typez.type\_utils module
 --------------------------------
 
