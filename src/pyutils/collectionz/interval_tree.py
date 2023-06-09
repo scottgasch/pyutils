@@ -14,7 +14,7 @@ from typing import Any, Generator, Optional
 from overrides import overrides
 
 from pyutils.collectionz import bst
-from pyutils.typez.simple import Numeric
+from pyutils.typez.typing import Numeric
 
 
 @total_ordering

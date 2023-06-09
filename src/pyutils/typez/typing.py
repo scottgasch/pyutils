@@ -5,7 +5,9 @@
 """My type hints."""
 
 from abc import abstractmethod
-from typing import Any, Protocol
+from typing import Any, Protocol, Union
+
+Numeric = Union[int, float]
 
 
 class Comparable(Protocol):

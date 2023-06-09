@@ -11,7 +11,7 @@ from heapq import heappop, heappush
 from typing import Dict, List, Optional, Tuple
 
 from pyutils import dict_utils
-from pyutils.typez.simple import Numeric
+from pyutils.typez.typing import Numeric
 
 
 class NumericPopulation(object):
@@ -124,7 +124,7 @@ class NumericPopulation(object):
             count[-n] += 1
         for n in self.highers:
             count[n] += 1
-        return dict_utils.item_with_max_value(count)
+        return dict_utils.item_with_max_value(count)  # type: ignore
 
     def get_stdev(self) -> float:
         """
