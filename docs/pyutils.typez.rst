@@ -32,10 +32,10 @@ pyutils.typez.money module
                       CURRENCY_RE
    :show-inheritance:
 
-pyutils.persistent module
--------------------------
+pyutils.typez.persistent module
+-------------------------------
 
-.. automodule:: pyutils.persistent
+.. automodule:: pyutils.typez.persistent
    :members:
    :undoc-members:
    :show-inheritance:
