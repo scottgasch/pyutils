@@ -653,6 +653,16 @@ class LoggingContext(contextlib.ContextDecorator):
             But inside, the decorator has changed us to DEBUG
             >>> logger.debug("And, of course, out here we're still at INFO afterwards")
 
+        Args:
+            logger: the logger on which to operate
+            level: the new level to set for the duration of the context
+            handlers: additional handlers to add for the duration of the context
+            prefix: the prefix string to set for the duration of the context
+            suffix: the suffix string to set for the duration of the context
+
+        Returns:
+            The modified logger.
+
         """
         self.logger = logger
         self.level = level
@@ -1215,7 +1225,7 @@ def _get_systemwide_abnormal_exit_handler(filename: str) -> FileHandler:
     return handler
 
 
-def non_zero_return_value(ret: Any):
+def non_zero_return_value(ret: Any) -> bool:
     """
     Special method hooked from bootstrap.py to optionally keep a system-wide
     record of non-zero python program exits.
@@ -1230,13 +1240,15 @@ def non_zero_return_value(ret: Any):
             handler = _get_systemwide_abnormal_exit_handler(record)
             program = config.PROGRAM_NAME
             args = config.ORIG_ARGV
-            with LoggingContext(logger, handlers=[handler], level=logging.INFO):
-                logger.info('%s (%s) exited with non-zero value %s', program, args, ret)
+            with LoggingContext(logger, handlers=[handler], level=logging.ERROR) as log:
+                log.error('%s (%s) Exit %s', program, args, ret)
+            return True
     except Exception:
         pass
+    return False
 
 
-def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb):
+def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb) -> bool:
     """
     Special method hooked from bootstrap.py to optionally keep a system-wide
     record of unhandled top level exceptions.
@@ -1253,9 +1265,9 @@ def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb):
             args = config.ORIG_ARGV
             site_file = exc_tb.tb_frame.f_code.co_filename
             site_lineno = exc_tb.tb_lineno
-            with LoggingContext(logger, handlers=[handler], level=logging.INFO):
-                logger.info(
-                    '%s (%s) took an unhandled top-level exception (type=%s(%s)) at %s:%s',
+            with LoggingContext(logger, handlers=[handler], level=logging.ERROR) as log:
+                log.error(
+                    '%s (%s) unhandled top-level exception (type=%s(%s)) at %s:%s',
                     program,
                     args,
                     exc_type.__name__,
@@ -1263,8 +1275,10 @@ def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb):
                     site_file,
                     site_lineno,
                 )
+            return True
     except Exception:
         pass
+    return False
 
 
 def hlog(message: str) -> None:
