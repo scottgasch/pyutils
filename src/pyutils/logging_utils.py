@@ -1241,7 +1241,7 @@ def unhandled_top_level_exception(exc_type: type):
             args = config.ORIG_ARGV
             with open(record, 'a') as af:
                 print(
-                    f'{_timestamp}: {program} ({args}) took unhandled top level exception {exc_type}',
+                    f'{_timestamp()}: {program} ({args}) took unhandled top level exception {exc_type}',
                     file=af,
                 )
     except Exception:
