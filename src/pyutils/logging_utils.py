@@ -32,8 +32,12 @@ to do things such as:
     * optionally squelch repeated messages (:code:`--logging_squelch_repeats`),
     * optionally log probalistically (:code:`--logging_probabilistically`),
     * capture printed messages into the info log (:code:`--logging_captures_prints`),
-    * and optionally clear unwanted logging handlers added by other imports
+    * optionally clear unwanted logging handlers added by other imports
       before this one (:code:`--logging_clear_preexisting_handlers`).
+    * optionally append to system-wide records of non-zero exits
+      (:code:`--logging_non_zero_exits_record_path`) and unhandled exceptions
+      (:code:`--logging_unhandled_top_level_exceptions_record_path`) in
+      cooperation with :mod:`pyutils.bootstrap`.
     * There are also :class:`LoggerAdapter` classes to implement prefix/suffix
       functionality without using :class:`LoggingContext` by wrapping the
       logger included.
