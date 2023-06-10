@@ -567,3 +567,92 @@ This version -------- 0.0.1b16
 Previous version ---- 0.0.1b15
 Total commits -------       59
 ```
+# 🎁 Release notes (`0.0.1b17`)
+
+## Changes
+- Adds geocode from scottutilz.
+- Fixup dedup_files and add some help/usage methods to config.
+- Include filename on exit.
+- Get rid of a typing: ignore.
+- Fixup docs.
+- Merge simple and typing.
+- Fix docs
+- duh
+- ...and the sphinx docs.
+- Oops, update comments.
+- Persistent should be a type.
+- Simple base interfaces.
+- Minor typing cleanup.
+- Comparable.. and better type hints on dict_utils.
+- More Type -> type
+- Type -> type
+- Improve type hints again.
+- Fix widths in ansi.py main color dumper.
+- Add type hint for class arg.
+- Cut version 0.0.1b16
+- Cleanup code and update docs in bst.py.
+- Fix comment typos and remove linter warnings.
+- Fix type hints in executors.
+- Add some functionality to string_utils and improve type hints in there.
+- Improve type hints.
+- Improve docs on bst.py again.
+- Cut version 0.0.1b15
+- small comment change.
+- Dots instead of pass...
+- Use Protocol to implement the interface typevar here instead.
+- Adds find_lowest_node_less_than_or_equal_to.
+- Cleanup code / comments.
+- Improve type hints in bst.py.
+- Better definition of "fuzzy".
+- Iterate within a range.
+- Fix squelch repeated log messages to work with modules loaded via "from foo import bar" type syntax.
+- Log the interpreter path in debug mode.
+- Cut version 0.0.1b14
+- Fix another place for types -> typez
+- Make cron.py warn on no --timeout which can lead to stale locks.
+- Fix a bug around the computation of zookeeper lockfile expirations.
+- Remove package.
+- Use CreateFileWithMode for cache.
+- Make persistent use tighter permissions by default.
+- Fix clear_preexisting_handers functionality.
+- Adds a doctest.
+- Another types reference in the docs.
+- Rename in the docs.
+- types -> typez as the name mirrors a python core library name.
+- Add and use valid_byte_count.
+- Cut version 0.0.1b13
+- Remove tprint, add docs.
+- Document this logging stuff.
+- Removes my hacky --lmodule which I will miss dearly but it was preventing the cool LoggingContext which is now added.
+- Cleanup.
+- Adds LoggingContext.
+- Cut version 0.0.1b12
+- Do this logging stuff the right way.
+- Cut version 0.0.1b11
+- Rename that class; it doesn't just prepend...
+- Improve pydocs.
+- Fix pydocs
+- Create methods to dynamically prepend or append messages to all log messages produced by the current thread.
+- Update docs.
+- Cut version 0.0.1b10
+- More cleanup.
+- More spring cleaning.
+- I guess it's 2023 now...
+- Adds a new color.
+- Augment logging at startup in debug mode; fix a bug in config.
+- Fix logger.exception messages in example code.
+- Fix logger.exception() calls.
+- Use full path for grep.
+- Make logging use execute_probabilstically.
+- Improve docs and add a doctest.
+- Adds execute_probabilistically.
+- Minor tweaks.
+- Adds CreateFileWithMode helper to create a new file with a given mode more easily.
+- Cut version 0.0.1b9
+
+## Metadata
+```
+This version -------- 0.0.1b17
+Previous version ---- 0.0.1b16
+Total commits -------       79
+```
