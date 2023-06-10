@@ -118,6 +118,10 @@ def handle_uncaught_exception(exc_type, exc_value, exc_tb):
     msg = f"Unhandled top level exception {exc_type}"
     logger.exception(msg)
     print(msg, file=sys.stderr)
+    try:
+        logging_utils.unhandled_top_level_exception(exc_type)
+    except Exception:
+        pass
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_tb)
         return
@@ -431,6 +435,7 @@ def initialize(entry_point):
         base_filename = os.path.basename(entry_filename)
         if ret is not None and ret != 0:
             logger.error("%s: Exit %s", base_filename, ret)
+            logging_utils.non_zero_return_value(ret)
         else:
             logger.debug("%s: Exit %s", base_filename, ret)
         sys.exit(ret)

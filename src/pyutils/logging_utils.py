@@ -204,6 +204,20 @@ cfg.add_argument(
         + "cause you to miss logging messages."
     ),
 )
+cfg.add_argument(
+    "--logging_non_zero_exits_record_path",
+    type=str,
+    default="/var/log/abnormal_python_exits.log",
+    metavar="FILENAME",
+    help="The filename in which to record non-zero exits.",
+)
+cfg.add_argument(
+    "--logging_unhandled_top_level_exceptions_record_path",
+    type=str,
+    default="/var/log/abnormal_python_exits.log",
+    metavar="FILENAME",
+    help="The filename in which to record unhandled top level exceptions.",
+)
 
 BUILT_IN_PRINT = print
 LOGGING_INITIALIZED = False
@@ -1183,6 +1197,55 @@ class OutputMultiplexerContext(OutputMultiplexer, contextlib.ContextDecorator):
         if etype is not None:
             return False
         return True
+
+
+def _timestamp() -> str:
+    ts = datetime.datetime.now(pytz.timezone('US/Pacific'))
+    return ts.strftime("%Y/%m/%dT%H:%M:%S.%f%z")
+
+
+def non_zero_return_value(ret: Any):
+    """
+    Special method hooked from bootstrap.py to optionally keep a system-wide
+    record of non-zero python program exits.
+
+    Args:
+        ret: the return value
+    """
+    try:
+        record = config.config['logging_non_zero_exits_record_path']
+        if record:
+            program = config.PROGRAM_NAME
+            args = config.ORIG_ARGV
+            with open(record, 'a') as af:
+                print(
+                    f'{_timestamp()}: {program} ({args}) exited with non-zero value {ret}.',
+                    file=af,
+                )
+    except Exception:
+        pass
+
+
+def unhandled_top_level_exception(exc_type: type):
+    """
+    Special method hooked from bootstrap.py to optionally keep a system-wide
+    record of unhandled top level exceptions.
+
+    Args:
+        exc_type: the type of the unhandled exception
+    """
+    try:
+        record = config.config['logging_unhandled_top_level_exceptions_record_path']
+        if record:
+            program = config.PROGRAM_NAME
+            args = config.ORIG_ARGV
+            with open(record, 'a') as af:
+                print(
+                    f'{_timestamp}: {program} ({args}) took unhandled top level exception {exc_type}',
+                    file=af,
+                )
+    except Exception:
+        pass
 
 
 def hlog(message: str) -> None:
