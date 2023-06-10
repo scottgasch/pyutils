@@ -119,7 +119,7 @@ def handle_uncaught_exception(exc_type, exc_value, exc_tb):
     logger.exception(msg)
     print(msg, file=sys.stderr)
     try:
-        logging_utils.unhandled_top_level_exception(exc_type)
+        logging_utils.unhandled_top_level_exception(exc_type, exc_value, exc_tb)
     except Exception:
         pass
     if issubclass(exc_type, KeyboardInterrupt):

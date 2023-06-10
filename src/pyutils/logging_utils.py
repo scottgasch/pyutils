@@ -57,6 +57,7 @@ import logging
 import os
 import re
 import sys
+from logging import FileHandler
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
@@ -1203,9 +1204,15 @@ class OutputMultiplexerContext(OutputMultiplexer, contextlib.ContextDecorator):
         return True
 
 
-def _timestamp() -> str:
-    ts = datetime.datetime.now(pytz.timezone('US/Pacific'))
-    return ts.strftime("%Y/%m/%dT%H:%M:%S.%f%z")
+def _get_systemwide_abnormal_exit_handler(filename: str) -> FileHandler:
+    handler = FileHandler(filename)
+    handler.setFormatter(
+        MillisecondAwareFormatter(
+            fmt=_construct_logging_format(),
+            datefmt=config.config["logging_date_format"],
+        )
+    )
+    return handler
 
 
 def non_zero_return_value(ret: Any):
@@ -1219,18 +1226,17 @@ def non_zero_return_value(ret: Any):
     try:
         record = config.config['logging_non_zero_exits_record_path']
         if record:
+            logger = logging.getLogger()
+            handler = _get_systemwide_abnormal_exit_handler(record)
             program = config.PROGRAM_NAME
             args = config.ORIG_ARGV
-            with open(record, 'a') as af:
-                print(
-                    f'{_timestamp()}: {program} ({args}) exited with non-zero value {ret}.',
-                    file=af,
-                )
+            with LoggingContext(logger, handlers=[handler], level=logging.INFO):
+                logger.info('%s (%s) exited with non-zero value %s', program, args, ret)
     except Exception:
         pass
 
 
-def unhandled_top_level_exception(exc_type: type):
+def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb):
     """
     Special method hooked from bootstrap.py to optionally keep a system-wide
     record of unhandled top level exceptions.
@@ -1241,12 +1247,21 @@ def unhandled_top_level_exception(exc_type: type):
     try:
         record = config.config['logging_unhandled_top_level_exceptions_record_path']
         if record:
+            logger = logging.getLogger()
+            handler = _get_systemwide_abnormal_exit_handler(record)
             program = config.PROGRAM_NAME
             args = config.ORIG_ARGV
-            with open(record, 'a') as af:
-                print(
-                    f'{_timestamp()}: {program} ({args}) took unhandled top level exception {exc_type}',
-                    file=af,
+            site_file = exc_tb.tb_frame.f_code.co_filename
+            site_lineno = exc_tb.tb_lineno
+            with LoggingContext(logger, handlers=[handler], level=logging.INFO):
+                logger.info(
+                    '%s (%s) took an unhandled top-level exception (type=%s(%s)) at %s:%s',
+                    program,
+                    args,
+                    exc_type.__name__,
+                    exc_value,
+                    site_file,
+                    site_lineno,
                 )
     except Exception:
         pass
