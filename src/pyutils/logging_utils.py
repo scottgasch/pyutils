@@ -620,7 +620,7 @@ class LoggingContext(contextlib.ContextDecorator):
             ...     logger.info("Working on it now")
             10.0.0.13> Working on it now
 
-            logger.info("Done with that request")
+            >>> logger.info("Done with that request")
             Done with that request
 
         LoggingContext can also be used to add temporary handler(s).
