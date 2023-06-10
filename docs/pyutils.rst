@@ -2318,6 +2318,14 @@ pyutils.function\_utils module
    :undoc-members:
    :show-inheritance:
 
+pyutils.geocode module
+----------------------
+
+.. automodule:: pyutils.geocode
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.graph module
 ------------------------------
 
