@@ -1259,7 +1259,7 @@ def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb):
                     program,
                     args,
                     exc_type.__name__,
-                    exc_value,
+                    str(exc_value),
                     site_file,
                     site_lineno,
                 )
