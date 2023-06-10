@@ -5,7 +5,7 @@ a generally useful pattern I stuffed it into a local library.  That
 library grew into pyutils: a set of collections, helpers and utilities
 that I find useful and hope you will too.
 
-Code is under [src/pyutils/](https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=src/pyutils;h=e716e14b7a895e5c6206af90f4628bf756f040fe;hb=HEAD).
+Code is under [src/pyutils/](https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=src/pyutils;hb=HEAD).
 Most code includes inline documentation and doctests.  I've tried to
 organize it into logical packages based on the code's functionality.
 Note that when words would collide with a Python library or reserved
