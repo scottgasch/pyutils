@@ -21,14 +21,17 @@ def init_or_inc(
     init_value: Any = 1,
     inc_function: Callable[..., Any] = lambda x: x + 1,
 ) -> bool:
-    """
-    Initialize a dict value (if it doesn't exist) or increments it (using the
+    """Initialize a dict value (if it doesn't exist) or increments it (using the
     inc_function, which is customizable) if it already does exist.
+
+    See also :py:class:`defaultdict`
+    (https://docs.python.org/3/library/collections.html#collections.defaultdict)
+    for a more pythonic alternative.
 
     Args:
         d: the dict to increment or initialize a value in
         key: the key to increment or initialize
-        init_value: default initial value
+        init_value: default initial value (see also :meth:`dict.setdefault`)
         inc_function: Callable use to increment a value
 
     Returns:
@@ -46,6 +49,7 @@ def init_or_inc(
     False
     >>> d
     {'test': 2, 'ing': 1}
+
     """
     if key in d.keys():
         d[key] = inc_function(d[key])
