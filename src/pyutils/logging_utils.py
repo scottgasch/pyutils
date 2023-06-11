@@ -60,6 +60,7 @@ import sys
 from logging import FileHandler
 from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler, SysLogHandler
+from types import TracebackType
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
 import pytz
@@ -1207,7 +1208,7 @@ class OutputMultiplexerContext(OutputMultiplexer, contextlib.ContextDecorator):
     def __enter__(self):
         return self
 
-    def __exit__(self, etype, value, traceback) -> bool:
+    def __exit__(self, etype, value, tb) -> bool:
         super().close()
         if etype is not None:
             return False
@@ -1248,23 +1249,31 @@ def non_zero_return_value(ret: Any) -> bool:
     return False
 
 
-def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb) -> bool:
+def unhandled_top_level_exception(
+    exc_type: type, exc_value: type, exc_tb: TracebackType
+) -> bool:
     """
     Special method hooked from bootstrap.py to optionally keep a system-wide
     record of unhandled top level exceptions.
 
     Args:
         exc_type: the type of the unhandled exception
+        exc_value: the value passed to the exception's c'tor
+        exc_tb: the stack from where the exception was raised
     """
     try:
         record = config.config['logging_unhandled_top_level_exceptions_record_path']
         if record:
+            import traceback
+
             logger = logging.getLogger()
             handler = _get_systemwide_abnormal_exit_handler(record)
             program = config.PROGRAM_NAME
             args = config.ORIG_ARGV
-            site_file = exc_tb.tb_frame.f_code.co_filename
-            site_lineno = exc_tb.tb_lineno
+            tb = traceback.extract_tb(exc_tb)
+            original_frame = tb[-1]
+            raise_site_file = original_frame.filename
+            raise_site_lineno = original_frame.lineno
             with LoggingContext(logger, handlers=[handler], level=logging.ERROR) as log:
                 log.error(
                     '%s (%s) unhandled top-level exception (type=%s(%s)) at %s:%s',
@@ -1272,8 +1281,8 @@ def unhandled_top_level_exception(exc_type: type, exc_value, exc_tb) -> bool:
                     args,
                     exc_type.__name__,
                     str(exc_value),
-                    site_file,
-                    site_lineno,
+                    raise_site_file,
+                    raise_site_lineno,
                 )
             return True
     except Exception:
