@@ -70,16 +70,19 @@ class CentCount(object):
             currency: optionally declare the currency being represented by
                 this instance.  If provided it will guard against operations
                 such as attempting to add it to non-matching currencies.
-            strict_mode: if True, the instance created will object if you
-                compare or aggregate it with non-CentCount objects; that is,
+            strict_mode: if True, the instance created will object (raise) if
+                compared or aggregated with non-CentCount objects; that is,
                 strict_mode disallows comparison with literal numbers or
                 aggregation with literal numbers.
+
+        Raises:
+            ValueError: invalid money string passed in
         """
         self.strict_mode = strict_mode
         if isinstance(centcount, str):
             ret = CentCount._parse(centcount)
             if ret is None:
-                raise Exception(f'Unable to parse money string "{centcount}"')
+                raise ValueError(f'Unable to parse money string "{centcount}"')
             centcount = ret[0]
             currency = ret[1]
         if isinstance(centcount, float):
@@ -108,6 +111,11 @@ class CentCount(object):
         return CentCount(centcount=-self.centcount, currency=self.currency)
 
     def __add__(self, other):
+        """
+        Raises:
+            TypeError: if addend is not compatible or the object is in strict
+                mode and the addend is not another CentCount.
+        """
         if isinstance(other, CentCount):
             if self.currency == other.currency:
                 return CentCount(
@@ -123,6 +131,11 @@ class CentCount(object):
                 return self.__add__(CentCount(other, self.currency))
 
     def __sub__(self, other):
+        """
+        Raises:
+            TypeError: if amount is not compatible or the object is in strict
+                mode and the amount is not another CentCount.
+        """
         if isinstance(other, CentCount):
             if self.currency == other.currency:
                 return CentCount(
@@ -139,6 +152,9 @@ class CentCount(object):
 
     def __mul__(self, other):
         """
+        Raises:
+            TypeError: if factor is not compatible.
+
         .. note::
 
             Multiplication and division are performed by converting the
@@ -172,6 +188,9 @@ class CentCount(object):
 
     def __truediv__(self, other):
         """
+        Raises:
+            TypeError: the divisor is not compatible
+
         .. note::
 
             Multiplication and division are performed by converting the
@@ -212,6 +231,11 @@ class CentCount(object):
     __radd__ = __add__
 
     def __rsub__(self, other):
+        """
+        Raises:
+            TypeError: amount is not compatible or, if the object is in
+                strict mode, the amount is not a CentCount.
+        """
         if isinstance(other, CentCount):
             if self.currency == other.currency:
                 return CentCount(
@@ -235,6 +259,10 @@ class CentCount(object):
     # Override comparison operators to also compare currency.
     #
     def __eq__(self, other):
+        """
+        Raises:
+            TypeError: In strict mode and the other object isn't a CentCount.
+        """
         if other is None:
             return False
         if isinstance(other, CentCount):
@@ -251,6 +279,11 @@ class CentCount(object):
         return not result
 
     def __lt__(self, other):
+        """
+        Raises:
+            TypeError: amounts have different currencies or, if this object
+                is in strict mode, the amount must be a CentCount.
+        """
         if isinstance(other, CentCount):
             if self.currency == other.currency:
                 return self.centcount < other.centcount
@@ -263,6 +296,11 @@ class CentCount(object):
                 return self.centcount < int(other)
 
     def __gt__(self, other):
+        """
+        Raises:
+            TypeError: amounts have different currencies or, if this object
+                is in strict mode, the amount must be a CentCount.
+        """
         if isinstance(other, CentCount):
             if self.currency == other.currency:
                 return self.centcount > other.centcount
@@ -313,11 +351,14 @@ class CentCount(object):
 
         Args:
             s: the string to be parsed
+
+        Raises:
+            ValueError: input string cannot be parsed.
         """
         chunks = CentCount._parse(s)
         if chunks is not None:
             return CentCount(chunks[0], chunks[1])
-        raise Exception(f'Unable to parse money string "{s}"')
+        raise ValueError(f'Unable to parse money string "{s}"')
 
 
 if __name__ == "__main__":

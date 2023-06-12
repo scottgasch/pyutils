@@ -154,7 +154,11 @@ class ParseException(Exception):
 
 
 class RaisingErrorListener(antlr4.DiagnosticErrorListener):
-    """An error listener that raises ParseExceptions."""
+    """An error listener that raises ParseExceptions.
+
+    Raises:
+        ParseException: on parse error
+    """
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         raise ParseException(msg)
@@ -304,6 +308,9 @@ class DateParser(dateparse_utilsListener):
         Returns:
             A datetime.datetime representing the parsed date/time or
             None on error.
+
+        Raises:
+            ParseException: an exception happened during parsing
 
         .. note::
 

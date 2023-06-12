@@ -45,6 +45,10 @@ class ActionNoYes(argparse.Action):
 
     These arguments can be used to indicate the inclusion or exclusion of
     binary exclusive behaviors.
+
+    Raises:
+        ValueError: illegal argument value or combination
+
     """
 
     def __init__(self, option_strings, dest, default=None, required=False, help=None):
@@ -90,7 +94,10 @@ def valid_bool(v: Any) -> bool:
         v: data passed to an argument expecting a bool on the cmdline.
 
     Returns:
-        The boolean value of v or raises an ArgumentTypeError on error.
+        The boolean value of v
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. not a valid bool string)
 
     Sample usage::
 
@@ -145,7 +152,10 @@ def valid_ip(ip: str) -> str:
         ip: data passed to a commandline arg expecting an IP(v4) address.
 
     Returns:
-        The IP address, if valid.  Raises ArgumentTypeError otherwise.
+        The IP address, if valid.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. not a valid IP address string)
 
     Sample usage::
 
@@ -186,6 +196,9 @@ def valid_mac(mac: str) -> str:
 
     Returns:
         The MAC address passed or raises ArgumentTypeError on error.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. not a valid MAC address)
 
     Sample usage::
 
@@ -230,6 +243,9 @@ def valid_percentage(num: str) -> float:
 
     Returns:
         The number if valid, otherwise raises ArgumentTypeError.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. not a valid percentage)
 
     Sample usage::
 
@@ -277,6 +293,9 @@ def valid_filename(filename: str) -> str:
     Returns:
         The filename if valid, otherwise raises ArgumentTypeError.
 
+    Raises:
+        ArgumentTypeError: parse error (e.g. file doesn't exist)
+
     Sample usage::
 
         args.add_argument(
@@ -313,6 +332,9 @@ def valid_date(txt: str) -> datetime.date:
 
     Returns:
         the datetime.date described by txt or raises ArgumentTypeError on error.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. date not valid)
 
     Sample usage::
 
@@ -355,6 +377,9 @@ def valid_datetime(txt: str) -> datetime.datetime:
 
     Returns:
         The datetime.datetime described by txt or raises ArgumentTypeError on error.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. invalid datetime string)
 
     Sample usage::
 
@@ -422,6 +447,9 @@ def valid_duration(txt: str) -> datetime.timedelta:
         The datetime.timedelta described by txt or raises ArgumentTypeError
         on error.
 
+    Raises:
+        ArgumentTypeError: parse error (e.g. invalid duration string)
+
     Sample usage::
 
         cfg.add_argument(
@@ -468,14 +496,15 @@ def valid_byte_count(txt: str) -> int:
         - plain numbers (123456)
         - numbers with ISO suffixes (Mb, Gb, Pb, etc...)
 
-    If the byte count is not parsable, raise an ArgumentTypeError.
-
     Args:
         txt: data passed to a commandline arg expecting a duration.
 
     Returns:
         An integer number of bytes or raises ArgumentTypeError on
         error.
+
+    Raises:
+        ArgumentTypeError: parse error (e.g. byte count not parsable)
 
     Sample usage::
 

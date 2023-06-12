@@ -43,12 +43,15 @@ class Money(object):
             strict_mode: if True, disallows comparison or arithmetic operations
                 between Money instances and any non-Money types (e.g. literal
                 numbers).
+
+        Raises:
+            ValueError: unable to parse a money string
         """
         self.strict_mode = strict_mode
         if isinstance(amount, str):
             ret = Money._parse(amount)
             if ret is None:
-                raise Exception(f'Unable to parse money string "{amount}"')
+                raise ValueError(f'Unable to parse money string "{amount}"')
             amount = ret[0]
             currency = ret[1]
         if not isinstance(amount, Decimal):
@@ -90,6 +93,11 @@ class Money(object):
         return Money(amount=-self.amount, currency=self.currency)
 
     def __add__(self, other):
+        """
+        Raises:
+            TypeError: attempt to add incompatible amounts or, if in strict
+                mode, attempt to add a Money with a literal.
+        """
         if isinstance(other, Money):
             if self.currency == other.currency:
                 return Money(amount=self.amount + other.amount, currency=self.currency)
@@ -105,14 +113,19 @@ class Money(object):
                 )
 
     def __sub__(self, other):
+        """
+        Raises:
+            TypeError: attempt to subtract incompatible amounts or, if in strict
+                mode, attempt to add a Money with a literal.
+        """
         if isinstance(other, Money):
             if self.currency == other.currency:
                 return Money(amount=self.amount - other.amount, currency=self.currency)
             else:
-                raise TypeError("Incompatible currencies in add expression")
+                raise TypeError("Incompatible currencies in sibtraction expression")
         else:
             if self.strict_mode:
-                raise TypeError("In strict_mode only two moneys can be added")
+                raise TypeError("In strict_mode only two moneys can be subtracted")
             else:
                 return Money(
                     amount=self.amount - Decimal(float(other)),
@@ -120,6 +133,10 @@ class Money(object):
                 )
 
     def __mul__(self, other):
+        """
+        Raises:
+            TypeError: attempt to multiply two Money objects.
+        """
         if isinstance(other, Money):
             raise TypeError("can not multiply monetary quantities")
         else:
@@ -129,6 +146,10 @@ class Money(object):
             )
 
     def __truediv__(self, other):
+        """
+        Raises:
+            TypeError: attempt to divide two Money objects.
+        """
         if isinstance(other, Money):
             raise TypeError("can not divide monetary quantities")
         else:
@@ -211,6 +232,11 @@ class Money(object):
     __radd__ = __add__
 
     def __rsub__(self, other):
+        """
+        Raises:
+            TypeError: attempt to subtract incompatible amounts or, if in strict
+                mode, attempt to add a Money with a literal.
+        """
         if isinstance(other, Money):
             if self.currency == other.currency:
                 return Money(amount=other.amount - self.amount, currency=self.currency)
@@ -231,6 +257,11 @@ class Money(object):
     # Override comparison operators to also compare currency.
     #
     def __eq__(self, other):
+        """
+        Raises:
+            TypeError: in strict mode, an attempt to compare a Money with a
+                non-Money object.
+        """
         if other is None:
             return False
         if isinstance(other, Money):
@@ -247,6 +278,10 @@ class Money(object):
         return not result
 
     def __lt__(self, other):
+        """
+        TypeError: attempt to compare incompatible amounts or, if in strict
+            mode, attempt to compare a Money with a literal.
+        """
         if isinstance(other, Money):
             if self.currency == other.currency:
                 return self.amount < other.amount
@@ -259,6 +294,10 @@ class Money(object):
                 return self.amount < Decimal(float(other))
 
     def __gt__(self, other):
+        """
+        TypeError: attempt to compare incompatible amounts or, if in strict
+            mode, attempt to compare a Money with a literal.
+        """
         if isinstance(other, Money):
             if self.currency == other.currency:
                 return self.amount > other.amount
@@ -309,11 +348,14 @@ class Money(object):
 
         Args:
             s: the string to parse
+
+        Raises:
+            ValueError: unable to parse a string
         """
         chunks = Money._parse(s)
         if chunks is not None:
             return Money(chunks[0], chunks[1])
-        raise Exception(f'Unable to parse money string "{s}"')
+        raise ValueError(f'Unable to parse money string "{s}"')
 
 
 if __name__ == "__main__":

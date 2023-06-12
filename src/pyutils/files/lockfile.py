@@ -104,6 +104,9 @@ class LockFile(contextlib.AbstractContextManager):
                 Note that this is required for zookeeper based locks.
             override_command: don't use argv to determine our commandline
                 rather use this instead if provided.
+
+        Raises:
+            Exception: Zookeeper lock path without an expiration timestamp
         """
         self.is_locked: bool = False
         self.lockfile: str = ""

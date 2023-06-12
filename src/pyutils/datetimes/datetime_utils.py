@@ -117,6 +117,9 @@ def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetim
         A datetime identical to dt, the input datetime, except for
         that a timezone has been added.
 
+    Raises:
+        ValueError: if dt is already a timezone aware datetime.
+
     .. warning::
 
         This doesn't change the hour, minute, second, day, month, etc...
@@ -152,7 +155,7 @@ def add_timezone(dt: datetime.datetime, tz: datetime.tzinfo) -> datetime.datetim
     if is_timezone_aware(dt):
         if dt.tzinfo == tz:
             return dt
-        raise Exception(
+        raise ValueError(
             f"{dt} is already timezone aware; use replace_timezone or translate_timezone "
             + "depending on the semantics you want.  See the pydocs / code."
         )
@@ -517,6 +520,9 @@ def n_timeunits_from_base(
         unit: the timeunit that we are counting by.
         base: a datetime representing the base date the result should be
             relative to.
+
+    Raises:
+        ValueError: unit is invalid
 
     Returns:
         A datetime that is count units before of after the base datetime.
@@ -956,6 +962,9 @@ def minute_number(hour: int, minute: int) -> MinuteOfDay:
     Returns:
         The minute number requested.  Raises `ValueError` on bad input.
 
+    Raises:
+        ValueError: invalid hour or minute input argument
+
     >>> minute_number(0, 0)
     0
 
@@ -1054,6 +1063,9 @@ def parse_duration(duration: str, raise_on_error: bool = False) -> int:
 
     Returns:
         A count of seconds represented by the input string.
+
+    Raises:
+        ValueError: bad duration and raise_on_error is set.
 
     >>> parse_duration('15 days, 2 hours')
     1303200
@@ -1358,6 +1370,9 @@ def easter(year: int, method: int = EASTER_WESTERN):
     and
 
     `The Calendar FAQ: Easter <https://www.tondering.dk/claus/cal/easter.php>`_
+
+    Raises:
+        ValueError if method argument is invalid
 
     """
 

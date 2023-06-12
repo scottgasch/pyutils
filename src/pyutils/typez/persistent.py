@@ -184,6 +184,10 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
     def load(
         cls: type[PicklingFileBasedPersistent],
     ) -> Optional[PicklingFileBasedPersistent]:
+        """
+        Raises:
+            Exception: failure to load from file.
+        """
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Attempting to load state from %s", filename)
@@ -202,6 +206,10 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
     @overrides
     def save(self) -> bool:
+        """
+        Raises:
+            Exception: failure to save to file.
+        """
         filename = self.get_filename()
         if self.should_we_save_data(filename):
             logger.debug("Trying to save state in %s", filename)
@@ -266,6 +274,10 @@ class JsonFileBasedPersistent(FileBasedPersistent):
     @classmethod
     @overrides
     def load(cls: type[JsonFileBasedPersistent]) -> Optional[JsonFileBasedPersistent]:
+        """
+        Raises:
+            Exception: failure to load from file.
+        """
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Trying to load state from %s", filename)
@@ -295,6 +307,10 @@ class JsonFileBasedPersistent(FileBasedPersistent):
 
     @overrides
     def save(self) -> bool:
+        """
+        Raises:
+            Exception: failure to save to file.
+        """
         filename = self.get_filename()
         if self.should_we_save_data(filename):
             logger.debug("Trying to save state in %s", filename)

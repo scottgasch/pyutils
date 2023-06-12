@@ -198,10 +198,11 @@ class ThreadWithReturnValue(threading.Thread, Runnable):
 
         A thread can be joined many times.
 
-        :meth:`join` raises a RuntimeError if an attempt is made to join the
-        current thread as that would cause a deadlock. It is also an
-        error to join a thread before it has been started and
-        attempts to do so raises the same exception.
+        Raises:
+            RuntimeError: an attempt is made to join the current thread
+                as that would cause a deadlock. It is also an error to join
+                a thread before it has been started and attempts to do so
+                raises the same exception.
         """
         threading.Thread.join(self, *args)
         return self._return

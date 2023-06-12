@@ -244,6 +244,10 @@ class ThreadExecutor(BaseExecutor):
 
     @overrides
     def submit(self, function: Callable, *args, **kwargs) -> fut.Future:
+        """
+        Raises:
+            Exception: executor is shutting down already.
+        """
         if self.already_shutdown:
             raise Exception('Submitted work after shutdown.')
         self.adjust_task_count(+1)
@@ -305,6 +309,10 @@ class ProcessExecutor(BaseExecutor):
 
     @overrides
     def submit(self, function: Callable, *args, **kwargs) -> fut.Future:
+        """
+        Raises:
+            Exception: executor is shutting down already.
+        """
         if self.already_shutdown:
             raise Exception('Submitted work after shutdown.')
         start = time.time()
@@ -849,6 +857,9 @@ class RemoteExecutor(BaseExecutor):
         Args:
             workers: A list of remote workers we can call on to do tasks.
             policy: A policy for selecting remote workers for tasks.
+
+        Raises:
+            RemoteExecutorException: unable to find a place to schedule work.
         """
 
         super().__init__()
@@ -1463,7 +1474,11 @@ class RemoteExecutor(BaseExecutor):
         self, bundle: BundleDetails
     ) -> Optional[fut.Future]:
         """Something unexpectedly failed with bundle.  Either retry it
-        from the beginning or throw in the towel and give up on it."""
+        from the beginning or throw in the towel and give up on it.
+
+        Raises:
+            RemoteExecutorException: a bundle fails repeatedly.
+        """
 
         is_original = bundle.src_bundle is None
         bundle.worker = None
@@ -1500,7 +1515,11 @@ class RemoteExecutor(BaseExecutor):
     @overrides
     def submit(self, function: Callable, *args, **kwargs) -> fut.Future:
         """Submit work to be done.  This is the user entry point of this
-        class."""
+        class.
+
+        Raises:
+            Exception: executor is already shutting down.
+        """
         if self.already_shutdown:
             raise Exception('Submitted work after shutdown.')
         pickle = _make_cloud_pickle(function, *args, **kwargs)

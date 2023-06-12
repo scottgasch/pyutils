@@ -356,6 +356,9 @@ def is_number(in_str: str) -> bool:
         True if the string contains a valid numberic value and
         False otherwise.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
     :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
     etc...
@@ -363,7 +366,7 @@ def is_number(in_str: str) -> bool:
     >>> is_number(100.5)
     Traceback (most recent call last):
     ...
-    ValueError: 100.5
+    TypeError: 100.5
     >>> is_number("100.5")
     True
     >>> is_number("test")
@@ -373,10 +376,10 @@ def is_number(in_str: str) -> bool:
     >>> is_number([1, 2, 3])
     Traceback (most recent call last):
     ...
-    ValueError: [1, 2, 3]
+    TypeError: [1, 2, 3]
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return NUMBER_RE.match(in_str) is not None
 
 
@@ -415,6 +418,9 @@ def is_hexidecimal_integer_number(in_str: str) -> bool:
     Returns:
         True if the string is a hex integer number and False otherwise.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
     :meth:`is_octal_integer_number`, :meth:`is_binary_integer_number`, etc...
 
@@ -431,18 +437,18 @@ def is_hexidecimal_integer_number(in_str: str) -> bool:
     >>> is_hexidecimal_integer_number(12345)  # Not a string
     Traceback (most recent call last):
     ...
-    ValueError: 12345
+    TypeError: 12345
     >>> is_hexidecimal_integer_number(101.4)
     Traceback (most recent call last):
     ...
-    ValueError: 101.4
+    TypeError: 101.4
     >>> is_hexidecimal_integer_number(0x1A3E)
     Traceback (most recent call last):
     ...
-    ValueError: 6718
+    TypeError: 6718
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return HEX_NUMBER_RE.match(in_str) is not None
 
 
@@ -453,6 +459,9 @@ def is_octal_integer_number(in_str: str) -> bool:
 
     Returns:
         True if the string is a valid octal integral number and False otherwise.
+
+    Raises:
+        TypeError: the input argument isn't a string
 
     See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
     :meth:`is_hexidecimal_integer_number`, :meth:`is_binary_integer_number`,
@@ -470,7 +479,7 @@ def is_octal_integer_number(in_str: str) -> bool:
     False
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return OCT_NUMBER_RE.match(in_str) is not None
 
 
@@ -481,6 +490,9 @@ def is_binary_integer_number(in_str: str) -> bool:
 
     Returns:
         True if the string contains a binary integral number and False otherwise.
+
+    Raises:
+        TypeError: the input argument isn't a string
 
     See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
     :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
@@ -500,7 +512,7 @@ def is_binary_integer_number(in_str: str) -> bool:
     False
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return BIN_NUMBER_RE.match(in_str) is not None
 
 
@@ -511,6 +523,9 @@ def to_int(in_str: str) -> int:
 
     Returns:
         The integral value of the string or raises on error.
+
+    Raises:
+        TypeError: the input argument isn't a string
 
     See also :meth:`is_integer_number`, :meth:`is_decimal_number`,
     :meth:`is_hexidecimal_integer_number`, :meth:`is_octal_integer_number`,
@@ -528,9 +543,13 @@ def to_int(in_str: str) -> int:
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 10: 'test'
+    >>> to_int(123)
+    Traceback (most recent call last):
+    ...
+    TypeError: 123
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     if is_binary_integer_number(in_str):
         return int(in_str, 2)
     if is_octal_integer_number(in_str):
@@ -549,6 +568,9 @@ def number_string_to_integer(in_str: str) -> int:
 
     Returns:
         The integer whose value was parsed from in_str.
+
+    Raises:
+        ValueError: unable to parse a chunk of the number string
 
     See also :meth:`integer_to_number_string`.
 
@@ -703,6 +725,9 @@ def add_thousands_separator(
     Returns:
         A numeric string with thousands separators added appropriately.
 
+    Raises:
+        ValueError: a non-numeric string argument is presented
+
     >>> add_thousands_separator('12345678')
     '12,345,678'
     >>> add_thousands_separator(12345678)
@@ -803,7 +828,7 @@ def is_email(in_str: Any) -> bool:
             head = head.replace(" ", "")[1:-1]
         return EMAIL_RE.match(head + "@" + tail) is not None
 
-    except ValueError:
+    except (TypeError, ValueError):
         # borderline case in which we have multiple "@" signs but the
         # head part is correctly escaped.
         if ESCAPED_AT_SIGN.search(in_str) is not None:
@@ -909,6 +934,9 @@ def is_credit_card(in_str: Any, card_type: str = None) -> bool:
 
     Returns:
         True if in_str is a valid credit card number.
+
+    Raises:
+        KeyError: card_type is invalid
 
     .. warning::
         This code is not verifying the authenticity of the credit card (i.e.
@@ -1259,6 +1287,9 @@ def contains_html(in_str: str) -> bool:
         True if the given string contains HTML/XML tags and False
         otherwise.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`strip_html`.
 
     .. warning::
@@ -1274,7 +1305,7 @@ def contains_html(in_str: str) -> bool:
 
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return HTML_RE.search(in_str) is not None
 
 
@@ -1285,6 +1316,9 @@ def words_count(in_str: str) -> int:
 
     Returns:
         The number of words contained in the given string.
+
+    Raises:
+        TypeError: the input argument isn't a string
 
     .. note::
         This method is "smart" in that it does consider only sequences
@@ -1300,7 +1334,7 @@ def words_count(in_str: str) -> int:
     4
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return len(WORDS_COUNT_RE.findall(in_str))
 
 
@@ -1357,6 +1391,9 @@ def generate_random_alphanumeric_string(size: int) -> str:
         A string of the specified size containing random characters
         (uppercase/lowercase ascii letters and digits).
 
+    Raises:
+        ValueError: size < 1
+
     See also :meth:`asciify`, :meth:`generate_uuid`.
 
     >>> random.seed(22)
@@ -1378,11 +1415,14 @@ def reverse(in_str: str) -> str:
     Returns:
         The reversed (chracter by character) string.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     >>> reverse('test')
     'tset'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return in_str[::-1]
 
 
@@ -1397,6 +1437,9 @@ def camel_case_to_snake_case(in_str: str, *, separator: str = "_"):
         original string if it is not a valid camel case string or some
         other error occurs.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`is_camel_case`, :meth:`is_snake_case`, and :meth:`is_slug`.
 
     >>> camel_case_to_snake_case('MacAddressExtractorFactory')
@@ -1405,7 +1448,7 @@ def camel_case_to_snake_case(in_str: str, *, separator: str = "_"):
     'Luke Skywalker'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     if not is_camel_case(in_str):
         return in_str
     return CAMEL_CASE_REPLACE_RE.sub(lambda m: m.group(1) + separator, in_str).lower()
@@ -1425,6 +1468,9 @@ def snake_case_to_camel_case(
         provided or the original string back again if it is not valid
         snake case or another error occurs.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`is_camel_case`, :meth:`is_snake_case`, and :meth:`is_slug`.
 
     >>> snake_case_to_camel_case('this_is_a_test')
@@ -1433,7 +1479,7 @@ def snake_case_to_camel_case(
     'Han Solo'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     if not is_snake_case(in_str, separator=separator):
         return in_str
     tokens = [s.title() for s in in_str.split(separator) if is_full_string(s)]
@@ -1529,6 +1575,9 @@ def strip_html(in_str: str, keep_tag_content: bool = False) -> str:
         A string with all HTML tags removed (optionally with tag contents
         preserved).
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`contains_html`.
 
     .. note::
@@ -1543,7 +1592,7 @@ def strip_html(in_str: str, keep_tag_content: bool = False) -> str:
     'test: click here'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     r = HTML_TAG_ONLY_RE if keep_tag_content else HTML_RE
     return r.sub("", in_str)
 
@@ -1559,6 +1608,9 @@ def asciify(in_str: str) -> str:
         by translating all non-ascii chars into their closest possible
         ASCII representation (eg: ó -> o, Ë -> E, ç -> c...).
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`to_ascii`, :meth:`generate_random_alphanumeric_string`.
 
     .. warning::
@@ -1568,7 +1620,7 @@ def asciify(in_str: str) -> str:
     'eeuuooaaeynAAACIINOE'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
 
     # "NFKD" is the algorithm which is able to successfully translate
     # the most of non-ascii chars.
@@ -1599,6 +1651,9 @@ def slugify(in_str: str, *, separator: str = "-") -> str:
         * all chars are encoded as ascii (by using :meth:`asciify`)
         * is safe for URL
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`is_slug` and :meth:`asciify`.
 
     >>> slugify('Top 10 Reasons To Love Dogs!!!')
@@ -1607,7 +1662,7 @@ def slugify(in_str: str, *, separator: str = "-") -> str:
     'monster-magnet'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
 
     # replace any character that is NOT letter or number with spaces
     out = NO_LETTERS_OR_NUMBERS_RE.sub(" ", in_str.lower()).strip()
@@ -1639,6 +1694,9 @@ def to_bool(in_str: str) -> bool:
 
         Otherwise False is returned.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :mod:`pyutils.argparse_utils`.
 
     >>> to_bool('True')
@@ -1660,7 +1718,7 @@ def to_bool(in_str: str) -> bool:
     True
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     return in_str.lower() in set(["true", "1", "yes", "y", "t", "on"])
 
 
@@ -1871,13 +1929,16 @@ def indent(in_str: str, amount: int) -> str:
     Returns:
         An indented string created by prepending amount spaces.
 
+    Raises:
+        TypeError: the input argument isn't a string
+
     See also :meth:`dedent`.
 
     >>> indent('This is a test', 4)
     '    This is a test'
     """
     if not is_string(in_str):
-        raise ValueError(in_str)
+        raise TypeError(in_str)
     line_separator = '\n'
     lines = [" " * amount + line for line in in_str.split(line_separator)]
     return line_separator.join(lines)
@@ -2434,6 +2495,9 @@ def to_ascii(txt: str):
     Returns:
         txt encoded as an ASCII byte string.
 
+    Raises:
+        TypeError: the input argument isn't a string or bytes
+
     See also :meth:`to_base64`, :meth:`to_bitstring`, :meth:`to_bytes`,
     :meth:`generate_random_alphanumeric_string`, :meth:`asciify`.
 
@@ -2447,7 +2511,7 @@ def to_ascii(txt: str):
         return txt.encode('ascii')
     if isinstance(txt, bytes):
         return txt
-    raise Exception('to_ascii works with strings and bytes')
+    raise TypeError('to_ascii works with strings and bytes')
 
 
 def to_base64(

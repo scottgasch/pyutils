@@ -118,8 +118,7 @@ class Trie(object):
 
     def __getitem__(self, item: Sequence[Any]) -> Dict[Any, Any]:
         """Given an item, return its trie node which contains all
-        of the successor (child) node pointers.  If the item is not
-        a node in the Trie, raise a KeyError.
+        of the successor (child) node pointers.
 
         Args:
             item: the item whose node is to be retrieved

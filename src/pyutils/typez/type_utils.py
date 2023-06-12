@@ -23,6 +23,9 @@ def unwrap_optional(x: Optional[Any]) -> Any:
         If the Optional[Type] argument is None, however, raise an
         exception.
 
+    Raises:
+        AssertionError: the parameter is, indeed, of NoneType.
+
     >>> x: Optional[bool] = True
     >>> unwrap_optional(x)
     True

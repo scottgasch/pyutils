@@ -337,13 +337,16 @@ def parallel_lists_to_dict(keys: List[Hashable], values: List[Any]) -> AnyDict:
     Returns:
         A dict composed of zipping the keys list and values list together.
 
+    Raises:
+        ValueError: if keys and values lists not the same length.
+
     >>> k = ['name', 'phone', 'address', 'zip']
     >>> v = ['scott', '555-1212', '123 main st.', '12345']
     >>> parallel_lists_to_dict(k, v)
     {'name': 'scott', 'phone': '555-1212', 'address': '123 main st.', 'zip': '12345'}
     """
     if len(keys) != len(values):
-        raise Exception("Parallel keys and values lists must have the same length")
+        raise ValueError("Parallel keys and values lists must have the same length")
     return dict(zip(keys, values))
 
 

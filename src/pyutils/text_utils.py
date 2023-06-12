@@ -49,6 +49,9 @@ def get_console_rows_columns() -> RowsColumns:
     Returns:
         The number of rows/columns on the current console or None
         if we can't tell or an error occurred.
+
+    Raises:
+        Exception: if the console size can't be determined.
     """
     from pyutils.exec_utils import cmd
 
@@ -171,6 +174,9 @@ def bar_graph_string(
         reset_seq: sequence to use to turn off color
         left_end: the character at the left side of the graph
         right_end: the character at the right side of the graph
+
+    Raises:
+        ValueError: if percentage is invalid
 
     See also :meth:`bar_graph`, :meth:`sparkline`.
 
@@ -325,6 +331,9 @@ def justify_string(
             * 'r' = right alignment
         padding: the padding character to use while justifying
 
+    Raises:
+        ValueError: if alignment argument is invalid.
+
     >>> justify_string('This is another test', width=40, alignment='c')
     '          This is another test          '
     >>> justify_string('This is another test', width=40, alignment='l')
@@ -349,7 +358,7 @@ def justify_string(
             else:
                 string = padding + string
         else:
-            raise ValueError
+            raise ValueError('alignment must be l, r, j, or c.')
     return string
 
 

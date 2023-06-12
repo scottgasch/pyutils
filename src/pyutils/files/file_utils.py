@@ -62,6 +62,9 @@ def slurp_file(
 
     Returns:
         A list of lines from the read and transformed file contents.
+
+    Raises:
+        Exception: filename not found or can't be read.
     """
 
     ret = []
@@ -309,6 +312,9 @@ def create_path_if_not_exist(
         path: the path to attempt to create
         on_error: If set, it's invoked on error conditions and passed then
             path and OSError that it caused.
+
+    Raises:
+        OSError: an exception occurred and on_error not set.
 
     See also :meth:`does_file_exist`.
 

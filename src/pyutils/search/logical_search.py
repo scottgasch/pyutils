@@ -320,6 +320,11 @@ class Corpus(object):
                 yield token
 
         def evaluate(corpus: Corpus, stack: List[str]):
+            """
+            Raises:
+                ParseError: bad number of operations, unbalanced parenthesis,
+                    unknown operators, internal errors.
+            """
             node_stack: List[Node] = []
             for token in stack:
                 node = None
@@ -403,7 +408,12 @@ class Node(object):
         self.operands = operands
 
     def eval(self) -> Set[str]:
-        """Evaluate this node."""
+        """Evaluate this node.
+
+        Raises:
+            ParseError: unexpected operands, invalid key:value syntax, wrong
+                number of operands for operation, other invalid queries.
+        """
 
         evaled_operands: List[Union[Set[str], str]] = []
         for operand in self.operands:

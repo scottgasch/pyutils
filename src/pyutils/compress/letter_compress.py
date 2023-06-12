@@ -35,6 +35,9 @@ def compress(uncompressed: str) -> bytes:
     Returns:
         the compressed bytes
 
+    Raises:
+        ValueError: uncompressed text contains illegal character
+
     >>> import binascii
     >>> binascii.hexlify(compress('this is a test'))
     b'a2133da67b0ee859d0'
@@ -52,7 +55,7 @@ def compress(uncompressed: str) -> bytes:
             bits = ord(letter) - ord("a") + 1  # 1..26
         else:
             if letter not in special_characters:
-                raise Exception(
+                raise ValueError(
                     f'"{uncompressed}" contains uncompressable char="{letter}"'
                 )
             bits = special_characters[letter]

@@ -410,6 +410,10 @@ def predicated_retry_with_backoff(
             that we should stop calling or False to indicate a retry
             is necessary
 
+    Raises:
+        ValueError: on invalid arguments; e.g. backoff must be >= 1.0,
+            delay_sec must be >= 0.0, tries must be > 0.
+
     .. note::
 
         If after `tries` attempts the wrapped function is still
@@ -951,6 +955,9 @@ def call_probabilistically(probability_of_call: float) -> Callable:
     Args:
         probability_of_call: probability with which to invoke the
             wrapped function.  Must be 0 <= probabilty <= 1.0.
+
+    Raises:
+        ValueError: invalid probability of call arg
 
     Example usage... this example would skip the invocation of
     `log_the_entire_request_message` 95% of the time and only invoke

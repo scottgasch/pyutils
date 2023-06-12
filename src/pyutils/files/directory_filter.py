@@ -30,6 +30,9 @@ class DirectoryFileFilter(object):
     content to-be-written is identical to the contents of the file on
     disk allowing calling code to safely skip the write.
 
+    Raises:
+        ValueError: directory doesn't exist
+
     >>> testfile = '/tmp/directory_filter_text_f39e5b58-c260-40da-9448-ad1c3b2a69c2.txt'
     >>> contents = b'This is a test'
     >>> with open(testfile, 'wb') as wf:

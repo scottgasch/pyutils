@@ -38,6 +38,9 @@ def cmd_showing_output(
         exited.  Raises `TimeoutExpired` after killing the subprocess
         if the timeout expires.
 
+    Raises:
+        TimeoutExpired: if timeout expires before child terminates
+
     Side effects:
         prints all output of the child process (stdout or stderr)
     """
@@ -93,9 +96,7 @@ def cmd_showing_output(
 
 def cmd_exitcode(command: str, timeout_seconds: Optional[float] = None) -> int:
     """Run a command silently in the background and return its exit
-    code once it has finished.  If timeout_seconds is provided and the
-    command runs longer than timeout_seconds, raise a `TimeoutExpired`
-    exception.
+    code once it has finished.
 
     Args:
         command: the command to run
@@ -105,6 +106,10 @@ def cmd_exitcode(command: str, timeout_seconds: Optional[float] = None) -> int:
     Returns:
         the exit status of the subprocess once the subprocess has
         exited
+
+    Raises:
+        TimeoutExpired: if timeout_seconds is provided and the child process
+            executes longer than the limit.
 
     >>> cmd_exitcode('/bin/echo foo', 10.0)
     0
@@ -152,10 +157,7 @@ def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
 
 
 def run_silently(command: str, timeout_seconds: Optional[float] = None) -> None:
-    """Run a command silently but raise
-    `subprocess.CalledProcessError` if it fails (i.e. returns a
-    non-zero return value) and raise a `TimeoutExpired` if it runs too
-    long.
+    """Run a command silently.
 
     Args:
         command: the command to run.
@@ -166,6 +168,10 @@ def run_silently(command: str, timeout_seconds: Optional[float] = None) -> None:
     Returns:
         No return value; error conditions (including non-zero child process
         exits) produce exceptions.
+
+    Raises:
+        CalledProcessError: if the child process fails (i.e. exit != 0)
+        TimeoutExpired: if the child process executes too long.
 
     >>> run_silently("/usr/bin/true")
 

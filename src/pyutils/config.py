@@ -403,6 +403,9 @@ class Config:
 
             Otherwise False is returned.
 
+        Raises:
+            Exception: On error reading from zookeeper
+
         >>> to_bool('True')
         True
 
@@ -604,6 +607,10 @@ class Config:
             A dict containing the parsed program configuration.  Note that this can
                 be safely ignored since it is also saved in `config.config` and may
                 be used directly using that identifier.
+
+        Raises:
+            Exception: if unrecognized config argument(s) are detected and the
+                --config_rejects_unrecognized_arguments argument is enabled.
         """
         if self.config_parse_called:
             return self.config

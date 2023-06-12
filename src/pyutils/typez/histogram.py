@@ -79,13 +79,16 @@ class SimpleHistogram(Generic[T]):
                 buckets we are counting population in.  See also
                 :meth:`n_evenly_spaced_buckets` to generate these
                 buckets more easily.
+
+        Raises:
+            ValueError: buckets overlap
         """
         from pyutils.math_utils import NumericPopulation
 
         self.buckets: Dict[Tuple[Bound, Bound], Count] = {}
         for start_end in buckets:
             if self._get_bucket(start_end[0]) is not None:
-                raise Exception("Buckets overlap?!")
+                raise ValueError("Buckets overlap?!")
             self.buckets[start_end] = 0
         self.sigma: float = 0.0
         self.stats: NumericPopulation = NumericPopulation()
@@ -109,11 +112,14 @@ class SimpleHistogram(Generic[T]):
 
         Returns:
             A list of bounds that define N evenly spaced buckets
+
+        Raises:
+            ValueError: min is not < max
         """
         ret: List[Tuple[int, int]] = []
         stride = int((max_bound - min_bound) / n)
         if stride <= 0:
-            raise Exception("Min must be < Max")
+            raise ValueError("Min must be < Max")
         imax = math.ceil(max_bound)
         imin = math.floor(min_bound)
         for bucket_start in range(imin, imax, stride):

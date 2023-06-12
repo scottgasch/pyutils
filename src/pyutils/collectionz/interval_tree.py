@@ -83,7 +83,7 @@ class AugmentedIntervalTree(bst.BinarySearchTree):
     @staticmethod
     def _assert_value_must_be_range(value: Any) -> NumericRange:
         if not isinstance(value, NumericRange):
-            raise Exception(
+            raise TypeError(
                 "AugmentedIntervalTree expects to use NumericRanges, see bst for a "
                 + "general purpose tree usable for other types."
             )

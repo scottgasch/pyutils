@@ -35,6 +35,10 @@ class Rate(object):
             percentage: provides the multiplier as a percentage
             percent_change: provides the multiplier as a percent change to
                 the base amount
+
+        Raises:
+            ValueError: if more than one of percentage, percent_change and
+                multiplier is provided
         """
         count = 0
         if multiplier is not None:
@@ -53,7 +57,7 @@ class Rate(object):
             self.multiplier = 1.0 + percent_change / 100
             count += 1
         if count != 1:
-            raise Exception(
+            raise ValueError(
                 "Exactly one of percentage, percent_change or multiplier is required."
             )
 

@@ -949,6 +949,10 @@ def initialize_logging(logger=None) -> logging.Logger:
     :meth:`bootstrap.initialize` decorator on your program's entry point,
     it will call this for you.  See :meth:`pyutils.bootstrap.initialize`
     for more details.
+
+    Raises:
+        ValueError: if logging level is invalid
+
     """
 
     global LOGGING_INITIALIZED
@@ -1077,6 +1081,11 @@ class OutputMultiplexer(object):
             handles: if FILEHANDLES bit is set, this should be a list of
                 already opened filehandles you'd like to output into.  The
                 handles will remain open after the scope of the multiplexer.
+
+        Raises:
+            ValueError: invalid combination of arguments (e.g. the filenames
+                argument is present but the filenames bit isn't set, the handle
+                argument is present but the handles bit isn't set, etc...)
         """
         if logger is None:
             logger = logging.getLogger(None)
@@ -1105,7 +1114,16 @@ class OutputMultiplexer(object):
         return self.destination_bitv
 
     def set_destination_bitv(self, destination_bitv: int):
-        """Change the output destination_bitv to the one provided."""
+        """Change the output destination_bitv to the one provided.
+
+        Args:
+            destination_bitv: the new destination bitvector to set.
+
+        Raises:
+            ValueError: invalid combination of arguments (e.g. the filenames
+                argument is present but the filenames bit isn't set, the handle
+                argument is present but the handles bit isn't set, etc...)
+        """
         if destination_bitv & self.Destination.FILENAMES and self.f is None:
             raise ValueError("Filename argument is required if bitv & FILENAMES")
         if destination_bitv & self.Destination.FILEHANDLES and self.h is None:
@@ -1113,7 +1131,12 @@ class OutputMultiplexer(object):
         self.destination_bitv = destination_bitv
 
     def print(self, *args, **kwargs):
-        """Produce some output to all sinks."""
+        """Produce some output to all sinks.  Use the same arguments as the
+        print-builtin.
+
+        Raises:
+            TypeError: Illegal argument types encountered
+        """
         from pyutils.string_utils import _sprintf, strip_escape_sequences
 
         end = kwargs.pop("end", None)

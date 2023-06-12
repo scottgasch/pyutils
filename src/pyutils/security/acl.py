@@ -116,6 +116,9 @@ class SimpleACL(ABC):
             default_answer: pass this argument to provide the ACL with a
                 default answer.
 
+        Raises:
+            ValueError: Invalid Order argument
+
         .. note::
 
             By using `order_to_check_allow_deny` and `default_answer` you
@@ -128,7 +131,7 @@ class SimpleACL(ABC):
             Order.ALLOW_DENY,
             Order.DENY_ALLOW,
         ):
-            raise Exception(
+            raise ValueError(
                 'order_to_check_allow_deny must be Order.ALLOW_DENY or '
                 + 'Order.DENY_ALLOW'
             )

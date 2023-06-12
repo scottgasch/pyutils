@@ -200,6 +200,9 @@ def gcd_float_sequence(lst: List[float]) -> float:
 
     Args:
         lst: a list of operands
+
+    Raises:
+        ValueError: if the list doesn't contain at least one number.
     """
     if len(lst) <= 0:
         raise ValueError("Need at least one number")
@@ -281,6 +284,9 @@ def is_prime(n: int) -> bool:
 
     Returns:
         True if n is prime and False otherwise.
+
+    Raises:
+        TypeError: if argument is not an into
 
     .. note::
 
