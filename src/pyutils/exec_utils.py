@@ -126,7 +126,6 @@ def cmd_exitcode(command: str, timeout_seconds: Optional[float] = None) -> int:
 def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
     """Run a command and capture its output to stdout and stderr into a
     string buffer.  Return that string as this function's output.
-    Raises subprocess.CalledProcessError or TimeoutExpired on error.
 
     Args:
         command: the command to run
@@ -135,6 +134,10 @@ def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
 
     Returns:
         The captured output of the subprocess' stdout as a string buffer
+
+    Raises:
+        CalledProcessError: the child process didn't exit cleanly
+        TimeoutExpired: the child process ran too long
 
     >>> cmd('/bin/echo foo')[:-1]
     'foo'
@@ -234,7 +237,11 @@ def cmd_in_background(command: str, *, silent: bool = False) -> subprocess.Popen
 
 def cmd_list(command: List[str]) -> str:
     """Run a command with args encapsulated in a list and return the
-    output text as a string.  Raises subprocess.CalledProcessError.
+    output text as a string.
+
+    Raises:
+        CalledProcessError: the child process didn't exit cleanly
+        TimeoutExpired: the child process ran too long
     """
     ret = subprocess.run(command, capture_output=True, check=True).stdout
     return ret.decode("utf-8")
