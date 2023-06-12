@@ -52,7 +52,7 @@ class PeekingIterator(Iterator):
         return self
 
     def __next__(self) -> Any:
-        if len(self.on_deck) > 0:
+        if self.on_deck:
             return self.on_deck.pop()
         else:
             item = self.source_iter.__next__()
@@ -69,7 +69,7 @@ class PeekingIterator(Iterator):
             `StopIteration` when read.
 
         """
-        if len(self.on_deck) > 0:
+        if self.on_deck:
             return self.on_deck[0]
         try:
             item = next(self.source_iter)
@@ -115,7 +115,7 @@ class PushbackIterator(Iterator):
         return self
 
     def __next__(self) -> Any:
-        if len(self.pushed_back) > 0:
+        if self.pushed_back:
             return self.pushed_back.pop()
         return self.source_iter.__next__()
 

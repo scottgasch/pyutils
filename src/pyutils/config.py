@@ -455,7 +455,7 @@ class Config:
                     temp_argv.append(arg)
                     logger.info("Updating %s from zookeeper async config change.", arg)
 
-            if len(temp_argv) > 0:
+            if temp_argv:
                 old_argv = sys.argv
                 sys.argv = temp_argv
                 known, _ = ARGS.parse_known_args()
@@ -519,7 +519,7 @@ class Config:
             else:
                 saw_other_args = True
 
-        if not loadfile or len(loadfile) == 0:
+        if not loadfile:
             return
 
         # Get contents from wherever.
@@ -635,7 +635,7 @@ class Config:
         # didn't recognize it, maybe someone else will.  Or, if
         # --config_rejects_unrecognized_arguments was passed, die
         # if we have unknown arguments.
-        if len(unknown) > 0:
+        if unknown:
             if config["config_rejects_unrecognized_arguments"]:
                 raise Exception(
                     f"Encountered unrecognized config argument(s) {unknown} with --config_rejects_unrecognized_arguments enabled; halting."
@@ -648,7 +648,7 @@ class Config:
 
         # Check for savefile and populate it if requested.
         savefile = config["config_savefile"]
-        if savefile and len(savefile) > 0:
+        if savefile:
             data = "\n".join(ORIG_ARGV[1:])
             if savefile[:3] == "zk:":
                 self._write_config_to_zookeeper(savefile[3:], data)

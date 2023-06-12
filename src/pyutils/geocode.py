@@ -132,7 +132,7 @@ def batch_geocode_addresses(addresses: List[str]) -> Optional[List[str]]:
         logger.debug("Response: %s", r.text)
         for line in r.text.split("\n"):
             line = line.strip()
-            if len(line) > 0:
+            if line:
                 out.append(line)
     return out
 

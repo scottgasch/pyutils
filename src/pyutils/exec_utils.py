@@ -71,7 +71,7 @@ def cmd_showing_output(
                     char = key.fileobj.read(1)  # type: ignore
                     if not char:
                         sel.unregister(key.fileobj)
-                        if len(sel.get_map()) == 0:
+                        if not sel.get_map():
                             sys.stdout.flush()
                             sys.stderr.flush()
                             sel.close()

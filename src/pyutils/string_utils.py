@@ -731,7 +731,7 @@ def _add_thousands_separator(in_str: str, *, separator_char=',', places=3) -> st
         (in_str, decimal_part) = in_str.split('.')
     tmp = [iter(in_str[::-1])] * places
     ret = separator_char.join("".join(x) for x in zip_longest(*tmp, fillvalue=""))[::-1]
-    if len(decimal_part) > 0:
+    if decimal_part:
         ret += '.'
         ret += decimal_part
     return ret
