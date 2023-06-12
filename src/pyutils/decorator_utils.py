@@ -843,9 +843,7 @@ def timeout(
         `use_signals` argument explicitly.
 
     Raises:
-
-        An Exception with a timed out message when/if the timeout is
-        reached.
+        Exception: the timeout was reached
 
     It is illegal to pass anything other than a function as the first
     parameter.  The function is wrapped and returned to the caller.
@@ -957,7 +955,7 @@ def call_probabilistically(probability_of_call: float) -> Callable:
             wrapped function.  Must be 0 <= probabilty <= 1.0.
 
     Raises:
-        ValueError: invalid probability of call arg
+        ValueError: invalid probability argument
 
     Example usage... this example would skip the invocation of
     `log_the_entire_request_message` 95% of the time and only invoke
