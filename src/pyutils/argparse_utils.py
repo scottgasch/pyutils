@@ -452,8 +452,7 @@ def valid_duration(txt: str) -> datetime.timedelta:
         txt: data passed to a commandline arg expecting a duration.
 
     Returns:
-        The datetime.timedelta described by txt
-        on error.
+        The datetime.timedelta described by txt.
 
     Raises:
         ArgumentTypeError: parse error (e.g. invalid duration string)
