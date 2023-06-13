@@ -522,7 +522,7 @@ def to_int(in_str: str) -> int:
         in_str: the string to convert
 
     Returns:
-        The integral value of the string or raises on error.
+        The integral value of the string.
 
     Raises:
         TypeError: the input argument isn't a string

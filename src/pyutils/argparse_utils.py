@@ -203,7 +203,7 @@ def valid_mac(mac: str) -> str:
         mac: a value passed to a commandline flag expecting a MAC address.
 
     Returns:
-        The MAC address passed or raises ArgumentTypeError on error.
+        The MAC address passed
 
     Raises:
         ArgumentTypeError: parse error (e.g. not a valid MAC address)
@@ -339,7 +339,7 @@ def valid_date(txt: str) -> datetime.date:
         txt: data passed to a commandline flag expecting a date.
 
     Returns:
-        the datetime.date described by txt or raises ArgumentTypeError on error.
+        the datetime.date described by txt
 
     Raises:
         ArgumentTypeError: parse error (e.g. date not valid)
@@ -384,7 +384,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
         txt: data passed to a commandline flag expecting a valid datetime.datetime.
 
     Returns:
-        The datetime.datetime described by txt or raises ArgumentTypeError on error.
+        The datetime.datetime described by txt
 
     Raises:
         ArgumentTypeError: parse error (e.g. invalid datetime string)
@@ -452,7 +452,7 @@ def valid_duration(txt: str) -> datetime.timedelta:
         txt: data passed to a commandline arg expecting a duration.
 
     Returns:
-        The datetime.timedelta described by txt or raises ArgumentTypeError
+        The datetime.timedelta described by txt
         on error.
 
     Raises:
@@ -508,8 +508,7 @@ def valid_byte_count(txt: str) -> int:
         txt: data passed to a commandline arg expecting a duration.
 
     Returns:
-        An integer number of bytes or raises ArgumentTypeError on
-        error.
+        An integer number of bytes.
 
     Raises:
         ArgumentTypeError: parse error (e.g. byte count not parsable)
