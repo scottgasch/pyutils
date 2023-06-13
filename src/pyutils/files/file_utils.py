@@ -91,6 +91,9 @@ def remove(path: str) -> None:
     Args:
         path: the path of the file to delete
 
+    Raises:
+        FileNotFoundError: the path to remove does not exist
+
     >>> import os
     >>> filename = '/tmp/file_utils_test_file'
     >>> os.system(f'touch {filename}')
@@ -100,6 +103,11 @@ def remove(path: str) -> None:
     >>> remove(filename)
     >>> does_file_exist(filename)
     False
+
+    >>> remove("/tmp/23r23r23rwdfwfwefgdfgwerhwrgewrgergerg22r")
+    Traceback (most recent call last):
+    ...
+    FileNotFoundError: [Errno 2] No such file or directory: '/tmp/23r23r23rwdfwfwefgdfgwerhwrgewrgergerg22r'
     """
     os.remove(path)
 
@@ -310,16 +318,15 @@ def create_path_if_not_exist(
 
     Args:
         path: the path to attempt to create
-        on_error: If set, it's invoked on error conditions and passed then
-            path and OSError that it caused.
+        on_error: if provided, this is invoked on error conditions and
+            passed the path and OSError that it caused
 
     Raises:
-        OSError: an exception occurred and on_error not set.
+        OSError: an exception occurred and on_error was not set.
 
     See also :meth:`does_file_exist`.
 
     .. warning::
-
         Files are created with mode 0o0777 (i.e. world read/writeable).
 
     >>> import uuid
@@ -354,6 +361,13 @@ def does_file_exist(filename: str) -> bool:
 
     Returns:
         True if filename exists and is a normal file.
+
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
 
     See also :meth:`create_path_if_not_exist`, :meth:`is_readable`.
 
@@ -391,6 +405,13 @@ def is_writable(filename: str) -> bool:
         True if file exists, is a normal file and is writable by the
         current process.  False otherwise.
 
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
+
     See also :meth:`is_readable`, :meth:`does_file_exist`.
     """
     return os.access(filename, os.W_OK)
@@ -405,6 +426,13 @@ def is_executable(filename: str) -> bool:
     Returns:
         True if file exists, is a normal file and is executable by the
         current process.  False otherwise.
+
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
 
     See also :meth:`does_file_exist`, :meth:`is_readable`,
     :meth:`is_writable`.
@@ -457,6 +485,13 @@ def is_normal_file(filename: str) -> bool:
     Returns:
         True if filename is a normal file.
 
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
+
     See also :meth:`is_directory`, :meth:`does_file_exist`, :meth:`is_symlink`.
 
     >>> is_normal_file(__file__)
@@ -473,6 +508,13 @@ def is_directory(filename: str) -> bool:
 
     Returns:
         True if filename is a directory
+
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
 
     See also :meth:`does_directory_exist`, :meth:`is_normal_file`,
     :meth:`is_symlink`.
@@ -491,6 +533,13 @@ def is_symlink(filename: str) -> bool:
 
     Returns:
         True if filename is a symlink, False otherwise.
+
+    .. note::
+        A Python core philosophy is: it's easier to ask forgiveness
+        than permission (https://docs.python.org/3/glossary.html#term-EAFP).
+        That is, code that just tries an operation and handles the set of
+        Exceptions that may arise is the preferred style.  That said, this
+        function can still be useful in some situations.
 
     See also :meth:`is_directory`, :meth:`is_normal_file`.
 
