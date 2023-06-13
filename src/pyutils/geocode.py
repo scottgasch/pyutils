@@ -9,9 +9,9 @@
 
 Also try::
 
-    $ curl --form addressFile=@localfile.csv \
-           --form benchmark=2020 \
-           https://geocoding.geo.census.gov/geocoder/locations/addressbatch \
+    $ curl --form addressFile=@localfile.csv \\
+           --form benchmark=2020 \\
+           https://geocoding.geo.census.gov/geocoder/locations/addressbatch \\
            --output geocoderesult.csv
 """
 

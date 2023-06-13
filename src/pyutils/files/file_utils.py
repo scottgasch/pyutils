@@ -303,8 +303,8 @@ def get_canonical_path(filespec: str) -> str:
 
     See also :meth:`get_path`, :meth:`without_path`.
 
-    >>> get_canonical_path('/home/scott/../../home/lynn/../scott/foo.txt')
-    '/usr/home/scott/foo.txt'
+    >>> get_canonical_path('./../../pyutils/files/file_utils.py')
+    '/usr/home/scott/lib/release/pyutils/files/file_utils.py'
 
     """
     return os.path.realpath(filespec)
