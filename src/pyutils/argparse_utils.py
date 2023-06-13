@@ -18,7 +18,7 @@ import argparse
 import datetime
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 
 from overrides import overrides
 
@@ -51,7 +51,14 @@ class ActionNoYes(argparse.Action):
 
     """
 
-    def __init__(self, option_strings, dest, default=None, required=False, help=None):
+    def __init__(
+        self,
+        option_strings: str,
+        dest: str,
+        default: Optional[str] = None,
+        required: bool = False,
+        help: Optional[str] = None,
+    ):
         if default is None:
             msg = "You must provide a default with Yes/No action"
             logger.critical(msg)
@@ -79,11 +86,12 @@ class ActionNoYes(argparse.Action):
         )
 
     @overrides
-    def __call__(self, parser, namespace, values, option_strings=None):
-        if option_strings.startswith("--no-") or option_strings.startswith("--no_"):
-            setattr(namespace, self.dest, False)
-        else:
-            setattr(namespace, self.dest, True)
+    def __call__(self, parser, namespace, values, option_strings: Optional[str] = None):
+        if option_strings is not None:
+            if option_strings.startswith("--no-") or option_strings.startswith("--no_"):
+                setattr(namespace, self.dest, False)
+            else:
+                setattr(namespace, self.dest, True)
 
 
 def valid_bool(v: Any) -> bool:
