@@ -145,6 +145,55 @@ class Graph(object):
         """
         return self.graph
 
+    def __repr__(self) -> str:
+        """
+        Returns:
+            A string representation of the graph in GraphViz format.
+
+        >>> g = Graph(directed=True)
+        >>> g.add_edge('a', 'b', weight=2)
+        >>> g.add_edge('b', 'a', weight=4)
+        >>> g.add_edge('a', 'c', weight=10)
+        >>> print(g)
+        digraph G {
+            node [shape=record];
+            a -> b  [weight=2]
+            a -> c  [weight=10]
+            b -> a  [weight=4]
+        }
+
+        >>> h = Graph(directed=False)
+        >>> h.add_edge('A', 'B')
+        >>> h.add_edge('B', 'C')
+        >>> h.add_edge('B', 'D')
+        >>> h.add_edge('D', 'A')
+        >>> print(h)
+        graph G {
+            node [shape=record];
+            A -- B  [weight=1]
+            A -- D  [weight=1]
+            B -- A  [weight=1]
+            B -- C  [weight=1]
+            B -- D  [weight=1]
+            C -- B  [weight=1]
+            D -- B  [weight=1]
+            D -- A  [weight=1]
+        }
+        """
+        if self.directed:
+            edge = '->'
+            out = 'digraph G {\n'
+        else:
+            edge = '--'
+            out = 'graph G {\n'
+        out += '    node [shape=record];\n'
+        edges = self.get_edges()
+        for src, dests in edges.items():
+            for dest, weight in dests.items():
+                out += f'    {src} {edge} {dest}  [weight={weight}]\n'
+        out += '}\n'
+        return out.strip()
+
     def _dfs(self, vertex: str, visited: Set[str]):
         yield vertex
         visited.add(vertex)
