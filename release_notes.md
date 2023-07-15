@@ -765,3 +765,14 @@ This version -------- 0.0.1b18
 Previous version ---- 0.0.1b17
 Total commits -------       99
 ```
+# 🎁 Release notes (`0.0.1`)
+
+## Changes
+
+
+## Metadata
+```
+This version -------- 0.0.1
+Previous version ---- 
+Total commits -------        1
+```
