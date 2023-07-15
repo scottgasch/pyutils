@@ -1,6 +1,8 @@
+# examples
+
 Stuff under here is example code that uses pyutils library routines and
 is meant to just be illustrative and fun.  Each should be runnable as-is
-if you have pyutils installed.  Use the --help flag for more info.
+if you have pyutils installed.  Use the `--help` flag for more info.
 
 cron:
     Wrapper for running cronjobs with optional locks to ensure that no

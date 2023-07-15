@@ -1,3 +1,4 @@
+# tests
 
 This directory contains the (non-doctest) testcode for pyutils (i.e. unit tests
 and integration tests).  It also contains a couple of helpers to run the tests.
