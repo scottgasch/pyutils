@@ -22,7 +22,7 @@ https://github.com/scottgasch/pyutils/tree/master/tests).  To run all tests:
     cd tests/
     ./run_tests.py --all [--coverage]
 
-See the [README](https://github.com/scottgasch/pyutils/tree/master/tests#readme.md)
+See the [README](https://github.com/scottgasch/pyutils/blob/main/tests/README.md)
 under `tests/` and the code of `run_tests.py` for more options / information
 about running the tests.
 
