@@ -2,7 +2,7 @@
 
 # © Copyright 2021-2022, Scott Gasch
 
-"""parallelize unittest."""
+"""parallelize integration test."""
 
 import logging
 import sys
