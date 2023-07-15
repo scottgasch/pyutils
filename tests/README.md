@@ -27,5 +27,5 @@ code coverage report at the end of testing:
 
     ./run_tests.py --all --coverage
 
-I use ./run_tests.py --all --coverage as a .git/hooks/pre-commit-hook during
+I use `./run_tests.py --all --coverage` as a `.git/hooks/pre-commit-hook` during
 development.
