@@ -24,28 +24,28 @@ f-string.  I run this as a pre-commit hook and thought it would be
 good to include.
 
 ## parallelize_config
-This is a sample config file (place in ~/.remote_worker_records or
-override with --remote_worker_records_file) for the @parallelize
+This is a sample config file (place in `~/.remote_worker_records` or
+override with `--remote_worker_records_file`) for the `@parallelize`
 framework to understand how to dispatch work to remote machines.
 
 ## pyskel
 This is a "skeleton" I keep around for when I want to start
 working on a new script.
 
-reminder:
-    Reminds you of important dates which are stored in the .reminder
-    file.
+## reminder
+Reminds you of important dates which are stored in the .reminder
+file.
 
-scrabble:
-    Helps you play Scrabble word game.
+## scrabble
+Helps you play Scrabble word game.
 
-wordle:
-    Plays and helps you cheat at the Wordle word game.  Demo of using
-    the @parallelize framework and shared_dict which it uses to
-    precompute the solution space on several processes at once.
+## wordle
+Plays and helps you cheat at the Wordle word game.  Demo of using
+the `@parallelize` framework and `shared_dict` which it uses to
+precompute the solution space on several processes at once.
 
-../tests/run_tests.py:
-    Though not under examples/ this is still a stand alone program that
-    uses pyutils concepts like @parallelize and smart_futures that might
-    be helpful to look at.
+## ../tests/run_tests.py
+Though not under `examples/` this is still a stand alone program that
+uses pyutils concepts like `@parallelize` and `smart_futures` that might
+be helpful to look at.
 
