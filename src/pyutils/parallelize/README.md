@@ -98,10 +98,10 @@ See documentation in (pyutils.parallelize.smart_future)[https://github.com/scott
 more details.
 
 The files
-(run_rests.py)[https://github.com/scottgasch/pyutils/blob/master/tests/run_tests.py]
+[run_rests.py](https://github.com/scottgasch/pyutils/blob/master/tests/run_tests.py)
 and
-(wordle.py)[https://github.com/scottgasch/pyutils/blob/master/examples/wordle/wordle.py]
-use this parallelization framework... as does the (parallelize integration
-test)[https://github.com/scottgasch/pyutils/blob/master/tests/parallelize/parallelize_itest.py].
+[wordle.py](https://github.com/scottgasch/pyutils/blob/master/examples/wordle/wordle.py)
+use this parallelization framework... as does the [parallelize integration
+test](https://github.com/scottgasch/pyutils/blob/master/tests/parallelize/parallelize_itest.py).
 
 """
