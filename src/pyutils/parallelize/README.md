@@ -30,7 +30,7 @@ do some setup work:
    this by either wrapping your main entry point with the
    [`pyutils.bootstrap.initialize`](https://github.com/scottgasch/pyutils/blob/master/src/pyutils/bootstrap.py) decorator or just calling
    `config.parse()` early in your program.  See instructions in
-   [`pyutils.bootstrap`](https://github.com/scottgasch/pyutils/blob/master/src/pyutils/bootstrap.py) and :mod:`pyutils.config` for more
+   [`pyutils.bootstrap`](https://github.com/scottgasch/pyutils/blob/master/src/pyutils/bootstrap.py) and `pyutils.config` for more
    information.
 
 2. You need to create and configure a pool of worker machines.
@@ -60,7 +60,7 @@ do some setup work:
 
 5. Finally, you will also need tell the
    `pyutils.parallelize.executors.RemoteExecutor` class how to
-   invoke the (remote_worker.py)[https://github.com/scottgasch/pyutils/blob/master/src/pyutils/remote_worker.py]
+   invoke the [remote_worker.py](https://github.com/scottgasch/pyutils/blob/master/src/pyutils/remote_worker.py)
    on remote machines by passing its path on remote worker
    machines in your setup via the `--remote_worker_helper_path`
    commandline flag (or, honestly, if you made it this far, just
@@ -69,13 +69,13 @@ do some setup work:
    default value of the `--remote_worker_helper_path` flag)
 
 If you're trying to set this up and struggling, email me at
-(scott.gasch@gmail.com)[mailto://scott.gasch@gmail.com].  I'm happy to help.
+[scott.gasch@gmail.com](mailto://scott.gasch@gmail.com).  I'm happy to help.
 
 What you get back when you call a decorated function (using
 threads, processes or a remote worker) is a
 `pyutils.parallelize.smart_future.SmartFuture`.  This class
-attempts to transparently wrap a normal Python (`Future`)[
-https://docs.python.org/3/library/concurrent.futures.html#future-objects].
+attempts to transparently wrap a normal Python [`Future`](
+https://docs.python.org/3/library/concurrent.futures.html#future-objects).
 If your code just uses the result of a `parallelized` method it
 will block waiting on the result of the wrapped function as soon
 as it uses that result in a manner that requires its value to be
@@ -94,7 +94,7 @@ given a collection of `SmartFuture` objects,
 will block until one (any) or all (all) are finished and yield the
 finished objects to the caller.  Callers can be confident that any
 objects returned from these methods will not block when accessed.
-See documentation in (pyutils.parallelize.smart_future)[https://github.com/scottgasch/pyutils/blob/master/src/pyutils/parallelize/smart_future.py] for
+See documentation in [pyutils.parallelize.smart_future](https://github.com/scottgasch/pyutils/blob/master/src/pyutils/parallelize/smart_future.py) for
 more details.
 
 The files
