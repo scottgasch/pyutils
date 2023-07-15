@@ -8,4 +8,4 @@ utility.
 
 The generated docs are hosted at  [https://github.com/scottgasch/pyutils/tree/master/docs](https://github.com/scottgasch/pyutils/tree/master/docs).
 
-I regenerate (and publish) the docs as a .git/hook/post-push step.
+I regenerate (and publish) the docs as a `.git/hook/post-push` step.
