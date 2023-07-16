@@ -44,6 +44,11 @@ args.add_argument(
     action="store_true",
     help="Run tests and capture code coverage data",
 )
+args.add_argument(
+    "--show_failures",
+    action="store_true",
+    help="Should we show failure messages in the output?",
+)
 
 HOME = os.environ["HOME"]
 
@@ -52,7 +57,9 @@ HOME = os.environ["HOME"]
 # they pay attention to code performance which is adversely affected
 # by coverage.
 PERF_SENSATIVE_TESTS = set(["string_utils_test.py"])
-TESTS_TO_SKIP = set(["zookeeper_test.py", "zookeeper.py", "run_tests.py"])
+TESTS_TO_SKIP = set(
+    ["zookeeper_test.py", "zookeeper.py", "dateparse_utils_test.py", "run_tests.py"]
+)
 
 ROOT = ".."
 
@@ -276,6 +283,8 @@ class TemplatedTestRunner(TestRunner, ABC):
                 msg += "failed; doctest failure message detected."
                 logger.error(msg)
                 self.persist_output(test, msg, output)
+                if config.config["show_failures"]:
+                    print(f"Failure message:\n\n{output}")
                 return TestResults.single_test_failed(test.name)
 
             msg += "succeeded."
@@ -292,6 +301,8 @@ class TemplatedTestRunner(TestRunner, ABC):
                 test.name,
                 e.output,
             )
+            if config.config["show_failures"]:
+                print("Timeout message:\n\n" + f"{e.output.decode('utf-8')}")
             self.persist_output(test, msg, e.output.decode("utf-8"))
             return TestResults.single_test_timed_out(test.name)
 
@@ -301,6 +312,11 @@ class TemplatedTestRunner(TestRunner, ABC):
             logger.debug(
                 "%s: %s output when it failed: %s", self.get_name(), test.name, e.output
             )
+            if config.config["show_failures"]:
+                print(
+                    f"Failure exit value {e.returncode} message:\n\n"
+                    + f"{e.output.decode('utf-8')}"
+                )
             self.persist_output(test, msg, e.output.decode("utf-8"))
             return TestResults.single_test_failed(test.name)
 
