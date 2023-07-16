@@ -39,4 +39,4 @@ jobs:
         run: |
           export PYTHONPATH="$PWD/src"
           cd tests
-          ./run_tests.py --unit --doctest
+          ./run_tests.py --unit --doctest --show_failures
