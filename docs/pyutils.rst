@@ -4,20 +4,26 @@ pyutils package
 Introduction
 ------------
 
-When I was writing little tools in Python and found myself implementing
-a generally useful pattern I stuffed it into a local library.  That
-library grew into pyutils: a set of collections, helpers and utilities
-that I find useful and hope you will too.
+When I was writing little tools in Python and found myself
+implementing a generally useful pattern I stuffed it into a local
+library.  That library grew into pyutils: a set of collections,
+helpers and utilities that I find useful and hope you will too.
 
-The `LICENSE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=LICENSE;hb=HEAD>`__
-and `NOTICE
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=NOTICE;hb=HEAD>`__
+This documentation is automatically generated at every ``git push`` by
+Sphinx and is hosted at
+https://wannabe.guru.org/pydocs/pyutils/pyutils.html.  You can
+generate them yourself by running ``make html`` (with GNU make) under
+the `docs/ <https://github.com/scottgasch/pyutils/tree/master/docs>`__
+folder.
+
+The repo now lives on `GitHub <https://github.com/scottgasch/pyutils>`__ but
+a lot of the development happened against a
+`local git server <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=summary>`__.
+
+The `LICENSE <https://github.com/scottgasch/pyutils/blob/master/LICENSE>`__
+and `NOTICE <https://github.com/scottgasch/pyutils/blob/master/NOTICE>`__
 files at the root of the project describe reusing this code and where
-everything came from.  Drop me a line if you are using this, find a
-bug, have a question, or have a suggestion:
-
-  --Scott Gasch (scott.gasch@gmail.com)
+everything came from.
 
 Installation
 ------------
@@ -41,16 +47,16 @@ stable:
     - overrides: code decorator to mark and enforce method overrides.
     - pytz: Python timezones, used in date parser and utils.
 
-You can also install the wheel directly; the latest is checked in under: https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=dist;hb=HEAD.  To do so, download it, check that the MD5
-matches, and run::
+You can also install the wheel directly; the latest is checked in
+under: https://github.com/scottgasch/pyutils/tree/main/dist.  To do
+so, download it, check that the MD5 matches, and run::
 
     pip install <filename.whl>
 
 Development
 -----------
 
-All of the project's code is located under `src/pyutils/
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=src/pyutils;h=e716e14b7a895e5c6206af90f4628bf756f040fe;hb=HEAD>`_.
+All of the project's code is located under `src/pyutils/ <https://github.com/scottgasch/pyutils/tree/main/src/pyutils>`__.
 Most code includes inline documentation and doctests.  I've tried to
 organize it into logical packages based on the code's functionality.
 Note that when words would collide with a Python standard library or
@@ -58,38 +64,35 @@ reserved keyword I've used a 'z' at the end, e.g. 'collectionz'
 instead of 'collections' and 'typez' instead of 'types'.
 
 There's some example code that uses various features of this project checked
-in under `examples/ <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=examples;h=d9744bf2b171ba7a9ff21ae1d3862b673647fff4;hb=HEAD>`_ that you can check out.  See the `README <http://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=examples/README;hb=HEAD>`__ in that directory for more information
+in under `examples/ <https://github.com/scottgasch/pyutils/tree/main/examples>`__ that you can check out.  See the `README <https://github.com/scottgasch/pyutils/blob/main/README.md>`__ in that directory for more information
 about what's there.
 
-Unit and integration tests are under `tests/
-<https://wannabe.guru.org/gitweb/?p=pyutils.git;a=tree;f=tests;h=8c303f23cd89b6d2e4fbf214a5c7dcc0941151b4;hb=HEAD>`_.
+Unit and integration tests are under `tests/ <https://github.com/scottgasch/pyutils/tree/main/tests>`__.
 
 To run all tests::
 
     cd tests/
     ./run_tests.py --all [--coverage]
 
-See the `README <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=tests/README;hb=HEAD>`__
+See the `README <https://github.com/scottgasch/pyutils/blob/main/README.md>`__
 under `tests/` and the code of `run_tests.py` for more options / information about running tests.
 
 Package code is checked into a local git server and available to clone
-from git at https://wannabe.guru.org/git/pyutils.git or to view in a
-web browser at:
-
-    https://wannabe.guru.org/gitweb/?p=pyutils.git;a=summary
+from git at https://github.com/scottgasch/pyutils.
 
 For a long time this was just a local library on my machine that my
 tools imported but I've now decided to release it on PyPi.  Earlier
 development happened in a different git repo:
 
-    https://wannabe.guru.org/gitweb/?p=python_utils.git;a=summary
+    https://wannabe.guru.org/gitweb/?p=pyutils.git;a=summary
 
-To actually build the code (by which I mean type check it, lint it, package it, format
-it, etc...) you need some other dependencies installed:
+To actually build the code (by which I mean type check it, lint it,
+package it, format it, etc...) you need some other dependencies
+installed:
 
     - black: I use black to auto-format the code
     - mypy: a Python type checker
-    - coverage: used by the --coverage option of `run_tests.py`.
+    - coverage: used by the --coverage option of ``run_tests.py``.
     - flake8: a Python linter
     - pylint: another Python linter
     - sphinx: documenation generator
@@ -99,16 +102,17 @@ it, etc...) you need some other dependencies installed:
 Documentation
 -------------
 
-The documentation you're browsing was created by Sphinx based largely on extracted code comments.
-It's available at:
+The documentation you're browsing was created by Sphinx based largely
+on extracted code comments.  It's available at:
 
     https://wannabe.guru.org/pydocs/pyutils/pyutils.html
 
 Support
 -------
 
-If you find a bug or have a question, please email me (scott.gasch@gmail.com).  I have not
-yet set up any more official bug tracker because there's no need yet.
+Drop me a line if you are using this, `find a bug <https://github.com/scottgasch/pyutils/issues>`__, have a question, or have a suggestion:
+
+  --Scott Gasch (`scott.gasch@gmail.com <mailto://scott.gasch@gmail.com>`__)
 
 Subpackages
 -----------
