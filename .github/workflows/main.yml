@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: install ANTLR4
+        run: |
+          apt update
+          apt install antlr4
       - name: install python
         uses: actions/setup-python@v4
         with:
@@ -28,6 +32,8 @@ jobs:
           pip install pytz
       - name: run tests
         run: |
+          cd src/pyutils/datetimes && antlr ./dateparse_utils.g4
+          cd ../../..
           export PYTHONPATH="$PWD/src"
           cd tests
           ./run_tests.py --unit --doctest
