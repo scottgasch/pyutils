@@ -403,7 +403,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
     >>> valid_datetime('6/5/2021 3:01:02')
     datetime.datetime(2021, 6, 5, 3, 1, 2)
 
-    >>> valid_datetime('Sun Dec 11 11:50:00 PST 2022')
+    >>> valid_datetime('Sun Dec 11 11:50:00 UTC 2022')
     datetime.datetime(2022, 12, 11, 11, 50)
 
     .. note::
