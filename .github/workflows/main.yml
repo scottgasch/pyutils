@@ -17,6 +17,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install antlr4
+          sudo apt install wamerican
       - name: install python
         uses: actions/setup-python@v4
         with:
@@ -39,8 +40,15 @@ jobs:
           cd src/pyutils/datetimes
           antlr4  -Dlanguage=Python3 ./dateparse_utils.g4
           cd ../../..
-      - name: run tests
+      - name: setup unscrambler
         run: |
+          sudo touch /usr/share/dict/sparse_index
+          sudo chmod 666 /usr/share/dict/sparse_index
           export PYTHONPATH="${PWD}/src"
+          echo "from pyutils.unscrambler import Unscrambler" > tmp.py
+          echo "Unscrambler.repopulate()" >> tmp.py
+          python3 tmp.py         
+      - name: run all tests
+        run: |
           cd tests
           ./run_tests.py --unit --doctest --show_failures
