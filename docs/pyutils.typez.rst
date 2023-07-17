@@ -56,10 +56,10 @@ pyutils.typez.type\_utils module
    :undoc-members:
    :show-inheritance:
 
-pyutils.typez.typing module
----------------------------
+pyutils.typez.type_hints module
+-------------------------------
 
-.. automodule:: pyutils.typez.typing
+.. automodule:: pyutils.typez.type_hints
    :members:
    :undoc-members:
    :show-inheritance:
