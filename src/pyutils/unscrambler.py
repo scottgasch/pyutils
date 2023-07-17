@@ -299,7 +299,7 @@ class Unscrambler(object):
 
         >>> u = Unscrambler()
         >>> u.lookup_by_sig(sig)
-        {'pupigerous': False, 'pupigenous': False, 'unpurposing': False, 'superpurgation': False, 'unsupporting': False, 'superseptuaginarian': True, 'purpurogallin': False, 'scuppaug': False, 'purpurigenous': False, 'purpurogenous': False, 'proppage': False}
+        {'scuppering': False, 'outcroppings': False, "outcropping's": False, 'supplicating': False, 'suppurating': False, 'uppercutting': False, 'pepping': False, 'pipping': False, 'popping': False, 'prepping': False, 'peppering': False}
         """
         ret = {}
         (_, location) = list_utils.binary_search(self.sigs, sig)
