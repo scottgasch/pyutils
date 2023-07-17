@@ -53,4 +53,4 @@ jobs:
         run: |
           export PYTHONPATH="${PWD}/src"        
           cd tests
-          ./run_tests.py --unit --doctest --show_failures
+          ./run_tests.py --unit --doctest --show_failures --keep_going
