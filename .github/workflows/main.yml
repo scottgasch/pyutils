@@ -23,8 +23,10 @@ jobs:
           python-version: '3.11'
       - name: install deps
         run: |
+          export ANTLR4_VERSION=$(antlr4 | head -1 | cut -d ' ' -f 6)
+          echo "ANTLR4: ${ANTLR4_VERSION}"
           pip install --upgrade pip
-          pip install antlr4-python3-runtime
+          pip install antlr4-python3-runtime==${ANTLR4_VERSION}
           pip install bitstring
           pip install cloudpickle
           pip install holidays
@@ -38,6 +40,6 @@ jobs:
           cd ../../..
       - name: run tests
         run: |
-          export PYTHONPATH="$PWD/src"
+          export PYTHONPATH="${PWD}/src"
           cd tests
           ./run_tests.py --unit --doctest --show_failures
