@@ -47,8 +47,10 @@ jobs:
           export PYTHONPATH="${PWD}/src"
           echo "from pyutils.unscrambler import Unscrambler" > tmp.py
           echo "Unscrambler.repopulate()" >> tmp.py
-          python3 tmp.py         
+          python3 tmp.py
+          rm -f tmp.py
       - name: run all tests
         run: |
+          export PYTHONPATH="${PWD}/src"        
           cd tests
           ./run_tests.py --unit --doctest --show_failures
