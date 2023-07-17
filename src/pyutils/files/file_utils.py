@@ -303,8 +303,8 @@ def get_canonical_path(filespec: str) -> str:
 
     See also :meth:`get_path`, :meth:`without_path`.
 
-    >>> get_canonical_path('./../../pyutils/files/file_utils.py')
-    '/usr/home/scott/lib/release/pyutils/files/file_utils.py'
+    >>> get_canonical_path('/tmp/../tmp/../tmp')
+    '/tmp'
 
     """
     return os.path.realpath(filespec)
@@ -546,8 +546,11 @@ def is_symlink(filename: str) -> bool:
     >>> is_symlink('/tmp')
     False
 
-    >>> is_symlink('/home')
+    >>> import os
+    >>> os.symlink('/tmp', '/tmp/foo')
+    >>> is_symlink('/tmp/foo')
     True
+    >>> os.unlink('/tmp/foo')
     """
     return os.path.islink(filename)
 
