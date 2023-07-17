@@ -49,6 +49,11 @@ args.add_argument(
     action="store_true",
     help="Should we show failure messages in the output?",
 )
+args.add_argument(
+    "--keep_going",
+    action="store_true",
+    help="Should we keep going after encountering an error?",
+)
 
 HOME = os.environ["HOME"]
 
@@ -549,7 +554,7 @@ def main() -> Optional[int]:
     halt_event = threading.Event()
     halt_event.clear()
     params = TestingParameters(
-        halt_on_error=True,
+        halt_on_error=not config.config["keep_going"],
         halt_event=halt_event,
     )
 
@@ -622,7 +627,11 @@ def main() -> Optional[int]:
                     result = thread.join()
                     if result:
                         results[tid] = result
-                        if (len(result.tests_failed) + len(result.tests_timed_out)) > 0:
+                        if (
+                            not config.config["keep_going"]
+                            and (len(result.tests_failed) + len(result.tests_timed_out))
+                            > 0
+                        ):
                             logger.error(
                                 "Thread %s returned abnormal results; killing the others.",
                                 thread.get_name(),
