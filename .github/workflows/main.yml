@@ -33,6 +33,7 @@ jobs:
           pip install kazoo
           pip install overrides
           pip install pytz
+          pip install requests
       - name: process dateparse_utils grammar
         run: |
           cd src/pyutils/datetimes
