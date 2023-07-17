@@ -10,7 +10,7 @@ import os
 import threading
 from typing import Any, Callable, Optional, Tuple
 
-from pyutils.typez.typing import Runnable
+from pyutils.typez.type_hints import Runnable
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.

@@ -11,7 +11,7 @@ from heapq import heappop, heappush
 from typing import Dict, Hashable, List, Optional, Tuple, cast
 
 from pyutils import dict_utils
-from pyutils.typez.typing import Numeric
+from pyutils.typez.type_hints import Numeric
 
 
 class NumericPopulation(object):

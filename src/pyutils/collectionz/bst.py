@@ -6,7 +6,7 @@
 
 from typing import Generator, List, Optional
 
-from pyutils.typez.typing import Comparable
+from pyutils.typez.type_hints import Comparable
 
 
 class Node:

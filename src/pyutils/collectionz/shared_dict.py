@@ -48,7 +48,7 @@ from typing import (
     ValuesView,
 )
 
-from pyutils.typez.typing import Closable
+from pyutils.typez.type_hints import Closable
 
 
 class PickleSerializer:

@@ -8,7 +8,7 @@ from itertools import islice
 from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple
 
 from pyutils import dataclass_utils
-from pyutils.typez.typing import Comparable
+from pyutils.typez.type_hints import Comparable
 
 AnyDict = Dict[Hashable, Any]
 DictWithComparableKeys = Dict[Comparable, Any]
