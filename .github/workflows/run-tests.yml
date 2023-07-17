@@ -1,10 +1,10 @@
 name: 'Run all tests'
 on:
   workflow_dispatch
-#  push:
-#    branches:
-#      - main
-#  pull_request:
+  push:
+    branches:
+      - main
+  pull_request:
 
 jobs:
   run-tests:
@@ -17,7 +17,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install antlr4
-          sudo apt install wamerican
+      - name: install dictionary
+        run: sudo apt install wamerican
       - name: install python
         uses: actions/setup-python@v4
         with:
@@ -51,6 +52,6 @@ jobs:
           rm -f tmp.py
       - name: run all tests
         run: |
-          export PYTHONPATH="${PWD}/src"        
+          export PYTHONPATH="${PWD}/src"
           cd tests
           ./run_tests.py --unit --doctest --show_failures --keep_going
