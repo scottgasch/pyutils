@@ -16,10 +16,44 @@ There's some example code that uses various features of this project checked
 in under [examples/](https://github.com/scottgasch/pyutils/tree/master/examples).
 
 Unit and integration tests live under [tests/](
-https://github.com/scottgasch/pyutils/tree/master/tests).  To run all tests:
+https://github.com/scottgasch/pyutils/tree/master/tests).  To run all tests,
+it might help to check out the [GitHub action that does](https://github.com/scottgasch/pyutils/blob/main/.github/workflows/run-tests.yml)
+it as there are some setup steps you need to do first:
 
-    cd tests/
-    ./run_tests.py --all [--coverage]
+1. You will need to install ANTLR4 on your machine.  ANTLR is a tool that
+reads grammars and creates helper code to parse expressions in that grammar.
+I use it for the datetime_utils free form parser.  When you get ANTLR4, make
+sure to get the same version as the pip ANTLR4-python-runtime you have
+installed (it was a dependency of pyutils):
+
+        pip list | grep antlr
+
+2. Use the [ANTLR4 tool](https://www.antlr.org/) installed in the previous
+step to generate some helper files:
+
+        cd src/pyutils/datetimes
+        antlr4  -Dlanguage=Python3 ./dateparse_utils.g4
+        cd ../../..
+
+4. Pregenerate an unscrambler datafile:
+
+       sudo touch /usr/share/dict/sparse_index
+       sudo chmod 666 /usr/share/dict/sparse_index
+       python3
+       >>> from pyutils.unscrambler import Unscrambler
+       >>> Unscrambler.repopulate()
+
+5. Setup your parallelizer config file.  This involves editing a file called
+`.remote_worker_records` that, by default, lives in your home directory.  It
+has instructions inline.
+
+       cp examples/parallelize_config/.remote_worker_records $HOME
+       vi $HOME/.remote_worker_records
+  
+6. Actually run the tests!
+
+       cd tests/
+       ./run_tests.py --all [--coverage] [--keep_going] [--show_failures]
 
 See the [README](https://github.com/scottgasch/pyutils/blob/main/tests/README.md)
 under `tests/` and the code of `run_tests.py` for more options / information
