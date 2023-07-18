@@ -35,7 +35,9 @@ step to generate some helper files:
         antlr4  -Dlanguage=Python3 ./dateparse_utils.g4
         cd ../../..
 
-4. Pregenerate an unscrambler datafile:
+4. Pregenerate an unscrambler datafile, which relies on the presence of the
+input file `/usr/share/dict/words` (so install that, maybe via
+`sudo apt install wamerican` if required):
 
        sudo touch /usr/share/dict/sparse_index
        sudo chmod 666 /usr/share/dict/sparse_index
