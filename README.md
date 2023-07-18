@@ -52,7 +52,9 @@ of the input file `/usr/share/dict/words` (so install that, maybe via
 
 3. Setup your parallelizer config file.  This involves editing a file
 called `.remote_worker_records` that, by default, lives in your home
-directory.  It has instructions inline.
+directory.  It has [instructions inline](https://github.com/scottgasch/pyutils/blob/main/examples/parallelize_config/.remote_worker_records).
+Also check out the [more complete instructions](https://github.com/scottgasch/pyutils/tree/main/src/pyutils/parallelize) for getting remote parallelization
+configured.
 
        cp examples/parallelize_config/.remote_worker_records $HOME
        vi $HOME/.remote_worker_records
