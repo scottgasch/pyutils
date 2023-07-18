@@ -39,20 +39,19 @@ step to generate some helper files:
 input file `/usr/share/dict/words` (so install that, maybe via
 `sudo apt install wamerican` if required):
 
-       sudo touch /usr/share/dict/sparse_index
-       sudo chmod 666 /usr/share/dict/sparse_index
+       sudo install -o user -m 644 /dev/null /usr/share/dict/sparse_index
        python3
        >>> from pyutils.unscrambler import Unscrambler
        >>> Unscrambler.repopulate()
 
-5. Setup your parallelizer config file.  This involves editing a file called
+6. Setup your parallelizer config file.  This involves editing a file called
 `.remote_worker_records` that, by default, lives in your home directory.  It
 has instructions inline.
 
        cp examples/parallelize_config/.remote_worker_records $HOME
        vi $HOME/.remote_worker_records
   
-6. Actually run the tests!
+7. Actually run the tests!
 
        cd tests/
        ./run_tests.py --all [--coverage] [--keep_going] [--show_failures]
