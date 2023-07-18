@@ -37,8 +37,8 @@ in under [examples/](https://github.com/scottgasch/pyutils/tree/master/examples)
 ## Setup
 
 In addition to installing the library (`pip install pyutils` or via
-the wheel checked in under `dist/`), there are a couple of steps you
-should do so that everything works:
+the wheels checked in under [dist/](https://github.com/scottgasch/pyutils/tree/main/dist),
+there are a couple of steps you should do so that everything works:
 
 1. Pregenerate an unscrambler datafile, which relies on the presence
 of the input file `/usr/share/dict/words` (so install that, maybe via
@@ -77,21 +77,21 @@ about running the tests.
 
 This package generates Sphinx docs which are available at
 [https://wannabe.guru.org/pydocs/pyutils/pyutils.html](https://wannabe.guru.org/pydocs/pyutils/pyutils.html).
-You can generate them yourself by running `make html` (with GNU make)
+You can generate them yourself by running `make html` (with [GNU make](https://www.gnu.org/software/make/)
 under the [docs/](https://github.com/scottgasch/pyutils/tree/master/docs)
 folder.
 
 ## Troubleshooting
 
-If you have trouble with ANTLR, e.g. you see messages like "Exception:
+If you have trouble with [ANTLR](https://www.antlr.org/), e.g. you see messages like "Exception:
 Could not deserialize ATN with version", make sure that the version of
-the `antlr4-python3-runtime` is correct.  It must match the version of
+the `antlr4-python3-runtime` package is correct.  It must match the version of
 `antlr4` that was used to create generated files under `src/pyutils/datetimes`.
-If all else fails, regenerate those files yourself by installing antlr4
-on your machine and then running `antlr4 -Dlanguage=Python3 ./dateparse_utils.g4`.
-Once you've done this, run `antlr4` without arguments and note the version
-of antlr4 you just used.  Then, install the matching runtime using pip:
-`pip install -U antlr4-python3-runtime==<version>`.
+You can regenerate those files yourself by installing antlr4
+on your machine and then running `antlr4 -Dlanguage=Python3 ./dateparse_utils.g4`
+from that directory.  Once you've done this, run `antlr4` without arguments
+and note the version number of antlr4 you just used.  Then, install the matching
+runtime package using pip: `pip install -U antlr4-python3-runtime==<version>`.
 
 ## Support
 
