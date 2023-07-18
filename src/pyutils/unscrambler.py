@@ -2,7 +2,20 @@
 
 # © Copyright 2021-2023, Scott Gasch
 
-"""A fast (English) word unscrambler."""
+"""A fast (English) word unscrambler.
+
+Before you use it you must initialize the index file:
+
+    % python3
+    >> from pyutils.unscrambler import Unscrambler
+    >> u.repopulate()
+
+This is quick.  It parses the contents of /usr/share/dict/words (by
+default) and writes to /usr/share/dict/sparse_index (by default).  You
+can override these if required:
+
+    >> u.repopulate('/usr/share/dict/web2a', '/home/scott/.sparse_index')
+"""
 
 import logging
 from typing import Dict, Mapping, Optional

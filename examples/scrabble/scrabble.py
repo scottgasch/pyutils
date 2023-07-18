@@ -1,10 +1,36 @@
 #!/usr/bin/env python3
 
+"""This is a little script you can use to cheat at Scrabble.  It
+serves as an example of the unscrambler library.  Before you use it
+you must initialize the unscrambler:
+
+    % python3
+    >> from pyutils.unscrambler import Unscrambler
+    >> u.repopulate()
+
+This is quick.  It parses the contents of /usr/share/dict/words (by
+default) and writes to /usr/share/dict/sparse_index (by default).  You
+can override these if required:
+
+    >> u.repopulate('/usr/share/dict/web2a', '/home/scott/.sparse_index')
+
+Here's the usage:
+
+    $ scrabble.py pexeaml --show_scrabble_score --min_length=5
+    peale => 6
+    ample => 9
+    maple => 9
+    expel => 13
+    example => 67
+
+You can use underscore (_) to represent a blank tile.
+"""
+
 import itertools
 import logging
 import string
 import sys
-from typing import Set
+from typing import Generator, Set
 
 from pyutils import bootstrap, config
 from pyutils.unscrambler import Unscrambler
@@ -63,7 +89,7 @@ scrabble_score_by_letter = {
 }
 
 
-def fill_in_blanks(letters: str, skip: Set[str]) -> str:
+def fill_in_blanks(letters: str, skip: Set[str]) -> Generator[str, None, None]:
     if '_' not in letters:
         logger.debug('Filled in blanks: %s', letters)
         yield letters
