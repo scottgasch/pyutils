@@ -44,13 +44,13 @@ should do so that everything works:
 of the input file `/usr/share/dict/words` (so install that, maybe via
 `sudo apt install wamerican` if required):
 
-       sudo touch /usr/share/dict/sparse_index
-       sudo chmod 666 /usr/share/dict/sparse_index
+       export MYACCOUNT=$(whoami)
+       sudo install -m 644 -u $MYACCOUNT /usr/share/dict/sparse_index
        python3
        >>> from pyutils.unscrambler import Unscrambler
        >>> Unscrambler.repopulate()
 
-2. Setup your parallelizer config file.  This involves editing a file
+3. Setup your parallelizer config file.  This involves editing a file
 called `.remote_worker_records` that, by default, lives in your home
 directory.  It has instructions inline.
 
