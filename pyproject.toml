@@ -1,6 +1,6 @@
 [project]
 name = "pyutils"
-version = "0.0.1"
+version = "0.0.11"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
@@ -15,13 +15,14 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "antlr4-python3-runtime",
+    "antlr4-python3-runtime==4.12.0",
     "bitstring",
     "cloudpickle",
     "holidays",
     "kazoo",
     "overrides",
     "pytz",
+    "requests",
 ]
 
 [project.urls]

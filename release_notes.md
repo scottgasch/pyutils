@@ -776,3 +776,60 @@ This version -------- 0.0.1
 Previous version ---- 
 Total commits -------        1
 ```
+# 🎁 Release notes (`0.0.11`)
+
+## Changes
+- Require the correct ANTLR runtime version.
+- Update README.md.
+- Don't give people bad advice in the README
+- Update comments to tell people how to generate the unscrambled index.
+- Update README.md
+- Update README.md
+- Typo...
+- Update test runner to run on push / PR.
+- PST -> UTC for machines that don't have PST in their time.tzname list.
+- Update main.yml
+- Adds --keep_going to run_tests.py.
+- Fix sphinx docs for type_hints change.
+- Rename typing to type_hints so that we don't get confused with the stdlib module.
+- Update unscrambler doctest to use linux /usr/share/dict/words.
+- Fix doctests to be ~machine-independent.
+- Update main.yml
+- Update main.yml
+- Geocode stuff depends on requests currently; should fix this to use stdlib.
+- Update main.yml
+- Update main.yml
+- Update main.yml
+- Update main.yml
+- Add --show_failures to run_tests.py.
+- Update main.yml
+- Update main.yml
+- Update main.yml
+- Update main.yml
+- Update main.yml (#2)
+- Create main.yml (#1)
+- Update issue templates
+- Update README.md
+- Update Sphinx docs to have links to GitHub.
+- Update README.md
+- Update README.md.
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update readmes; convert some to markdown.
+- Update parallelize_itest.py comment
+- Update README.md... one more time, with feeling.
+- Update README.md again, get the links right this time.
+- Update README.md markdown now that I can see it.
+- Cause the creation of a test_output directory even though we git ignore it by adding a README.
+- Adds a README file for the parallelization framework.
+- Cut version 0.0.1
+
+## Metadata
+```
+This version -------- 0.0.11
+Previous version ---- 0.0.1
+Total commits -------       47
+```
