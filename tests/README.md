@@ -7,7 +7,7 @@ The simplest way to run all the tests is, from this directory, to run:
 
     ./run_tests.py --all
 
-This `run_tests.py` [helper script](https://github.com/scottgasch/pyutils/main/tests/run_tests.py)
+This `run_tests.py` [helper script](https://github.com/scottgasch/pyutils/blob/main/tests/run_tests.py)
 knows about three kinds of tests: unit tests, doctests, and integration tests.
 You can run each class individually:
 
@@ -37,7 +37,7 @@ I use `./run_tests.py --all --show_failures --coverage` as a
 
 I wrote the `run_tests.py` tool to speed up test passes (and, somewhat, as an
 example of using the pyutil parallelize framework).  Before that, I used a
-[simple shell script](https://github.com/scottgasch/pyutils/main/tests/run_tests_serially.sh)
+[simple shell script](https://github.com/scottgasch/pyutils/blob/main/tests/run_tests_serially.sh)
 to run tests passes and that historical test runner is checked in 
 as `run_tests_serially.sh`.  The only reason that might be interesting
 to you is if the parallel test running (`run_tests.py`) puts too much load
