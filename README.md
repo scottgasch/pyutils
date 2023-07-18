@@ -37,7 +37,7 @@ in under [examples/](https://github.com/scottgasch/pyutils/tree/master/examples)
 ## Setup
 
 In addition to installing the library (`pip install pyutils` or via
-the wheels checked in under [dist/](https://github.com/scottgasch/pyutils/tree/main/dist),
+the wheels checked in under [dist/](https://github.com/scottgasch/pyutils/tree/main/dist)),
 there are a couple of steps you should do so that everything works:
 
 1. Pregenerate an unscrambler datafile, which relies on the presence
