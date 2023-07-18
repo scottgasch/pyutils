@@ -104,5 +104,6 @@ git commit -a -m "Cut version ${VERSION}" -m "${CHANGES}"
 
 echo "Pushing changes to git"
 git push
+git push origin "${VERSION}"
 
 echo "Done.  To upload, run: \"twine upload --verbose --repository pypi dist/pyutils-${VERSION}*.whl\""
