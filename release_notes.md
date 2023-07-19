@@ -833,3 +833,24 @@ This version -------- 0.0.11
 Previous version ---- 0.0.1
 Total commits -------       47
 ```
+# 🎁 Release notes (`0.0.12`)
+
+## Changes
+- Update file_utils to accept Pathlib.paths.
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Update README.md
+- Add instructions for installing wheels directly.
+- Update TOML.
+- Push the new tag.
+- Update README.md
+- Cut version 0.0.11
+
+## Metadata
+```
+This version -------- 0.0.12
+Previous version ---- 0.0.11
+Total commits -------       11
+```
