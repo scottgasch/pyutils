@@ -85,6 +85,8 @@ folder.
 
 ## Troubleshooting
 
+### ANTLR4 version incompatibilities
+
 If you have trouble with [ANTLR](https://www.antlr.org/), e.g. you see messages like "Exception:
 Could not deserialize ATN with version", make sure that the version of
 the `antlr4-python3-runtime` package is correct.  It must match the version of
@@ -94,6 +96,43 @@ on your machine and then running `antlr4 -Dlanguage=Python3 ./dateparse_utils.g4
 from that directory.  Once you've done this, run `antlr4` without arguments
 and note the version number of antlr4 you just used.  Then, install the matching
 runtime package using pip: `pip install -U antlr4-python3-runtime==<version>`.
+
+### Missing .remote_worker_records file
+
+A `.remote_worker_records` file, by default in your home directory (but overridable
+via the `--remote_worker_records_file` commandline argument), is used to
+set up remote machines with the same version of python in an identical venv that
+can be used to parallelize code across multiple machines.  An example of this file
+is checked in under [examples/parallelize_config](https://github.com/scottgasch/pyutils/blob/main/examples/parallelize_config/.remote_worker_records)
+and has inline comments describing the format.  The setup process itself is
+described in the [src/pyutil/parallelize/README.md](https://github.com/scottgasch/pyutils/tree/main/src/pyutils/parallelize).
+
+If you attempt to use `@parallelize.parallelize(method=Method.REMOTE)` without
+setting this up, you will get an error message with a URL that points here.
+
+### Missing .sparse_index file
+
+The [unscrambler.py code](https://github.com/scottgasch/pyutils/blob/main/src/pyutils/unscrambler.py)
+attempts to generate an indexfile using an input "dictionary" of all language
+words, by default `/usr/share/dict/words` but overridable via the 
+`--unscrambler_source_dictfile` commandline argument.  This indexfile lives, by
+default, in `.sparse_index` in your home directory but that location can also
+be overridden using the `--unscrambler_default_indexfile` commandline argument.
+
+If this indexfile is not present when you attempt to instantiate an `Unscrambler`, 
+it will attempt to read the dictfile input and generate its indexfile.  This
+process usually just takes a second or two and is a one-time cost (assuming
+that it can find the indexfile on subsequent invocations).  If something goes
+wrong (e.g. no input dictfile, unreadable input dictfile, unwritable indexfile
+location) you can intervene by using the commandline arguments above.
+
+You can force the library to attempt to generate the indexfile using the
+python commandline:
+
+    >>> from pyutils.unscrambler import Unscrambler
+    >>> u = Unscrambler()
+
+If the indexfile does not exist, this will attempt to create it.
 
 ## Support
 
