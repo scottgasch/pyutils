@@ -9,7 +9,9 @@ words from /usr/share/dict/words (or whatever was passed as the
 --unscrambler_source_dictfile argument) and generate an index at
 ~/.sparse_index (or whatever was passed as the
 --unscrambler_default_indexfile argument).  It should be ~fast and
-only happens once.
+only happens once.  See:
+
+    https://github.com/scottgasch/pyutils#missing-sparse_index-file
 
 """
 
@@ -33,7 +35,7 @@ cfg.add_argument(
     "--unscrambler_default_indexfile",
     help="Path to a file of signature -> word index.",
     metavar="FILENAME",
-    default=f"{os.environ['HOME']}/.sparse_index",
+    default=f'{os.environ.get("HOME", ".")}/.sparse_index',
 )
 
 logger = logging.getLogger(__name__)
@@ -146,6 +148,10 @@ class Unscrambler(object):
 
     @staticmethod
     def get_dictfile(dictfile: Optional[str]) -> str:
+        """
+        Returns:
+            The current dictfile's location.
+        """
         if not dictfile or not file_utils.is_readable(dictfile):
             dictfile = '/usr/share/dict/words'
         assert file_utils.is_readable(dictfile), f"Can't read {dictfile}"
@@ -155,21 +161,32 @@ class Unscrambler(object):
     def get_indexfile(indexfile: Optional[str]) -> str:
         """
         Returns:
-            The current indexfile location
+            The current indexfile location, generates it if it doesn't
+            yet exist.
         """
         if indexfile is None:
             if "unscrambler_default_indexfile" in config.config:
                 indexfile = config.config["unscrambler_default_indexfile"]
                 assert isinstance(indexfile, str)
             else:
-                indexfile = f"{os.environ['HOME']}/.sparse_index"
+                indexfile = f"{os.environ.get('HOME', '.')}/.sparse_index"
         if not file_utils.is_readable(indexfile):
-            logger.warning(f'Doing one-time work to generate {indexfile}, one moment')
-            Unscrambler.repopulate(
-                Unscrambler.get_dictfile(config.config['unscrambler_source_dictfile']),
-                indexfile,
-            )
-        assert file_utils.is_readable(indexfile), f"Can't read {indexfile}"
+            try:
+                logger.info('Doing one-time work to generate %s, one moment', indexfile)
+                Unscrambler.repopulate(
+                    Unscrambler.get_dictfile(
+                        config.config['unscrambler_source_dictfile']
+                    ),
+                    indexfile,
+                )
+                logger.info('Done generating %s', indexfile)
+            except Exception as e:
+                msg = (
+                    f'Unable to read/generate {indexfile}.  See:\n'
+                    + 'https://github.com/scottgasch/pyutils#missing-sparse_index-file'
+                )
+                print(msg)
+                raise Exception(msg) from e
         return indexfile
 
     # 52 bits

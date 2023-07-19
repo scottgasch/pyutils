@@ -24,10 +24,14 @@ processes on the same machine and is more useful for compute-bound
 workloads.
 
 The :class:`RemoteExecutor` is used in conjunection with `ssh`,
-the `cloudpickle` dependency, and `remote_worker.py <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=src/pyutils/remote_worker.py;hb=HEAD>`_ file
+the `cloudpickle` dependency, and `remote_worker.py <https://github.com/scottgasch/pyutils/blob/main/src/pyutils/remote_worker.py>`_ file
 to dispatch work to a set of remote worker machines on your
 network.  You can configure this pool via a JSON configuration file,
-an example of which `can be found in examples <https://wannabe.guru.org/gitweb/?p=pyutils.git;a=blob_plain;f=examples/parallelize_config/.remote_worker_records;hb=HEAD>`_.
+an example of which `can be found in examples <https://raw.githubusercontent.com/scottgasch/pyutils/main/examples/parallelize_config/.remote_worker_records>`_.  If
+this file is not present when you attempt to use multiple machine
+parallelization you will get an error.  See:
+
+    https://github.com/scottgasch/pyutils#missing-remote_worker_records-file
 
 Finally, this file defines a :class:`DefaultExecutors` pool that
 contains a pre-created and ready instance of each of the three
@@ -62,8 +66,9 @@ from pyutils import argparse_utils, config, dataclass_utils, math_utils, string_
 from pyutils.ansi import bg, fg, reset, underline
 from pyutils.decorator_utils import singleton
 from pyutils.exec_utils import cmd_exitcode, cmd_in_background, run_silently
+from pyutils.files import file_utils
 from pyutils.parallelize.thread_utils import background_thread
-from pyutils.typez import persistent, type_utils
+from pyutils.typez import persistent
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +116,6 @@ parser.add_argument(
     help='Path to remote_worker.py on remote machines',
     default=f'source py39-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
 )
-
 
 SSH = '/usr/bin/ssh -oForwardX11=no'
 SCP = '/usr/bin/scp -C'
@@ -344,6 +348,15 @@ class RemoteExecutorException(Exception):
     """Thrown when a bundle cannot be executed despite several retries."""
 
     pass
+
+
+def get_remote_workers_filename() -> str:
+    remote_workers_record_file = config.config['remote_worker_records_file']
+    if not remote_workers_record_file:
+        remote_workers_record_file = (
+            f'{os.environ.get("HOME", ".")}/.remote_worker_records'
+        )
+    return remote_workers_record_file
 
 
 @dataclass
@@ -863,6 +876,16 @@ class RemoteExecutor(BaseExecutor):
         """
 
         super().__init__()
+
+        remote_worker_records_file = get_remote_workers_filename()
+        if not file_utils.is_readable(remote_worker_records_file):
+            msg = (
+                f"Couldn't find a remote worker records file at {remote_worker_records_file}.\n"
+                + "See: https://github.com/scottgasch/pyutils#missing-remote_worker_records-file"
+            )
+            print(msg)
+            raise Exception(msg)
+
         self.workers = workers
         self.policy = policy
         self.worker_count = 0
@@ -1569,7 +1592,7 @@ class ConfigRemoteWorkerPoolProvider(
     @staticmethod
     @overrides
     def get_filename() -> str:
-        return type_utils.unwrap_optional(config.config['remote_worker_records_file'])
+        return get_remote_workers_filename()
 
     @staticmethod
     @overrides
