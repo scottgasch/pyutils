@@ -3,9 +3,9 @@ This is Scott's pyutils module.  See README.md for details.
 Some code in this library came from other sources.  As required by
 clause 4 of the Apache 2.0 License and clause 3 of the PSF License,
 this NOTICE file describes changes Scott Gasch made to any preexisting
-code regardless its original License.  All such original code was used
-in a manner compliant with its original License and is enumerated in
-this file.  This file also contains URLs pointing at the orginal
+code regardless of its original License.  All such original code was 
+used in a manner compliant with its original License and is enumerated
+in this file.  This file also contains URLs pointing at the orginal
 source of all forked code.
 
   1. As noted in string_utils.py, that file is a fork of work by
