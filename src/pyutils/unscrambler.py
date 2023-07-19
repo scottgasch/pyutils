@@ -4,20 +4,17 @@
 
 """A fast (English) word unscrambler.
 
-Before you use it you must initialize the index file:
+The first time you use this class it will attempt to read a list of
+words from /usr/share/dict/words (or whatever was passed as the
+--unscrambler_source_dictfile argument) and generate an index at
+~/.sparse_index (or whatever was passed as the
+--unscrambler_default_indexfile argument).  It should be ~fast and
+only happens once.
 
-    % python3
-    >> from pyutils.unscrambler import Unscrambler
-    >> u.repopulate()
-
-This is quick.  It parses the contents of /usr/share/dict/words (by
-default) and writes to /usr/share/dict/sparse_index (by default).  You
-can override these if required:
-
-    >> u.repopulate('/usr/share/dict/web2a', '/home/scott/.sparse_index')
 """
 
 import logging
+import os
 from typing import Dict, Mapping, Optional
 
 from pyutils import config, decorator_utils, list_utils
@@ -27,10 +24,16 @@ cfg = config.add_commandline_args(
     f"Unscrambler base library ({__file__})", "A fast word unscrambler."
 )
 cfg.add_argument(
+    "--unscrambler_source_dictfile",
+    help="Path to a file of words.",
+    metavar="FILENAME",
+    default="/usr/share/dict/words",
+)
+cfg.add_argument(
     "--unscrambler_default_indexfile",
     help="Path to a file of signature -> word index.",
     metavar="FILENAME",
-    default="/usr/share/dict/sparse_index",
+    default=f"{os.environ['HOME']}/.sparse_index",
 )
 
 logger = logging.getLogger(__name__)
@@ -142,6 +145,13 @@ class Unscrambler(object):
             self.words.append(word)
 
     @staticmethod
+    def get_dictfile(dictfile: Optional[str]) -> str:
+        if not dictfile or not file_utils.is_readable(dictfile):
+            dictfile = '/usr/share/dict/words'
+        assert file_utils.is_readable(dictfile), f"Can't read {dictfile}"
+        return dictfile
+
+    @staticmethod
     def get_indexfile(indexfile: Optional[str]) -> str:
         """
         Returns:
@@ -152,9 +162,14 @@ class Unscrambler(object):
                 indexfile = config.config["unscrambler_default_indexfile"]
                 assert isinstance(indexfile, str)
             else:
-                indexfile = "/usr/share/dict/sparse_index"
-        else:
-            assert file_utils.is_readable(indexfile), f"Can't read {indexfile}"
+                indexfile = f"{os.environ['HOME']}/.sparse_index"
+        if not file_utils.is_readable(indexfile):
+            logger.warning(f'Doing one-time work to generate {indexfile}, one moment')
+            Unscrambler.repopulate(
+                Unscrambler.get_dictfile(config.config['unscrambler_source_dictfile']),
+                indexfile,
+            )
+        assert file_utils.is_readable(indexfile), f"Can't read {indexfile}"
         return indexfile
 
     # 52 bits
@@ -231,7 +246,7 @@ class Unscrambler(object):
     @staticmethod
     def repopulate(
         dictfile: str = "/usr/share/dict/words",
-        indexfile: str = "/usr/share/dict/sparse_index",
+        indexfile: str = f"{os.environ['HOME']}/.sparse_index",
     ) -> None:
         """
         Repopulates the indexfile.
