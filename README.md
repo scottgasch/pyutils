@@ -38,23 +38,13 @@ in under [examples/](https://github.com/scottgasch/pyutils/tree/master/examples)
 
 In addition to installing the library (`pip install pyutils` or via
 the wheels checked in under [dist/](https://github.com/scottgasch/pyutils/tree/main/dist)),
-there are a couple of steps you should do so that everything works:
+you should configure your parallelizer remote workers file, if you
+want to use `@parallelize(mathod = Method.REMOTE)`.
 
-1. Pregenerate an unscrambler datafile, which relies on the presence
-of the input file `/usr/share/dict/words` (so install that, maybe via
-`sudo apt install wamerican` if required):
-
-       export MYACCOUNT=$(whoami)
-       sudo install -m 644 -u $MYACCOUNT /usr/share/dict/sparse_index
-       python3
-       >>> from pyutils.unscrambler import Unscrambler
-       >>> Unscrambler.repopulate()
-
-3. Setup your parallelizer config file.  This involves editing a file
-called `.remote_worker_records` that, by default, lives in your home
-directory.  It has [instructions inline](https://github.com/scottgasch/pyutils/blob/main/examples/parallelize_config/.remote_worker_records).
-Also check out the [more complete instructions](https://github.com/scottgasch/pyutils/tree/main/src/pyutils/parallelize) for getting remote parallelization
-configured.
+This involves editing a file called `.remote_worker_records` that,
+by default, lives in your home directory.  It has [instructions inline](https://github.com/scottgasch/pyutils/blob/main/examples/parallelize_config/.remote_worker_records).
+Also check out the [more complete instructions](https://github.com/scottgasch/pyutils/tree/main/src/pyutils/parallelize) 
+for getting remote parallelization configured.
 
        cp examples/parallelize_config/.remote_worker_records $HOME
        vi $HOME/.remote_worker_records
