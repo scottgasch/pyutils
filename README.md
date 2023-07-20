@@ -116,8 +116,8 @@ that it can find the indexfile on subsequent invocations).  If something goes
 wrong (e.g. no input dictfile, unreadable input dictfile, unwritable indexfile
 location) you can intervene by using the commandline arguments above.
 
-You can force the library to attempt to generate the indexfile using the
-python commandline:
+You can force the library to attempt to generate the indexfile using interactive
+python:
 
     >>> from pyutils.unscrambler import Unscrambler
     >>> u = Unscrambler()
