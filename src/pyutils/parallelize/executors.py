@@ -1576,9 +1576,9 @@ class ConfigRemoteWorkerPoolProvider(
     def __init__(self, json_remote_worker_pool: Dict[str, Any]):
         self.remote_worker_pool: List[RemoteWorkerRecord] = []
         for record in json_remote_worker_pool['remote_worker_records']:
-            self.remote_worker_pool.append(
-                dataclass_utils.dataclass_from_dict(RemoteWorkerRecord, record)
-            )
+            r = dataclass_utils.dataclass_from_dict(RemoteWorkerRecord, record)
+            assert isinstance(r, RemoteWorkerRecord)
+            self.remote_worker_pool.append(r)
         assert len(self.remote_worker_pool) > 0
 
     @overrides
@@ -1673,7 +1673,7 @@ class DefaultExecutors(object):
     def remote_pool(self) -> RemoteExecutor:
         if self.remote_executor is None:
             logger.info('Looking for some helper machines...')
-            provider = ConfigRemoteWorkerPoolProvider()
+            provider = ConfigRemoteWorkerPoolProvider()  # type: ignore
             all_machines = provider.get_remote_workers()
             pool = []
 
