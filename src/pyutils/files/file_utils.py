@@ -240,6 +240,10 @@ def get_extension(path: Path) -> str:
     >>> get_extension('foobar')
     ''
 
+    >>> import pathlib
+    >>> get_extension(pathlib.Path('/tmp/foobar.txt'))
+    '.txt'
+
     """
     return os.path.splitext(str(path))[1]
 
@@ -290,6 +294,10 @@ def without_path(filespec: Path) -> Path:
 
     >>> without_path('foo.py')
     'foo.py'
+
+    >>> import pathlib
+    >>> str(without_path(pathlib.Path('/tmp/testing.123')))
+    'testing.123'
 
     """
     ret = os.path.split(str(filespec))[1]
