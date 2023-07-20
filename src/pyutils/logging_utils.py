@@ -961,6 +961,7 @@ def initialize_logging(logger=None) -> logging.Logger:
     LOGGING_INITIALIZED = True
 
     clear_preexisting = config.config["logging_clear_preexisting_handlers"]
+    assert clear_preexisting is not None and isinstance(clear_preexisting, bool)
     preexisting_handlers_count = 0
     if logger is None:
         logging.basicConfig(force=clear_preexisting)

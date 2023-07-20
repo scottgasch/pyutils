@@ -3,6 +3,8 @@
 """Utilities for dealing with Dataclasses.  A non-official type hint and some
 friendly wrappers around conversion to/from Dicts."""
 
+from __future__ import annotations
+
 import dataclasses
 from typing import Any, Dict, Protocol
 
