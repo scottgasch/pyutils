@@ -267,7 +267,7 @@ def obtain_lease(
     """
     if not lease_id.startswith('/leases/'):
         lease_id = f'/leases/{lease_id}'
-        lease_id = str(file_utils.fix_multiple_slashes(lease_id))
+        lease_id = file_utils.fix_multiple_slashes(lease_id)
 
     def wrapper(func: Callable) -> Callable:
         @functools.wraps(func)
@@ -374,7 +374,7 @@ def run_for_election(
     """
     if not election_id.startswith('/elections/'):
         election_id = f'/elections/{election_id}'
-        election_id = str(file_utils.fix_multiple_slashes(election_id))
+        election_id = file_utils.fix_multiple_slashes(election_id)
 
     class wrapper:
         """Helper wrapper class."""
