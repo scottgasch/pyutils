@@ -21,12 +21,12 @@ import pathlib
 import re
 import time
 from os.path import exists, isfile
-from typing import IO, Any, Callable, Generator, List, Literal, Optional, Union
+from typing import IO, Any, Callable, Generator, List, Literal, Optional, TypeVar
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
-Path = Union[str, pathlib.Path]
+Path = TypeVar("Path", str, pathlib.Path)
 
 
 def remove_newlines(x: str) -> str:
@@ -1189,7 +1189,10 @@ def expand_globs(in_filename: Path) -> Generator[Path, None, None]:
     for filename in glob.glob(str(in_filename)):
         if isinstance(in_filename, str):
             yield filename
-        yield pathlib.Path(filename)
+        elif isinstance(in_filename, pathlib.Path):
+            yield pathlib.Path(filename)
+        else:
+            raise TypeError("What the heck was in_filename?!")
 
 
 def get_files(directory: Path) -> Generator[Path, None, None]:
@@ -1209,7 +1212,10 @@ def get_files(directory: Path) -> Generator[Path, None, None]:
         if isfile(full_path) and exists(full_path):
             if isinstance(directory, pathlib.Path):
                 yield full_path
-            yield str(full_path)
+            elif isinstance(directory, str):
+                yield str(full_path)
+            else:
+                raise TypeError("What the heck was directory?!")
 
 
 def get_matching_files(directory: Path, glob_string: str):
