@@ -46,8 +46,8 @@ by default, lives in your home directory.  It has [instructions inline](https://
 Also check out the [more complete instructions](https://github.com/scottgasch/pyutils/tree/main/src/pyutils/parallelize) 
 for getting remote parallelization configured.
 
-       cp examples/parallelize_config/.remote_worker_records $HOME
-       vi $HOME/.remote_worker_records
+    cp examples/parallelize_config/.remote_worker_records $HOME
+    vi $HOME/.remote_worker_records
 
 ## Testing
 
