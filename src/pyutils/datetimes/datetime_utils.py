@@ -8,7 +8,7 @@ import datetime
 import enum
 import logging
 import re
-from typing import Any, NewType, Optional, Tuple
+from typing import Any, NewType, Optional, Tuple, Union
 
 import holidays  # type: ignore
 import pytz
@@ -465,33 +465,41 @@ def datetime_to_time(dt: datetime.datetime) -> datetime.time:
     return datetime_to_date_and_time(dt)[1]
 
 
-def normalize_tzabbrev(
-    abbrev: str, country_code: Optional[str] = 'US'
+def timezone_abbrev_to_canonical_name(
+    abbrev: str, country_code: Optional[str] = "US"
 ) -> Optional[str]:
-    """Return the full timezone name given a timezone abbreviation
-    and an optional country code denoting which country the timezone
-    is located in.
+    """Return the full, unique timezone name given a timezone
+    abbreviation and an optional country code denoting which
+    country the timezone is located in.
 
     Args:
-        abbrev: the timezone abbreviation to expand
-        country_code: the two-letter ISO 3166-1 alpha-2 country code
+        abbrev: the timezone abbreviation, e.g. "PDT"
+        country_code: optional two-letter ISO 3166-1 alpha-2 country code
 
     Returns:
         The expanded timezone, on None if nothing found.
 
-    >>> normalize_tzabbrev('PDT')
+    .. note ::
+
+    This method has a predisposition to returning US-based timezones
+    since the :param:country_code argument defaults to 'US'.
+
+    >>> timezone_abbrev_to_canonical_name('PDT')
     'America/Boise'
 
-    >>> normalize_tzabbrev('PST')
+    >>> timezone_abbrev_to_canonical_name('PST')
     'America/Boise'
 
-    >>> normalize_tzabbrev('AKST')
+    >>> timezone_abbrev_to_canonical_name('AKST')
     'America/Nome'
 
-    >>> normalize_tzabbrev('+0600')
+    >>> timezone_abbrev_to_canonical_name('+0600')
     'Etc/GMT+600'
 
-    >>> normalize_tzabbrev('wfwefwfffw')
+    >>> timezone_abbrev_to_canonical_name('-0600')
+    'Etc/GMT-600'
+
+    >>> timezone_abbrev_to_canonical_name('abracadabra')
     """
     if abbrev in pytz.all_timezones:
         return abbrev
@@ -499,10 +507,10 @@ def normalize_tzabbrev(
     try:
         offset = int(abbrev)
         if offset > 0:
-            offset_str = '+' + str(offset)
+            offset_str = "+" + str(offset)
         else:
             offset_str = str(offset)
-        return 'Etc/GMT' + offset_str
+        return "Etc/GMT" + offset_str
     except ValueError:
         pass
 
@@ -516,7 +524,7 @@ def normalize_tzabbrev(
             tzone = pytz.timezone(name)
             for _, _, tzabbrev in getattr(
                 tzone,
-                '_transition_info',
+                "_transition_info",
                 [[None, None, datetime.datetime.now(tzone).tzname()]],
             ):
                 if tzabbrev.upper() == abbrev.upper():
@@ -530,13 +538,58 @@ def normalize_tzabbrev(
         tzone = pytz.timezone(name)
         for _, _, tzabbrev in getattr(
             tzone,
-            '_transition_info',
+            "_transition_info",
             [[None, None, datetime.datetime.now(tzone).tzname()]],
         ):
             if tzabbrev.upper() == abbrev.upper():
                 set_zones.add(name)
     if len(set_zones) > 0:
         return min(set_zones, key=lambda x: (len(x), x))
+    return None
+
+
+def timezone_abbrev_to_tz(
+    abbrev: str, country_code: Optional[str] = "US"
+) -> Union[pytz.tzinfo.DstTzInfo, pytz.tzinfo.StaticTzInfo, None,]:
+    """
+    Given a timezone abbreviation and optional country code, return a
+    timezone from pytz that cooresponds to the given abbreviation.
+
+    Args:
+        abbrev: the timezone abbreviation, e.g. "EST"
+        country_code: optional
+
+    Returns:
+        A timezone from the pytz library or None on error.
+
+    .. note ::
+
+    This method has a predisposition to returning US-based timezones.
+    To override this, pass an explicit country_code instead of relying
+    on the default.
+
+    >>> timezone_abbrev_to_tz('EST')
+    <StaticTzInfo 'EST'>
+
+    >>> timezone_abbrev_to_tz('CST')
+    <DstTzInfo 'America/Chicago' LMT-1 day, 18:09:00 STD>
+
+    >>> timezone_abbrev_to_tz('CST', 'CN')
+    <DstTzInfo 'Asia/Shanghai' LMT+8:06:00 STD>
+
+    >>> timezone_abbrev_to_tz('xyzzy')
+    """
+
+    # First try with the requested country_code.
+    canonical_tzname = timezone_abbrev_to_canonical_name(abbrev, country_code)
+    if canonical_tzname:
+        return pytz.timezone(canonical_tzname)  # type: ignore
+
+    # Next, search all countries (if we didn't already)
+    if country_code:
+        canonical_tzname = timezone_abbrev_to_canonical_name(abbrev, None)
+        if canonical_tzname:
+            return pytz.timezone(canonical_tzname)  # type: ignore
     return None
 
 
