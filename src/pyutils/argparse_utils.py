@@ -422,9 +422,30 @@ def valid_datetime(txt: str) -> datetime.datetime:
     if dt is not None:
         return dt
 
-    # Don't choke on the default format of unix date.
+    # Don't choke on the default format of unix date.  Work around the
+    # shitty %Z semantics in datetime.strptime.
     try:
-        return datetime.datetime.strptime(txt, "%a %b %d %H:%M:%S %Z %Y")
+        chunks = txt.split()
+        if len(chunks) == 6:
+            import pytz
+
+            from pyutils.datetimes import datetime_utils
+
+            abbrev = chunks[4]
+            timezone = datetime_utils.normalize_tzabbrev(abbrev, 'US')
+            if not timezone:
+                timezone = datetime_utils.normalize_tzabbrev(abbrev)
+
+            if timezone:
+                tz = pytz.timezone(timezone)
+                if tz:
+                    # Chop out the timezone part
+                    txt = " ".join(chunks[:4] + [chunks[5]])
+                    dt = datetime.datetime.strptime(txt, "%a %b %d %H:%M:%S %Y")
+
+                    # Force the right timezone guess
+                    datetime_utils.replace_timezone(dt, tz)
+                    return dt
     except Exception:
         pass
 

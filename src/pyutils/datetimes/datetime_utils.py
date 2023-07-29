@@ -465,6 +465,81 @@ def datetime_to_time(dt: datetime.datetime) -> datetime.time:
     return datetime_to_date_and_time(dt)[1]
 
 
+def normalize_tzabbrev(
+    abbrev: str, country_code: Optional[str] = 'US'
+) -> Optional[str]:
+    """Return the full timezone name given a timezone abbreviation
+    and an optional country code denoting which country the timezone
+    is located in.
+
+    Args:
+        abbrev: the timezone abbreviation to expand
+        country_code: the two-letter ISO 3166-1 alpha-2 country code
+
+    Returns:
+        The expanded timezone, on None if nothing found.
+
+    >>> normalize_tzabbrev('PDT')
+    'America/Boise'
+
+    >>> normalize_tzabbrev('PST')
+    'America/Boise'
+
+    >>> normalize_tzabbrev('AKST')
+    'America/Nome'
+
+    >>> normalize_tzabbrev('+0600')
+    'Etc/GMT+600'
+
+    >>> normalize_tzabbrev('wfwefwfffw')
+    """
+    if abbrev in pytz.all_timezones:
+        return abbrev
+
+    try:
+        offset = int(abbrev)
+        if offset > 0:
+            offset_str = '+' + str(offset)
+        else:
+            offset_str = str(offset)
+        return 'Etc/GMT' + offset_str
+    except ValueError:
+        pass
+
+    country_tzones = None
+    if country_code:
+        country_tzones = pytz.country_timezones.get(country_code, None)
+
+    set_zones = set()
+    if country_tzones and len(country_tzones) > 0:
+        for name in country_tzones:
+            tzone = pytz.timezone(name)
+            for _, _, tzabbrev in getattr(
+                tzone,
+                '_transition_info',
+                [[None, None, datetime.datetime.now(tzone).tzname()]],
+            ):
+                if tzabbrev.upper() == abbrev.upper():
+                    set_zones.add(name)
+
+        if len(set_zones) > 0:
+            return min(set_zones, key=lambda x: (len(x), x))
+        return None
+
+    for name in pytz.all_timezones:
+        tzone = pytz.timezone(name)
+        for _, _, tzabbrev in getattr(
+            tzone,
+            '_transition_info',
+            [[None, None, datetime.datetime.now(tzone).tzname()]],
+        ):
+            if tzabbrev.upper() == abbrev.upper():
+                set_zones.add(name)
+    if len(set_zones) > 0:
+        return min(set_zones, key=lambda x: (len(x), x))
+    return None
+
+
 class TimeUnit(enum.IntEnum):
     """An enum to represent units with which we can compute deltas."""
 
