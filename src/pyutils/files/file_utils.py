@@ -7,6 +7,13 @@ This is a grab bag of file-related utilities.  It has code to, for example,
 read files transforming the text as its read, normalize pathnames, strip
 extensions, read and manipulate atimes/mtimes/ctimes, compute a signature
 based on a file's contents, traverse the file system recursively, etc...
+
+.. note::
+
+    Many of these functions accept either a string or a pathlib.Path
+    object and will return the same type they were given.  I've defined
+    a local TypeVar called StrOrPath to use on these routines.
+
 """
 
 import contextlib
@@ -26,7 +33,9 @@ from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
-Path = TypeVar("Path", str, pathlib.Path)
+# Note: this type is either a string or a pathlib.Path and is used
+# extensively below by routines that want to accept either of these.
+StrOrPath = TypeVar("StrOrPath", str, pathlib.Path)
 
 
 def remove_newlines(x: str) -> str:
@@ -49,7 +58,7 @@ def remove_hash_comments(x: str) -> str:
 
 
 def slurp_file(
-    filename: Path,
+    filename: StrOrPath,
     *,
     skip_blank_lines: bool = False,
     line_transformers: Optional[List[Callable[[str], str]]] = None,
@@ -86,7 +95,7 @@ def slurp_file(
     return ret
 
 
-def remove(path: Path) -> None:
+def remove(path: StrOrPath) -> None:
     """Deletes a file.  Raises if path refers to a directory or a file
     that doesn't exist.
 
@@ -125,7 +134,7 @@ def remove(path: Path) -> None:
     os.remove(str(path))
 
 
-def fix_multiple_slashes(path: Path) -> Path:
+def fix_multiple_slashes(path: StrOrPath) -> StrOrPath:
     """Fixes multi-slashes in paths or path-like strings
 
     Args:
@@ -150,14 +159,14 @@ def fix_multiple_slashes(path: Path) -> Path:
     return pathlib.Path(ret)
 
 
-def delete(path: Path) -> None:
+def delete(path: StrOrPath) -> None:
     """This is a convenience for my dumb ass who can't remember os.remove
     sometimes.
     """
     os.remove(str(path))
 
 
-def without_extension(path: Path) -> Path:
+def without_extension(path: StrOrPath) -> StrOrPath:
     """Remove one (the last) extension from a file or path.
 
     Args:
@@ -193,7 +202,7 @@ def without_extension(path: Path) -> Path:
     return pathlib.Path(ext)
 
 
-def without_all_extensions(path: Path) -> Path:
+def without_all_extensions(path: StrOrPath) -> StrOrPath:
     """Removes all extensions from a path; handles multiple extensions
     like foobar.tar.gz -> foobar.
 
@@ -219,7 +228,7 @@ def without_all_extensions(path: Path) -> Path:
     return pathlib.Path(spath)
 
 
-def get_extension(path: Path) -> str:
+def get_extension(path: StrOrPath) -> str:
     """Extract and return one (the last) extension from a file or path.
 
     Args:
@@ -248,7 +257,7 @@ def get_extension(path: Path) -> str:
     return os.path.splitext(str(path))[1]
 
 
-def get_all_extensions(path: Path) -> List[str]:
+def get_all_extensions(path: StrOrPath) -> List[str]:
     """Return the extensions of a file or path in order.
 
     Args:
@@ -278,7 +287,7 @@ def get_all_extensions(path: Path) -> List[str]:
             return ret
 
 
-def without_path(filespec: Path) -> Path:
+def without_path(filespec: StrOrPath) -> StrOrPath:
     """Returns the base filename without any leading path.
 
     Args:
@@ -306,7 +315,7 @@ def without_path(filespec: Path) -> Path:
     return pathlib.Path(ret)
 
 
-def get_path(filespec: Path) -> Path:
+def get_path(filespec: StrOrPath) -> StrOrPath:
     """Returns just the path of the filespec by removing the filename and
     extension.
 
@@ -335,7 +344,7 @@ def get_path(filespec: Path) -> Path:
     return pathlib.Path(ret)
 
 
-def get_canonical_path(filespec: Path) -> Path:
+def get_canonical_path(filespec: StrOrPath) -> StrOrPath:
     """Returns a canonicalized absolute path.
 
     Args:
@@ -357,7 +366,7 @@ def get_canonical_path(filespec: Path) -> Path:
 
 
 def create_path_if_not_exist(
-    path: Path, on_error: Callable[[Path, OSError], None] = None
+    path: StrOrPath, on_error: Callable[[StrOrPath, OSError], None] = None
 ) -> None:
     """
     Attempts to create path if it does not exist already.
@@ -400,7 +409,7 @@ def create_path_if_not_exist(
         os.umask(previous_umask)
 
 
-def does_file_exist(filename: Path) -> bool:
+def does_file_exist(filename: StrOrPath) -> bool:
     """Returns True if a file exists and is a normal file.
 
     Args:
@@ -426,7 +435,7 @@ def does_file_exist(filename: Path) -> bool:
     return os.path.exists(str(filename)) and os.path.isfile(str(filename))
 
 
-def is_readable(filename: Path) -> bool:
+def is_readable(filename: StrOrPath) -> bool:
     """Is the file readable?
 
     Args:
@@ -442,7 +451,7 @@ def is_readable(filename: Path) -> bool:
     return os.access(str(filename), os.R_OK)
 
 
-def is_writable(filename: Path) -> bool:
+def is_writable(filename: StrOrPath) -> bool:
     """Is the file writable?
 
     Args:
@@ -464,7 +473,7 @@ def is_writable(filename: Path) -> bool:
     return os.access(str(filename), os.W_OK)
 
 
-def is_executable(filename: Path) -> bool:
+def is_executable(filename: StrOrPath) -> bool:
     """Is the file executable?
 
     Args:
@@ -487,7 +496,7 @@ def is_executable(filename: Path) -> bool:
     return os.access(str(filename), os.X_OK)
 
 
-def does_directory_exist(dirname: Path) -> bool:
+def does_directory_exist(dirname: StrOrPath) -> bool:
     """Does the given directory exist?
 
     Args:
@@ -506,12 +515,12 @@ def does_directory_exist(dirname: Path) -> bool:
     return os.path.exists(str(dirname)) and os.path.isdir(str(dirname))
 
 
-def does_path_exist(pathname: Path) -> bool:
+def does_path_exist(pathname: StrOrPath) -> bool:
     """Just a more verbose wrapper around os.path.exists."""
     return os.path.exists(str(pathname))
 
 
-def get_file_size(filename: Path) -> int:
+def get_file_size(filename: StrOrPath) -> int:
     """Returns the size of a file in bytes.
 
     Args:
@@ -523,7 +532,7 @@ def get_file_size(filename: Path) -> int:
     return os.path.getsize(str(filename))
 
 
-def is_normal_file(filename: Path) -> bool:
+def is_normal_file(filename: StrOrPath) -> bool:
     """Is that file normal (not a directory or some special file?)
 
     Args:
@@ -547,7 +556,7 @@ def is_normal_file(filename: Path) -> bool:
     return os.path.isfile(str(filename))
 
 
-def is_directory(filename: Path) -> bool:
+def is_directory(filename: StrOrPath) -> bool:
     """Is that path a directory (not a normal file?)
 
     Args:
@@ -572,7 +581,7 @@ def is_directory(filename: Path) -> bool:
     return os.path.isdir(str(filename))
 
 
-def is_symlink(filename: Path) -> bool:
+def is_symlink(filename: StrOrPath) -> bool:
     """Is that path a symlink?
 
     Args:
@@ -602,7 +611,7 @@ def is_symlink(filename: Path) -> bool:
     return os.path.islink(str(filename))
 
 
-def is_same_file(file1: Path, file2: Path) -> bool:
+def is_same_file(file1: StrOrPath, file2: StrOrPath) -> bool:
     """Determine if two paths reference the same inode.
 
     Args:
@@ -623,7 +632,7 @@ def is_same_file(file1: Path, file2: Path) -> bool:
     return os.path.samefile(str(file1), str(file2))
 
 
-def get_file_raw_timestamps(filename: Path) -> Optional[os.stat_result]:
+def get_file_raw_timestamps(filename: StrOrPath) -> Optional[os.stat_result]:
     """Stats the file and returns an `os.stat_result` or None on error.
 
     Args:
@@ -646,7 +655,7 @@ def get_file_raw_timestamps(filename: Path) -> Optional[os.stat_result]:
 
 
 def get_file_raw_timestamp(
-    filename: Path, extractor: Callable[[os.stat_result], Optional[float]]
+    filename: StrOrPath, extractor: Callable[[os.stat_result], Optional[float]]
 ) -> Optional[float]:
     """Stat a file and, if successful, use extractor to fetch some
     subset of the information in the `os.stat_result`.
@@ -671,7 +680,7 @@ def get_file_raw_timestamp(
     return None
 
 
-def get_file_raw_atime(filename: Path) -> Optional[float]:
+def get_file_raw_atime(filename: StrOrPath) -> Optional[float]:
     """Get a file's raw access time.
 
     Args:
@@ -692,7 +701,7 @@ def get_file_raw_atime(filename: Path) -> Optional[float]:
     return get_file_raw_timestamp(str(filename), lambda x: x.st_atime)
 
 
-def get_file_raw_mtime(filename: Path) -> Optional[float]:
+def get_file_raw_mtime(filename: StrOrPath) -> Optional[float]:
     """Get a file's raw modification time.
 
     Args:
@@ -713,7 +722,7 @@ def get_file_raw_mtime(filename: Path) -> Optional[float]:
     return get_file_raw_timestamp(str(filename), lambda x: x.st_mtime)
 
 
-def get_file_raw_ctime(filename: Path) -> Optional[float]:
+def get_file_raw_ctime(filename: StrOrPath) -> Optional[float]:
     """Get a file's raw creation time.
 
     Args:
@@ -734,7 +743,7 @@ def get_file_raw_ctime(filename: Path) -> Optional[float]:
     return get_file_raw_timestamp(str(filename), lambda x: x.st_ctime)
 
 
-def get_file_md5(filename: Path) -> str:
+def get_file_md5(filename: StrOrPath) -> str:
     """Hashes filename's disk contents and returns the MD5 digest.
 
     Args:
@@ -752,7 +761,7 @@ def get_file_md5(filename: Path) -> str:
     return file_hash.hexdigest()
 
 
-def set_file_raw_atime(filename: Path, atime: float) -> None:
+def set_file_raw_atime(filename: StrOrPath, atime: float) -> None:
     """Sets a file's raw access time.
 
     Args:
@@ -775,7 +784,7 @@ def set_file_raw_atime(filename: Path, atime: float) -> None:
     os.utime(sfilename, (atime, mtime))
 
 
-def set_file_raw_mtime(filename: Path, mtime: float):
+def set_file_raw_mtime(filename: StrOrPath, mtime: float):
     """Sets a file's raw modification time.
 
     Args:
@@ -798,7 +807,7 @@ def set_file_raw_mtime(filename: Path, mtime: float):
     os.utime(sfilename, (atime, mtime))
 
 
-def set_file_raw_atime_and_mtime(filename: Path, ts: float = None) -> None:
+def set_file_raw_atime_and_mtime(filename: StrOrPath, ts: float = None) -> None:
     """Sets both a file's raw modification and access times.
 
     Args:
@@ -839,7 +848,7 @@ def _convert_file_timestamp_to_datetime(
     return None
 
 
-def get_file_atime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
+def get_file_atime_as_datetime(filename: StrOrPath) -> Optional[datetime.datetime]:
     """Fetch a file's access time as a Python datetime.
 
     Args:
@@ -861,7 +870,7 @@ def get_file_atime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
     return _convert_file_timestamp_to_datetime(str(filename), get_file_raw_atime)
 
 
-def get_file_mtime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
+def get_file_mtime_as_datetime(filename: StrOrPath) -> Optional[datetime.datetime]:
     """Fetch a file's modification time as a Python datetime.
 
     Args:
@@ -883,7 +892,7 @@ def get_file_mtime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
     return _convert_file_timestamp_to_datetime(str(filename), get_file_raw_mtime)
 
 
-def get_file_ctime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
+def get_file_ctime_as_datetime(filename: StrOrPath) -> Optional[datetime.datetime]:
     """Fetches a file's creation time as a Python datetime.
 
     Args:
@@ -903,7 +912,7 @@ def get_file_ctime_as_datetime(filename: Path) -> Optional[datetime.datetime]:
     return _convert_file_timestamp_to_datetime(str(filename), get_file_raw_ctime)
 
 
-def _get_file_timestamp_age_seconds(filename: Path, extractor) -> Optional[int]:
+def _get_file_timestamp_age_seconds(filename: StrOrPath, extractor) -> Optional[int]:
     """~Internal helper"""
     now = time.time()
     ts = get_file_raw_timestamps(str(filename))
@@ -913,7 +922,7 @@ def _get_file_timestamp_age_seconds(filename: Path, extractor) -> Optional[int]:
     return now - result
 
 
-def get_file_atime_age_seconds(filename: Path) -> Optional[int]:
+def get_file_atime_age_seconds(filename: StrOrPath) -> Optional[int]:
     """Gets a file's access time as an age in seconds (ago).
 
     Args:
@@ -935,7 +944,7 @@ def get_file_atime_age_seconds(filename: Path) -> Optional[int]:
     return _get_file_timestamp_age_seconds(str(filename), lambda x: x.st_atime)
 
 
-def get_file_ctime_age_seconds(filename: Path) -> Optional[int]:
+def get_file_ctime_age_seconds(filename: StrOrPath) -> Optional[int]:
     """Gets a file's creation time as an age in seconds (ago).
 
     Args:
@@ -956,7 +965,7 @@ def get_file_ctime_age_seconds(filename: Path) -> Optional[int]:
     return _get_file_timestamp_age_seconds(str(filename), lambda x: x.st_ctime)
 
 
-def get_file_mtime_age_seconds(filename: Path) -> Optional[int]:
+def get_file_mtime_age_seconds(filename: StrOrPath) -> Optional[int]:
     """Gets a file's modification time as seconds (ago).
 
     Args:
@@ -979,7 +988,7 @@ def get_file_mtime_age_seconds(filename: Path) -> Optional[int]:
 
 
 def _get_file_timestamp_timedelta(
-    filename: Path, extractor
+    filename: StrOrPath, extractor
 ) -> Optional[datetime.timedelta]:
     """~Internal helper"""
     age = _get_file_timestamp_age_seconds(str(filename), extractor)
@@ -988,7 +997,7 @@ def _get_file_timestamp_timedelta(
     return None
 
 
-def get_file_atime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
+def get_file_atime_timedelta(filename: StrOrPath) -> Optional[datetime.timedelta]:
     """How long ago was a file accessed as a timedelta?
 
     Args:
@@ -1011,7 +1020,7 @@ def get_file_atime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
     return _get_file_timestamp_timedelta(str(filename), lambda x: x.st_atime)
 
 
-def get_file_ctime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
+def get_file_ctime_timedelta(filename: StrOrPath) -> Optional[datetime.timedelta]:
     """How long ago was a file created as a timedelta?
 
     Args:
@@ -1032,7 +1041,7 @@ def get_file_ctime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
     return _get_file_timestamp_timedelta(str(filename), lambda x: x.st_ctime)
 
 
-def get_file_mtime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
+def get_file_mtime_timedelta(filename: StrOrPath) -> Optional[datetime.timedelta]:
     """
     Gets a file's modification time as a Python timedelta.
 
@@ -1056,7 +1065,9 @@ def get_file_mtime_timedelta(filename: Path) -> Optional[datetime.timedelta]:
     return _get_file_timestamp_timedelta(str(filename), lambda x: x.st_mtime)
 
 
-def describe_file_timestamp(filename: Path, extractor, *, brief=False) -> Optional[str]:
+def describe_file_timestamp(
+    filename: StrOrPath, extractor, *, brief=False
+) -> Optional[str]:
     """~Internal helper"""
     from pyutils.datetimes.datetime_utils import (
         describe_duration,
@@ -1072,7 +1083,7 @@ def describe_file_timestamp(filename: Path, extractor, *, brief=False) -> Option
         return describe_duration(age)
 
 
-def describe_file_atime(filename: Path, *, brief: bool = False) -> Optional[str]:
+def describe_file_atime(filename: StrOrPath, *, brief: bool = False) -> Optional[str]:
     """
     Describe how long ago a file was accessed.
 
@@ -1123,7 +1134,7 @@ def describe_file_ctime(filename: str, *, brief: bool = False) -> Optional[str]:
     return describe_file_timestamp(str(filename), lambda x: x.st_ctime, brief=brief)
 
 
-def describe_file_mtime(filename: Path, *, brief: bool = False) -> Optional[str]:
+def describe_file_mtime(filename: StrOrPath, *, brief: bool = False) -> Optional[str]:
     """Describes how long ago a file was modified.
 
     Args:
@@ -1149,7 +1160,7 @@ def describe_file_mtime(filename: Path, *, brief: bool = False) -> Optional[str]
     return describe_file_timestamp(str(filename), lambda x: x.st_mtime, brief=brief)
 
 
-def touch_file(filename: Path, *, mode: Optional[int] = 0o666):
+def touch_file(filename: StrOrPath, *, mode: Optional[int] = 0o666):
     """Like unix "touch" command's semantics: update the timestamp
     of a file to the current time if the file exists.  Create the
     file if it doesn't exist.
@@ -1173,7 +1184,7 @@ def touch_file(filename: Path, *, mode: Optional[int] = 0o666):
         filename.touch()
 
 
-def expand_globs(in_filename: Path) -> Generator[Path, None, None]:
+def expand_globs(in_filename: StrOrPath) -> Generator[StrOrPath, None, None]:
     """
     Expands shell globs (* and ? wildcards) to the matching files.
 
@@ -1195,7 +1206,7 @@ def expand_globs(in_filename: Path) -> Generator[Path, None, None]:
             raise TypeError("What the heck was in_filename?!")
 
 
-def get_files(directory: Path) -> Generator[Path, None, None]:
+def get_files(directory: StrOrPath) -> Generator[StrOrPath, None, None]:
     """Returns the files in a directory as a generator.
 
     Args:
@@ -1218,7 +1229,7 @@ def get_files(directory: Path) -> Generator[Path, None, None]:
                 raise TypeError("What the heck was directory?!")
 
 
-def get_matching_files(directory: Path, glob_string: str):
+def get_matching_files(directory: StrOrPath, glob_string: str):
     """
     Returns the subset of files whose name matches a glob.
 
@@ -1238,7 +1249,7 @@ def get_matching_files(directory: Path, glob_string: str):
             yield filename
 
 
-def get_directories(directory: Path):
+def get_directories(directory: StrOrPath):
     """
     Returns the subdirectories in a directory as a generator.
 
@@ -1259,7 +1270,7 @@ def get_directories(directory: Path):
             yield str(full_path)
 
 
-def get_files_recursive(directory: Path):
+def get_files_recursive(directory: StrOrPath):
     """
     Find the files and directories under a root recursively.
 
@@ -1281,7 +1292,7 @@ def get_files_recursive(directory: Path):
             yield file_or_directory
 
 
-def get_matching_files_recursive(directory: Path, glob_string: str):
+def get_matching_files_recursive(directory: StrOrPath, glob_string: str):
     """Returns the subset of files whose name matches a glob under a root recursively.
 
     Args:
@@ -1319,7 +1330,7 @@ class FileWriter(contextlib.AbstractContextManager):
             print("This is only a test...", file=w)
     """
 
-    def __init__(self, filename: Path) -> None:
+    def __init__(self, filename: StrOrPath) -> None:
         """
         Args:
             filename: the ultimate destination file we want to populate.
@@ -1376,7 +1387,7 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
 
     def __init__(
         self,
-        filename: Path,
+        filename: StrOrPath,
         filesystem_mode: Optional[int] = 0o600,
         open_mode: Optional[str] = "w",
     ) -> None:
