@@ -1110,7 +1110,7 @@ def describe_file_atime(filename: StrOrPath, *, brief: bool = False) -> Optional
     return describe_file_timestamp(filename, lambda x: x.st_atime, brief=brief)
 
 
-def describe_file_ctime(filename: str, *, brief: bool = False) -> Optional[str]:
+def describe_file_ctime(filename: StrOrPath, *, brief: bool = False) -> Optional[str]:
     """Describes a file's creation time.
 
     Args:
