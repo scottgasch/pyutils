@@ -854,3 +854,32 @@ This version -------- 0.0.12
 Previous version ---- 0.0.11
 Total commits -------       11
 ```
+# 🎁 Release notes (`0.0.13`)
+
+## Changes
+- Missed one...
+- Rename local Path -> StrOrPath, improve comments.
+- Fix the docstrings...
+- Push code out of argparse into datetime_utils.
+- Work around bad implementation of strptime in python's datetime.
+- Create SECURITY.md (#3)
+- Update README.md
+- Remove spurious casts.
+- Use a TypeVar instead of a Union.
+- words...
+- Yet another mypy fixup.
+- Make mypy happy.
+- Add pathlib doctests.
+- Update README.md
+- More work to make the setup steps to use this library produce good error messages when needed.
+- Update README.md
+- Teach unscrambler to generate its indexfile on first use.
+- Update NOTICE
+- Cut version 0.0.12
+
+## Metadata
+```
+This version -------- 0.0.13
+Previous version ---- 0.0.12
+Total commits -------       19
+```
