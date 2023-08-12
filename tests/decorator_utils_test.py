@@ -19,7 +19,7 @@ class TestCounter:
         self.x += 1
 
 
-@du.synchronized()
+@du.synchronized
 def increment(x: TestCounter) -> None:
     x.increment()
 

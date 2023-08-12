@@ -909,7 +909,9 @@ def timeout(
     return decorate
 
 
-def synchronized(lock: Union[None, threading.Lock, threading.RLock] = None) -> Callable:
+def synchronized(
+    _func=None, *, lock: Union[None, threading.Lock, threading.RLock] = None
+) -> Callable:
     """Emulates java's "synchronized" keyword: given a lock, require
     that threads take that lock (or wait) before invoking the wrapped
     function and automatically releases the lock afterwards.
@@ -932,13 +934,12 @@ def synchronized(lock: Union[None, threading.Lock, threading.RLock] = None) -> C
         def update_shared_state():
             do some work
 
-    .. warning::
+    .. note::
 
         If you pass no lock, a default lock will be used.  This default
-        lock *is* reentrant.  But you need to pass include empty parenthesis.
-        e.g.::
+        lock is reentrant.  e.g.::
 
-            @synchronized()           # <- this will not with w/o the ()'s
+            @synchronized
             def do_something_single_threaded():
                 whatever
 
@@ -957,20 +958,10 @@ def synchronized(lock: Union[None, threading.Lock, threading.RLock] = None) -> C
 
         return wrapper_synchronized
 
-    return wrap
-
-
-def repeat(num_times):
-    def decorator_repeat(func):
-        @functools.wraps(func)
-        def wrapper_repeat(*args, **kwargs):
-            for _ in range(num_times):
-                value = func(*args, **kwargs)
-            return value
-
-        return wrapper_repeat
-
-    return decorator_repeat
+    if not _func:
+        return wrap
+    else:
+        return wrap(_func)
 
 
 def call_probabilistically(probability_of_call: float) -> Callable:
