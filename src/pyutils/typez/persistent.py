@@ -2,6 +2,10 @@
 
 # © Copyright 2021-2023, Scott Gasch
 
+# TODO(scott): Make type hints PEP 612 compliant once python 3.10
+# is a reasonable minimum version requirement for this library.
+# https://peps.python.org/pep-0612/#specification
+
 """
 This module defines a class hierarchy (base class :class:`Persistent`) and
 a decorator (`@persistent_autoloaded_singleton`) that can be used to create

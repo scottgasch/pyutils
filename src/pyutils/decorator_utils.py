@@ -3,6 +3,10 @@
 # © Copyright 2021-2023, Scott Gasch
 # A portion (marked) below retain the original author's copyright.
 
+# TODO(scott): Make type hints PEP 612 compliant once python 3.10
+# is a reasonable minimum version requirement for this library.
+# https://peps.python.org/pep-0612/#specification
+
 """This is a grab bag of, hopefully, useful decorators."""
 
 import enum
