@@ -181,6 +181,11 @@ class OptionalRawFormatter(argparse.HelpFormatter):
             return text[4:].splitlines()
         return argparse.HelpFormatter._split_lines(self, text, width)
 
+    def _fill_text(self, text, width, indent):
+        if text.startswith("RAW|"):
+            return ''.join(indent + line for line in text[4:].splitlines(keepends=True))
+        return argparse.HelpFormatter._fill_text(self, text, width, indent)
+
 
 # A global argparser that we will collect arguments in.  Each module (including
 # us) will add arguments to a separate argument group.
@@ -188,7 +193,6 @@ ARGS = argparse.ArgumentParser(
     description=None,
     formatter_class=OptionalRawFormatter,
     fromfile_prefix_chars="@",
-    epilog=f"{PROGRAM_NAME} uses config.py ({__file__}) for global, cross-module configuration setup and parsing.",
     # I don't fully understand why but when loaded by sphinx sometimes
     # the same module is loaded many times causing any arguments it
     # registers via module-level code to be redefined.  Work around
