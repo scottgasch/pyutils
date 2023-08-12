@@ -300,14 +300,16 @@ class _SingletonWrapper:
     def __init__(self, cls):
         self.__wrapped__ = cls
         self._instance = None
+        self.lock = threading.Lock()
 
     def __call__(self, *args, **kwargs):
         """Returns a single instance of decorated class"""
         logger.debug(
             "@singleton returning global instance of %s", self.__wrapped__.__name__
         )
-        if self._instance is None:
-            self._instance = self.__wrapped__(*args, **kwargs)
+        with self.lock:
+            if self._instance is None:
+                self._instance = self.__wrapped__(*args, **kwargs)
         return self._instance
 
 
