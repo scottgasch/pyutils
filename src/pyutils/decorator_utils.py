@@ -24,6 +24,7 @@ from typing import Any, Callable, List, NoReturn, Optional, Union
 # taking any unnecessary dependencies back on them.
 
 logger = logging.getLogger(__name__)
+DEFAULT_LOCK = threading.RLock()
 
 
 def timed(func: Callable) -> Callable:
@@ -906,7 +907,7 @@ def timeout(
     return decorate
 
 
-def synchronized(lock: Union[threading.Lock, threading.RLock]):
+def synchronized(lock: Union[None, threading.Lock, threading.RLock] = None) -> Callable:
     """Emulates java's "synchronized" keyword: given a lock, require
     that threads take that lock (or wait) before invoking the wrapped
     function and automatically releases the lock afterwards.
@@ -929,20 +930,45 @@ def synchronized(lock: Union[threading.Lock, threading.RLock]):
         def update_shared_state():
             do some work
 
-    """
+    .. warning::
 
-    def wrap(f):
-        @functools.wraps(f)
-        def _gatekeeper(*args, **kw):
+        If you pass no lock, a default lock will be used.  This default
+        lock *is* reentrant.  But you need to pass include empty parenthesis.
+        e.g.::
+
+            @synchronized()           # <- this will not with w/o the ()'s
+            def do_something_single_threaded():
+                whatever
+
+    """
+    if not lock:
+        lock = DEFAULT_LOCK
+
+    def wrap(func: Callable):
+        @functools.wraps(func)
+        def wrapper_synchronized(*args, **kwargs):
             lock.acquire()
             try:
-                return f(*args, **kw)
+                return func(*args, **kwargs)
             finally:
                 lock.release()
 
-        return _gatekeeper
+        return wrapper_synchronized
 
     return wrap
+
+
+def repeat(num_times):
+    def decorator_repeat(func):
+        @functools.wraps(func)
+        def wrapper_repeat(*args, **kwargs):
+            for _ in range(num_times):
+                value = func(*args, **kwargs)
+            return value
+
+        return wrapper_repeat
+
+    return decorator_repeat
 
 
 def call_probabilistically(probability_of_call: float) -> Callable:
