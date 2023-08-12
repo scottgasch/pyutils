@@ -37,6 +37,7 @@ import kazoo
 
 from pyutils import argparse_utils, config, decorator_utils, zookeeper
 from pyutils.datetimes import datetime_utils
+from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(f"Lockfile ({__file__})", "Args related to lockfiles")
 cfg.add_argument(
@@ -242,8 +243,12 @@ class LockFile(contextlib.AbstractContextManager):
         if not self.zk_client:
             raw_contents = self._read_lockfile()
             if raw_contents:
-                contents = LocalLockFileContents(**json.loads(raw_contents))
-                msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} ({contents.commandline}).  Giving up."
+                try:
+                    contents = LocalLockFileContents(**json.loads(raw_contents))
+                except Exception:
+                    contents = LocalLockFileContents(0, 'UNKNOWN', 0)
+                since = file_utils.describe_file_mtime(self.lockfile, brief=True)
+                msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} for {since} ({contents.commandline}).  Giving up."
         logger.warning(msg)
         raise LockFileException(msg)
 
@@ -303,7 +308,10 @@ class LockFile(contextlib.AbstractContextManager):
             raw_contents = self._read_lockfile()
             if not raw_contents:
                 return
-            contents = LocalLockFileContents(**json.loads(raw_contents))
+            try:
+                contents = LocalLockFileContents(**json.loads(raw_contents))
+            except Exception:
+                return
             logger.debug('Blocking lock contents="%s"', contents)
 
             # Does the PID exist still?
