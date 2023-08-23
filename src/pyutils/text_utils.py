@@ -531,7 +531,7 @@ def header(
     align: Optional[str] = None,
     style: Optional[str] = "solid",
     color: Optional[str] = None,
-):
+) -> str:
     """
     Creates a nice header line with a title.
 
