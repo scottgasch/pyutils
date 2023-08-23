@@ -14,12 +14,13 @@ master election, locking, etc...
 
 import datetime
 import functools
+import json
 import logging
 import os
 import platform
 import sys
 import threading
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
 from kazoo.client import KazooClient
 from kazoo.exceptions import CancelledError
@@ -36,24 +37,11 @@ cfg = config.add_commandline_args(
     'Args related python-zookeeper interactions',
 )
 cfg.add_argument(
-    '--zookeeper_nodes',
-    type=str,
-    default=None,
-    help='Comma separated host:port or ip:port address(es)',
-)
-cfg.add_argument(
-    '--zookeeper_client_cert_path',
+    '--zookeeper_config',
     type=argparse_utils.valid_filename,
     default=None,
     metavar='FILENAME',
-    help='Path to file containing client certificate.',
-)
-cfg.add_argument(
-    '--zookeeper_client_passphrase',
-    type=str,
-    default=None,
-    metavar='PASSPHRASE',
-    help='Pass phrase for unlocking the client certificate.',
+    help='Path to file zookeeper configuration',
 )
 
 
@@ -63,19 +51,49 @@ cfg.add_argument(
 PROGRAM_NAME: str = os.path.basename(sys.argv[0])
 
 
+def get_zookeeper_config() -> Optional[Tuple[str, str, str]]:
+    config_file = config.config['zookeeper_config']
+    if not config_file:
+        config_file = f'{os.environ["HOME"]}/.zookeeper_secrets'
+
+    try:
+        with open(config_file, 'r') as rf:
+            contents = rf.read()
+        json_dict = json.loads(contents)
+        if (
+            'zookeeper_nodes' in json_dict
+            and 'zookeeper_client_cert_path' in json_dict
+            and 'zookeeper_client_passphrase' in json_dict
+        ):
+            return (
+                json_dict['zookeeper_nodes'],
+                json_dict['zookeeper_client_cert_path'],
+                json_dict['zookeeper_client_passphrase'],
+            )
+    except Exception:
+        pass
+    return None
+
+
 def get_started_zk_client() -> KazooClient:
     """
     Returns:
         A zk client library reference that has been connected and started
         using the commandline provided address, certificates and passphrase.
     """
+    _ = get_zookeeper_config()
+    if _ is not None:
+        (zookeeper_nodes, zookeeper_client_cert_path, zookeeper_client_passphrase) = _
+    else:
+        raise Exception("No valid zookeeper config was found.")
+
     zk = KazooClient(
-        hosts=config.config['zookeeper_nodes'],
+        hosts=zookeeper_nodes,
         use_ssl=True,
         verify_certs=False,
-        keyfile=config.config['zookeeper_client_cert_path'],
-        keyfile_password=config.config['zookeeper_client_passphrase'],
-        certfile=config.config['zookeeper_client_cert_path'],
+        keyfile=zookeeper_client_cert_path,
+        keyfile_password=zookeeper_client_passphrase,
+        certfile=zookeeper_client_cert_path,
     )
     zk.start()
     logger.debug('We have an active zookeeper connection.')

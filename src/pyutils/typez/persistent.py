@@ -20,6 +20,11 @@ of where and whether to save are left to your code to decide by implementing
 interface methods like :meth:`FileBasedPersistent.get_filename` and
 :meth:`FileBasedPersistent.should_we_load_data`.
 
+The subclasses such as :class:`JsonZookeeperFileBasedPersistent` and
+:class:`PicklingZookeeperFileBasedPersistent` can be used to automatically
+persist state in a zookeeper instance such that state can be shared
+and restored by code running on different machines.
+
 This module inculdes some helpers to make deciding whether to load persisted
 state easier such as :meth:`was_file_written_today` and
 :meth:`was_file_written_within_n_seconds`.
@@ -65,7 +70,6 @@ class Persistent(ABC):
         pass
 
     @classmethod
-    @abstractmethod
     def load(cls: type[Persistent]) -> Optional[Persistent]:
         """Load this thing from somewhere and give back an instance which
         will become the global singleton and which may (see
@@ -104,7 +108,6 @@ class FileBasedPersistent(Persistent):
     """
 
     @staticmethod
-    @abstractmethod
     def get_filename() -> str:
         """
         Returns:
@@ -113,7 +116,6 @@ class FileBasedPersistent(Persistent):
         pass
 
     @staticmethod
-    @abstractmethod
     def should_we_save_data(filename: str) -> bool:
         """
         Returns:
@@ -122,7 +124,6 @@ class FileBasedPersistent(Persistent):
         pass
 
     @staticmethod
-    @abstractmethod
     def should_we_load_data(filename: str) -> bool:
         """
         Returns:
@@ -170,10 +171,11 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
             def should_we_load_data(filename: str) -> bool:
                 return persistent.was_file_written_within_n_seconds(whatever)
 
-        # Persistent will handle the plumbing to instantiate your class from its
-        # persisted state iff the :meth:`should_we_load_data` says it's ok to.  It
-        # will also persist the current in-memory state to disk at program exit iff
-        # the :meth:`should_we_save_data` methods says to.
+        # Persistent will handle the plumbing to instantiate your class
+        # from its persisted state iff the :meth:`should_we_load_data`
+        # says it's ok to.  It will also persist the current in-memory
+        # state to disk at program exit iff the :meth:`should_we_save_data`
+        # methods says to.
         c = MyClass()
 
     """
@@ -184,18 +186,12 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
         pass
 
     @classmethod
-    @overrides
     def load(
         cls: type[PicklingFileBasedPersistent],
     ) -> Optional[PicklingFileBasedPersistent]:
-        """
-        Raises:
-            Exception: failure to load from file.
-        """
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Attempting to load state from %s", filename)
-            assert file_utils.is_readable(filename)
 
             import pickle
 
@@ -203,9 +199,8 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
                 with open(filename, mode="rb") as rf:
                     data = pickle.load(rf)
                     return cls(data)
-
-            except Exception as e:
-                raise Exception(f"Failed to load {filename}.") from e
+            except Exception:
+                logger.exception("Failed to load path %s", filename)
         return None
 
     @overrides
@@ -222,6 +217,64 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
 
                 with file_utils.CreateFileWithMode(filename, 0o600, "wb") as wf:
                     pickle.dump(self.get_persistent_data(), wf, pickle.HIGHEST_PROTOCOL)
+                return True
+            except Exception as e:
+                raise Exception(f"Failed to save to {filename}.") from e
+        return False
+
+
+class PicklingZookeeperFileBasedPersistent(FileBasedPersistent):
+    """This class is like :class:`PicklingFileBasedPersistent`
+    except for that it persists state on a zookeeper instance."""
+
+    @abstractmethod
+    def __init__(self, data: Optional[Any] = None):
+        """You should override this."""
+        pass
+
+    @classmethod
+    def load(
+        cls: type[PicklingZookeeperFileBasedPersistent],
+    ) -> Optional[PicklingZookeeperFileBasedPersistent]:
+        filename = cls.get_filename()
+        if cls.should_we_load_data(filename):
+            import pickle
+
+            from pyutils import zookeeper as zk
+
+            try:
+                client = zk.get_started_zk_client()
+                raw_data = client.get(filename)[0]
+                cooked_data = pickle.loads(raw_data)
+                return cls(cooked_data)
+            except Exception:
+                logger.exception("Failed to load path %s", filename)
+        return None
+
+    @overrides
+    def save(self) -> bool:
+        """
+        Raises:
+            Exception: failure to save to file.
+        """
+        filename = self.get_filename()
+        if self.should_we_save_data(filename):
+            import pickle
+
+            from pyutils import zookeeper as zk
+
+            logger.debug("Trying to save state in %s", filename)
+            data = self.get_persistent_data()
+
+            try:
+                client = zk.get_started_zk_client()
+                client.ensure_path(filename)
+                raw_data = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
+                if len(raw_data) > 1024 * 1024:
+                    raise Exception(
+                        f'Persisted state too large, {len(raw_data)} exceeds 1Mb limit'
+                    )
+                client.set(filename, raw_data)
                 return True
             except Exception as e:
                 raise Exception(f"Failed to save to {filename}.") from e
@@ -276,12 +329,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
         pass
 
     @classmethod
-    @overrides
     def load(cls: type[JsonFileBasedPersistent]) -> Optional[JsonFileBasedPersistent]:
-        """
-        Raises:
-            Exception: failure to load from file.
-        """
         filename = cls.get_filename()
         if cls.should_we_load_data(filename):
             logger.debug("Trying to load state from %s", filename)
@@ -301,12 +349,8 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                     buf += line
                 json_dict = json.loads(buf)
                 return cls(json_dict)
-
-            except Exception as e:
-                logger.exception(
-                    "Failed to load path %s; raising an exception", filename
-                )
-                raise Exception(f"Failed to load {filename}.") from e
+            except Exception:
+                logger.exception("Failed to load path %s", filename)
         return None
 
     @overrides
@@ -324,6 +368,72 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                 json_blob = json.dumps(self.get_persistent_data())
                 with open(filename, mode="w", encoding="utf-8") as wf:
                     wf.writelines(json_blob)
+                return True
+            except Exception as e:
+                raise Exception(f"Failed to save to {filename}.") from e
+        return False
+
+
+class JsonZookeeperFileBasedPersistent(FileBasedPersistent):
+    """This class is like :class:`JsonFileBasedPersistent` except
+    that it persists state on a zookeeper instance."""
+
+    @abstractmethod
+    def __init__(self, data: Optional[Any]):
+        """You should override this."""
+        pass
+
+    @classmethod
+    def load(
+        cls: type[JsonZookeeperFileBasedPersistent],
+    ) -> Optional[JsonZookeeperFileBasedPersistent]:
+        """
+        Raises:
+            Exception: failure to load from file.
+        """
+        filename = cls.get_filename()
+        if cls.should_we_load_data(filename):
+            logger.debug("Trying to load state from %s", filename)
+            import json
+
+            from pyutils import zookeeper as zk
+
+            try:
+                client = zk.get_started_zk_client()
+                raw_contents = client.get(filename)
+
+                # This is probably bad... but I like comments
+                # in config files and JSON doesn't support them.  So
+                # pre-process the buffer to remove comments thus
+                # allowing people to add them.
+                buf = ""
+                for line in raw_contents.split('\n'):
+                    line = re.sub(r"#.*$", "", line)
+                    buf += line
+                json_dict = json.loads(buf)
+                return cls(json_dict)
+            except Exception:
+                logger.exception("Failed to load path %s", filename)
+        return None
+
+    @overrides
+    def save(self) -> bool:
+        filename = self.get_filename()
+        if self.should_we_save_data(filename):
+            logger.debug("Trying to save state in %s", filename)
+            import json
+
+            from pyutils import zookeeper as zk
+
+            try:
+                client = zk.get_started_zk_client()
+                client.ensure_path(filename)
+                json_blob = json.dumps(self.get_persistent_data())
+                if len(json_blob) > 1024 * 1024:
+                    raise Exception(
+                        f'Json persistent state is too large; {len(json_blob)} exceeds 1Mb limit.'
+                    )
+                client.set(filename, json_blob)
                 return True
             except Exception as e:
                 raise Exception(f"Failed to save to {filename}.") from e
