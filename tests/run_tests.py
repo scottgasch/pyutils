@@ -655,11 +655,12 @@ def main() -> Optional[int]:
             percent_done = 0.0
 
         if percent_done < 100.0:
-            width = text_utils.get_console_rows_columns()
-            if width:
-                width = width.columns - 18
-            if not width or width < 0:
-                width = 50
+            try:
+                width = text_utils.get_console_rows_columns().columns - 18
+                if width < 10:
+                    width = 40
+            except Exception:
+                width = 68
 
             print(
                 text_utils.bar_graph_string(
