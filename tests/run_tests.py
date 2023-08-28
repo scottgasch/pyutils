@@ -655,12 +655,18 @@ def main() -> Optional[int]:
             percent_done = 0.0
 
         if percent_done < 100.0:
+            width = text_utils.get_console_rows_columns()
+            if width:
+                width = width.columns - 18
+            if not width or width < 0:
+                width = 50
+
             print(
                 text_utils.bar_graph_string(
                     done,
                     started,
                     text=text_utils.BarGraphText.FRACTION,
-                    width=72,
+                    width=width,
                     fgcolor=color,
                 ),
                 end="",
