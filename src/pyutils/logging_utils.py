@@ -56,6 +56,7 @@ import io
 import logging
 import os
 import re
+import shlex
 import sys
 from logging import FileHandler
 from logging.config import fileConfig
@@ -1323,7 +1324,7 @@ def hlog(message: str) -> None:
 
     TODO: this needs to move.
     """
-    message = message.replace("'", "'\"'\"'")
+    message = shlex.quote(message)
     os.system(f"/usr/bin/logger -p local7.info -- '{message}'")
 
 
