@@ -49,6 +49,7 @@ from typing import Any, Optional
 
 from overrides import overrides
 
+from pyutils.exceptions import PyUtilsException
 from pyutils.files import file_utils
 
 logger = logging.getLogger(__name__)
@@ -219,7 +220,7 @@ class PicklingFileBasedPersistent(FileBasedPersistent):
                     pickle.dump(self.get_persistent_data(), wf, pickle.HIGHEST_PROTOCOL)
                 return True
             except Exception as e:
-                raise Exception(f"Failed to save to {filename}.") from e
+                raise PyUtilsException(f"Failed to save to {filename}.") from e
         return False
 
 
@@ -271,13 +272,13 @@ class PicklingZookeeperFileBasedPersistent(FileBasedPersistent):
                 client.ensure_path(filename)
                 raw_data = pickle.dumps(data, pickle.HIGHEST_PROTOCOL)
                 if len(raw_data) > 1024 * 1024:
-                    raise Exception(
+                    raise PyUtilsException(
                         f'Persisted state too large, {len(raw_data)} exceeds 1Mb limit'
                     )
                 client.set(filename, raw_data)
                 return True
             except Exception as e:
-                raise Exception(f"Failed to save to {filename}.") from e
+                raise PyUtilsException(f"Failed to save to {filename}.") from e
         return False
 
 
@@ -370,7 +371,7 @@ class JsonFileBasedPersistent(FileBasedPersistent):
                     wf.writelines(json_blob)
                 return True
             except Exception as e:
-                raise Exception(f"Failed to save to {filename}.") from e
+                raise PyUtilsException(f"Failed to save to {filename}.") from e
         return False
 
 
@@ -430,13 +431,13 @@ class JsonZookeeperFileBasedPersistent(FileBasedPersistent):
                 client.ensure_path(filename)
                 json_blob = json.dumps(self.get_persistent_data())
                 if len(json_blob) > 1024 * 1024:
-                    raise Exception(
+                    raise PyUtilsException(
                         f'Json persistent state is too large; {len(json_blob)} exceeds 1Mb limit.'
                     )
                 client.set(filename, json_blob)
                 return True
             except Exception as e:
-                raise Exception(f"Failed to save to {filename}.") from e
+                raise PyUtilsException(f"Failed to save to {filename}.") from e
         return False
 
 

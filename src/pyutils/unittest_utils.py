@@ -202,7 +202,9 @@ def check_method_for_perf_regressions(func: Callable) -> Callable:
                 "Persisting to a database is not implemented in this version"
             )
         else:
-            raise Exception("Unknown/unexpected --unittests_persistance_strategy value")
+            raise ValueError(
+                "Unknown/unexpected --unittests_persistance_strategy value"
+            )
 
         func_id = function_utils.function_identifier(func)
         func_name = func.__name__

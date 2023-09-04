@@ -131,6 +131,11 @@ import re
 import sys
 from typing import Any, Dict, List, Optional
 
+from pyutils.exceptions import (
+    PyUtilsDependencyUnreachableException,
+    PyUtilsUnrecognizedArgumentsException,
+)
+
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
 
@@ -408,7 +413,8 @@ class Config:
             Otherwise False is returned.
 
         Raises:
-            Exception: On error reading from zookeeper
+            PyUtilsDependencyUnreachableException: On error reading from
+            zookeeper.
 
         >>> to_bool('True')
         True
@@ -445,7 +451,9 @@ class Config:
                 self.max_version.get(event.path, 0),
             )
         except Exception as e:
-            raise Exception("Error reading data from zookeeper") from e
+            raise PyUtilsDependencyUnreachableException(
+                "Error reading data from zookeeper"
+            ) from e
 
         # Make sure we process changes in order.
         if meta.version > self.max_version.get(event.path, 0):
@@ -578,7 +586,7 @@ class Config:
                 self.zk = zookeeper.get_started_zk_client()
             encoded_data = data.encode()
             if len(encoded_data) > 1024 * 1024:
-                raise Exception(
+                raise ValueError(
                     f"Saved args are too large ({len(encoded_data)} bytes exceeds zk limit)"
                 )
             if not self.zk.exists(zkpath):
@@ -594,7 +602,9 @@ class Config:
                 )
                 self.max_version[zkpath] = meta.version
         except Exception as e:
-            raise Exception(f"Failed to create zookeeper path {zkpath}") from e
+            raise PyUtilsDependencyUnreachableException(
+                f"Failed to create zookeeper path {zkpath}"
+            ) from e
         self.saved_messages.append(f"Saved config to zookeeper in {zkpath}")
 
     def parse(self, entry_module: Optional[str]) -> Dict[str, Any]:
@@ -613,7 +623,8 @@ class Config:
                 be used directly using that identifier.
 
         Raises:
-            Exception: if unrecognized config argument(s) are detected and the
+            PyUtilsUnrecognizedArgumentsException: if unrecognized config
+                argument(s) are detected and the
                 --config_rejects_unrecognized_arguments argument is enabled.
         """
         if self.config_parse_called:
@@ -648,7 +659,7 @@ class Config:
         # if we have unknown arguments.
         if unknown:
             if config["config_rejects_unrecognized_arguments"]:
-                raise Exception(
+                raise PyUtilsUnrecognizedArgumentsException(
                     f"Encountered unrecognized config argument(s) {unknown} with --config_rejects_unrecognized_arguments enabled; halting."
                 )
             self.saved_messages.append(

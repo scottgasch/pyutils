@@ -48,6 +48,7 @@ from typing import (
     ValuesView,
 )
 
+from pyutils.exceptions import PyUtilsException
 from pyutils.typez.type_hints import Closable
 
 
@@ -59,13 +60,13 @@ class PickleSerializer:
         try:
             return pickle.dumps(obj, pickle.HIGHEST_PROTOCOL)
         except pickle.PicklingError as e:
-            raise Exception from e
+            raise PyUtilsException("Could not pickle object") from e
 
     def loads(self, data: bytes) -> Dict[Hashable, Any]:
         try:
             return pickle.loads(data)
         except pickle.UnpicklingError as e:
-            raise Exception from e
+            raise PyUtilsException("Could not unpickle object") from e
 
 
 # TODOs: profile the serializers and figure out the fastest one.  Can

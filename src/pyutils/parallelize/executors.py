@@ -65,6 +65,7 @@ import pyutils.typez.histogram as hist
 from pyutils import argparse_utils, config, dataclass_utils, math_utils, string_utils
 from pyutils.ansi import bg, fg, reset, underline
 from pyutils.decorator_utils import singleton
+from pyutils.exceptions import PyUtilsException, PyUtilsUnreachableConditionException
 from pyutils.exec_utils import cmd_exitcode, cmd_in_background, run_silently
 from pyutils.files import file_utils
 from pyutils.parallelize.thread_utils import background_thread
@@ -253,7 +254,7 @@ class ThreadExecutor(BaseExecutor):
             Exception: executor is shutting down already.
         """
         if self.already_shutdown:
-            raise Exception('Submitted work after shutdown.')
+            raise PyUtilsException('Submitted work after shutdown.')
         self.adjust_task_count(+1)
         newargs = []
         newargs.append(function)
@@ -318,7 +319,7 @@ class ProcessExecutor(BaseExecutor):
             Exception: executor is shutting down already.
         """
         if self.already_shutdown:
-            raise Exception('Submitted work after shutdown.')
+            raise PyUtilsException('Submitted work after shutdown.')
         start = time.time()
         self.adjust_task_count(+1)
         pickle = _make_cloud_pickle(function, *args, **kwargs)
@@ -884,7 +885,7 @@ class RemoteExecutor(BaseExecutor):
                 + "See: https://github.com/scottgasch/pyutils#missing-remote_worker_records-file"
             )
             print(msg)
-            raise Exception(msg)
+            raise PyUtilsException(msg)
 
         self.workers = workers
         self.policy = policy
@@ -1074,7 +1075,7 @@ class RemoteExecutor(BaseExecutor):
                 return worker
         msg = "We should never reach this point in the code"
         logger.critical(msg)
-        raise Exception(msg)
+        raise PyUtilsUnreachableConditionException(msg)
 
     def _release_worker(self, bundle: BundleDetails, *, was_cancelled=True) -> None:
         """Release a previously acquired worker."""
@@ -1544,7 +1545,7 @@ class RemoteExecutor(BaseExecutor):
             Exception: executor is already shutting down.
         """
         if self.already_shutdown:
-            raise Exception('Submitted work after shutdown.')
+            raise PyUtilsException('Submitted work after shutdown.')
         pickle = _make_cloud_pickle(function, *args, **kwargs)
         bundle = self._create_original_bundle(pickle, function.__name__)
         self.total_bundles_submitted += 1

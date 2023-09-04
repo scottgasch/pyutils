@@ -28,6 +28,7 @@ from kazoo.protocol.states import KazooState
 from kazoo.recipe.lease import NonBlockingLease
 
 from pyutils import argparse_utils, config
+from pyutils.exceptions import PyUtilsException
 from pyutils.files import file_utils
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def get_started_zk_client() -> KazooClient:
     if _ is not None:
         (zookeeper_nodes, zookeeper_client_cert_path, zookeeper_client_passphrase) = _
     else:
-        raise Exception("No valid zookeeper config was found.")
+        raise PyUtilsException("No valid zookeeper config was found.")
 
     zk = KazooClient(
         hosts=zookeeper_nodes,

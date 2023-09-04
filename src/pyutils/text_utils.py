@@ -29,6 +29,7 @@ from typing import Dict, Generator, List, Literal, Optional, Tuple, Union
 
 from pyutils import string_utils
 from pyutils.ansi import fg, reset
+from pyutils.exceptions import PyUtilsUnreadableConsoleException
 
 logger = logging.getLogger(__file__)
 
@@ -78,7 +79,7 @@ def get_console_rows_columns() -> RowsColumns:
             cols = None
 
     if not rows or not cols:
-        raise Exception("Can't determine console size?!")
+        raise PyUtilsUnreadableConsoleException("Can't determine console size?!")
     return RowsColumns(int(rows), int(cols))
 
 

@@ -37,6 +37,7 @@ import kazoo
 
 from pyutils import argparse_utils, config, decorator_utils, zookeeper
 from pyutils.datetimes import datetime_utils
+from pyutils.exceptions import PyUtilsUnreachableConditionException
 from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(f"Lockfile ({__file__})", "Args related to lockfiles")
@@ -117,7 +118,7 @@ class LockFile(contextlib.AbstractContextManager):
         if lockfile_path.startswith("zk:"):
             logger.debug("Lockfile is on Zookeeper.")
             if expiration_timestamp is None:
-                raise Exception("Zookeeper locks require an expiration timestamp")
+                raise ValueError("Zookeeper locks require an expiration timestamp")
             self.lockfile = lockfile_path[3:]
             if not self.lockfile.startswith("/leases"):
                 self.lockfile = "/leases" + self.lockfile
@@ -289,7 +290,9 @@ class LockFile(contextlib.AbstractContextManager):
                 expiration_timestamp=self.expiration_timestamp,
             )
             return json.dumps(contents.__dict__)
-        raise Exception("Non-local lockfiles should not call this?!")
+        raise PyUtilsUnreachableConditionException(
+            "Non-local lockfiles should not call this?!"
+        )
 
     def _read_lockfile(self) -> Optional[str]:
         if not self.zk_client:

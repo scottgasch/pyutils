@@ -49,6 +49,7 @@ from typing import NoReturn
 
 from pyutils import config, logging_utils
 from pyutils.argparse_utils import ActionNoYes
+from pyutils.exceptions import PyUtilsException
 
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
@@ -181,7 +182,7 @@ class ImportInterceptor(importlib.abc.MetaPathFinder):
         return "importlib" in filename or "six.py" in filename
 
     def find_module(self, fullname, path) -> NoReturn:
-        raise Exception(
+        raise PyUtilsException(
             "This method has been deprecated since Python 3.4, please upgrade."
         )
 

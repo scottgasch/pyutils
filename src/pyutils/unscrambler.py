@@ -20,6 +20,7 @@ import os
 from typing import Dict, Mapping, Optional
 
 from pyutils import config, decorator_utils, list_utils
+from pyutils.exceptions import PyUtilsException
 from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(
@@ -186,7 +187,7 @@ class Unscrambler(object):
                     + 'https://github.com/scottgasch/pyutils#missing-sparse_index-file'
                 )
                 print(msg)
-                raise Exception(msg) from e
+                raise PyUtilsException(msg) from e
         return indexfile
 
     # 52 bits

@@ -121,7 +121,7 @@ def raise_on_duplicated_keys(key, new_value, old_value):
     """Helper for use with :meth:`coalesce` that raises an exception
     when a collision is detected.
     """
-    raise Exception(f'Key {key} is duplicated in more than one input dict.')
+    raise KeyError(f'Key {key} is duplicated in more than one input dict.')
 
 
 def coalesce(
@@ -169,7 +169,7 @@ def coalesce(
     >>> coalesce([a, b, c], aggregation_function=raise_on_duplicated_keys)
     Traceback (most recent call last):
     ...
-    Exception: Key b is duplicated in more than one input dict.
+    KeyError: 'Key b is duplicated in more than one input dict.'
     """
     out: AnyDict = {}
     for d in inputs:

@@ -32,6 +32,8 @@ from os.path import exists, isfile
 from typing import IO, Any, Callable, Generator, List, Literal, Optional, TypeVar
 from uuid import uuid4
 
+from pyutils.exceptions import PyUtilsException
+
 logger = logging.getLogger(__name__)
 
 # Note: this type is either a string or a pathlib.Path and is used
@@ -85,7 +87,7 @@ def slurp_file(
         for x in line_transformers:
             xforms.append(x)
     if not is_readable(filename):
-        raise Exception(f"{filename} can't be read.")
+        raise PyUtilsException(f"{filename} can't be read.")
     with open(str(filename)) as rf:
         for line in rf:
             for transformation in xforms:
@@ -1353,7 +1355,7 @@ class FileWriter(contextlib.AbstractContextManager):
             cmd = f"/bin/mv -f {qtempfile} {qfilename}"
             ret = os.system(cmd)
             if (ret >> 8) != 0:
-                raise Exception(f"{cmd} failed, exit value {ret>>8}!")
+                raise PyUtilsException(f"{cmd} failed, exit value {ret>>8}!")
         return False
 
 
