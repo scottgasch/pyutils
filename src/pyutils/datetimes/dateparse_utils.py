@@ -118,6 +118,7 @@ from pyutils.datetimes.datetime_utils import (
     easter,
     n_timeunits_from_base,
 )
+from pyutils.exceptions import PyUtilsDateParseException
 from pyutils.security import acl
 
 logger = logging.getLogger(__name__)
@@ -141,27 +142,15 @@ def debug_parse(enter_or_exit_f: Callable[[Any, Any], None]):
     return debug_parse_wrapper
 
 
-class ParseException(Exception):
-    """An exception thrown during parsing because of unrecognized input."""
-
-    def __init__(self, message: str) -> None:
-        """
-        Args:
-            message: parse error message description.
-        """
-        super().__init__()
-        self.message = message
-
-
 class RaisingErrorListener(antlr4.DiagnosticErrorListener):
-    """An error listener that raises ParseExceptions.
+    """An error listener that raises PyUtilsDateParseExceptions.
 
     Raises:
-        ParseException: on parse error
+        PyUtilsDateParseException: on parse error
     """
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise ParseException(msg)
+        raise PyUtilsDateParseException(msg)
 
     def reportAmbiguity(
         self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
@@ -294,7 +283,7 @@ class DateParser(dateparse_utilsListener):
         `self.datetime`, `self.date` and `self.time` which can each be
         accessed other methods on the class: :meth:`get_datetime`,
         :meth:`get_date` and :meth:`get_time`.  Raises a
-        `ParseException` with a helpful(?) message on parse error or
+        `PyUtilsDateParseException` with a helpful(?) message on parse error or
         confusion.
 
         This is the main entrypoint to this class for caller code.
@@ -310,7 +299,7 @@ class DateParser(dateparse_utilsListener):
             None on error.
 
         Raises:
-            ParseException: an exception happened during parsing
+            PyUtilsDateParseException: an exception happened during parsing
 
         .. note::
 
@@ -430,14 +419,14 @@ class DateParser(dateparse_utilsListener):
             return TimeUnit(self.day_name_to_number[txt])
         elif txt in self.delta_unit_to_constant:
             return TimeUnit(self.delta_unit_to_constant[txt])
-        raise ParseException(f'Invalid date unit: {orig}')
+        raise PyUtilsDateParseException(f'Invalid date unit: {orig}')
 
     def _figure_out_time_unit(self, orig: str) -> int:
         """Figure out what unit a time expression piece is talking about."""
         txt = orig.lower()[:3]
         if txt in self.time_delta_unit_to_constant:
             return self.time_delta_unit_to_constant[txt]
-        raise ParseException(f'Invalid time unit: {orig}')
+        raise PyUtilsDateParseException(f'Invalid time unit: {orig}')
 
     def _parse_special_date(self, name: str) -> Optional[datetime.date]:
         """Parse what we think is a special date name and return its datetime
@@ -511,9 +500,9 @@ class DateParser(dateparse_utilsListener):
             return d
 
         if 'month' not in self.context:
-            raise ParseException('Missing month')
+            raise PyUtilsDateParseException('Missing month')
         if 'day' not in self.context:
-            raise ParseException('Missing day')
+            raise PyUtilsDateParseException('Missing day')
         if 'year' not in self.context:
             self.context['year'] = self.today.year
             self.saw_overt_year = False
@@ -542,8 +531,8 @@ class DateParser(dateparse_utilsListener):
             tz1 = pytz.timezone(txt)
             if tz1 is not None:
                 return tz1
-        except Exception:
-            logger.exception("Ignoring exception from pytz")
+        except pytz.exceptions.UnknownTimeZoneError:
+            pass
 
         # Try constructing an offset in seconds
         try:
@@ -555,8 +544,8 @@ class DateParser(dateparse_utilsListener):
                 offset = sign * (hour * 60 * 60) + sign * (minute * 60)
                 tzoffset = datetime.timezone(datetime.timedelta(seconds=offset))
                 return tzoffset
-        except Exception:
-            logger.exception("Ignoring exception from datetime.")
+        except ValueError:
+            pass
         return None
 
     @staticmethod
@@ -643,7 +632,7 @@ class DateParser(dateparse_utilsListener):
         # Otherwise treat self.date as a base date that we're modifying
         # with an offset.
         if 'delta_int' not in self.context:
-            raise ParseException('Missing delta_int?!')
+            raise PyUtilsDateParseException('Missing delta_int?!')
         count = self.context['delta_int']
         if count == 0:
             return
@@ -656,7 +645,7 @@ class DateParser(dateparse_utilsListener):
 
         # What are we counting units of?
         if 'delta_unit' not in self.context:
-            raise ParseException('Missing delta_unit?!')
+            raise PyUtilsDateParseException('Missing delta_unit?!')
         unit = self.context['delta_unit']
         dt = n_timeunits_from_base(count, TimeUnit(unit), date_to_datetime(self.date))
         self.date = datetime_to_date(dt)
@@ -680,7 +669,7 @@ class DateParser(dateparse_utilsListener):
         elif 'time_delta_int' in self.context:
             count = self.context['time_delta_int']
         else:
-            raise ParseException('Missing delta in relative time.')
+            raise PyUtilsDateParseException('Missing delta in relative time.')
         if count == 0:
             return
 
@@ -702,7 +691,7 @@ class DateParser(dateparse_utilsListener):
             elif unit == TimeUnit.HOURS:
                 self.timedelta = datetime.timedelta(hours=count)
             else:
-                raise ParseException(f'Invalid Unit: "{unit}"')
+                raise PyUtilsDateParseException(f'Invalid Unit: "{unit}"')
 
     def exitDeltaPlusMinusExpr(
         self, ctx: dateparse_utilsParser.DeltaPlusMinusExprContext
@@ -710,12 +699,16 @@ class DateParser(dateparse_utilsListener):
         try:
             n = ctx.nth()
             if n is None:
-                raise ParseException(f'Bad N in Delta +/- Expr: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Bad N in Delta +/- Expr: {ctx.getText()}'
+                )
             n = n.getText()
             n = DateParser._get_int(n)
             unit = self._figure_out_date_unit(ctx.deltaUnit().getText().lower())
         except Exception as e:
-            raise ParseException(f'Invalid Delta +/-: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Invalid Delta +/-: {ctx.getText()}'
+            ) from e
         else:
             self.context['delta_int'] = n
             self.context['delta_unit'] = unit
@@ -724,7 +717,7 @@ class DateParser(dateparse_utilsListener):
         try:
             unit = self._figure_out_date_unit(ctx.getText().lower())
         except Exception as e:
-            raise ParseException(f'Bad delta unit: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(f'Bad delta unit: {ctx.getText()}') from e
         else:
             self.context['delta_unit'] = unit
 
@@ -734,9 +727,9 @@ class DateParser(dateparse_utilsListener):
         try:
             txt = ctx.getText().lower()
         except Exception as e:
-            raise ParseException(f'Bad next/last: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(f'Bad next/last: {ctx.getText()}') from e
         if 'month' in self.context or 'day' in self.context or 'year' in self.context:
-            raise ParseException(
+            raise PyUtilsDateParseException(
                 'Next/last expression expected to be relative to today.'
             )
         if txt[:4] == 'next':
@@ -752,20 +745,20 @@ class DateParser(dateparse_utilsListener):
             self.context['year'] = self.now_datetime.year
             self.saw_overt_year = True
         else:
-            raise ParseException(f'Bad next/last: {ctx.getText()}')
+            raise PyUtilsDateParseException(f'Bad next/last: {ctx.getText()}')
 
     def exitCountUnitsBeforeAfterTimeExpr(
         self, ctx: dateparse_utilsParser.CountUnitsBeforeAfterTimeExprContext
     ) -> None:
         if 'nth' not in self.context:
-            raise ParseException(f'Bad count expression: {ctx.getText()}')
+            raise PyUtilsDateParseException(f'Bad count expression: {ctx.getText()}')
         try:
             unit = self._figure_out_time_unit(ctx.deltaTimeUnit().getText().lower())
             self.context['time_delta_unit'] = unit
         except Exception as e:
-            raise ParseException(f'Bad delta unit: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(f'Bad delta unit: {ctx.getText()}') from e
         if 'time_delta_before_after' not in self.context:
-            raise ParseException(f'Bad Before/After: {ctx.getText()}')
+            raise PyUtilsDateParseException(f'Bad Before/After: {ctx.getText()}')
 
     def exitDeltaTimeFraction(
         self, ctx: dateparse_utilsParser.DeltaTimeFractionContext
@@ -779,9 +772,9 @@ class DateParser(dateparse_utilsListener):
                 self.context['time_delta_int'] = 30
                 self.context['time_delta_unit'] = TimeUnit.MINUTES
             else:
-                raise ParseException(f'Bad time fraction {ctx.getText()}')
+                raise PyUtilsDateParseException(f'Bad time fraction {ctx.getText()}')
         except Exception as e:
-            raise ParseException(f'Bad time fraction {ctx.getText()}') from e
+            raise PyUtilsDateParseException(f'Bad time fraction {ctx.getText()}') from e
 
     def exitDeltaBeforeAfter(
         self, ctx: dateparse_utilsParser.DeltaBeforeAfterContext
@@ -789,7 +782,9 @@ class DateParser(dateparse_utilsListener):
         try:
             txt = ctx.getText().lower()
         except Exception as e:
-            raise ParseException(f'Bad delta before|after: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad delta before|after: {ctx.getText()}'
+            ) from e
         else:
             self.context['delta_before_after'] = txt
 
@@ -799,7 +794,9 @@ class DateParser(dateparse_utilsListener):
         try:
             txt = ctx.getText().lower()
         except Exception as e:
-            raise ParseException(f'Bad delta before|after: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad delta before|after: {ctx.getText()}'
+            ) from e
         else:
             self.context['time_delta_before_after'] = txt
 
@@ -815,17 +812,21 @@ class DateParser(dateparse_utilsListener):
         """
         try:
             if 'nth' not in self.context:
-                raise ParseException(f'Missing nth number: {ctx.getText()}')
+                raise PyUtilsDateParseException(f'Missing nth number: {ctx.getText()}')
             n = self.context['nth']
             if n < 1 or n > 5:  # months never have more than 5 Foodays
                 if n != -1:
-                    raise ParseException(f'Invalid nth number: {ctx.getText()}')
+                    raise PyUtilsDateParseException(
+                        f'Invalid nth number: {ctx.getText()}'
+                    )
             del self.context['nth']
             self.context['delta_int'] = n
 
             year = self.context.get('year', self.today.year)
             if 'month' not in self.context:
-                raise ParseException(f'Missing month expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Missing month expression: {ctx.getText()}'
+                )
             month = self.context['month']
 
             dow = self.context['dow']
@@ -856,7 +857,7 @@ class DateParser(dateparse_utilsListener):
             self.context['day'] = tmp_date.day
             self.main_type = DateParser.PARSE_TYPE_BASE_AND_OFFSET_EXPR
         except Exception as e:
-            raise ParseException(
+            raise PyUtilsDateParseException(
                 f'Invalid nthWeekday expression: {ctx.getText()}'
             ) from e
 
@@ -870,7 +871,9 @@ class DateParser(dateparse_utilsListener):
         try:
             i = DateParser._get_int(ctx.getText())
         except Exception as e:
-            raise ParseException(f'Bad nth expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad nth expression: {ctx.getText()}'
+            ) from e
         else:
             self.context['nth'] = i
 
@@ -882,9 +885,13 @@ class DateParser(dateparse_utilsListener):
             elif txt == 'last':
                 txt = -1
             else:
-                raise ParseException(f'Bad first|last expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Bad first|last expression: {ctx.getText()}'
+                )
         except Exception as e:
-            raise ParseException(f'Bad first|last expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad first|last expression: {ctx.getText()}'
+            ) from e
         else:
             self.context['nth'] = txt
 
@@ -893,7 +900,7 @@ class DateParser(dateparse_utilsListener):
             dow = ctx.getText().lower()[:3]
             dow = self.day_name_to_number.get(dow, None)
         except Exception as e:
-            raise ParseException('Bad day of week') from e
+            raise PyUtilsDateParseException('Bad day of week') from e
         else:
             self.context['dow'] = dow
 
@@ -911,9 +918,13 @@ class DateParser(dateparse_utilsListener):
                 return
             day = DateParser._get_int(day)
             if day < 1 or day > 31:
-                raise ParseException(f'Bad dayOfMonth expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Bad dayOfMonth expression: {ctx.getText()}'
+                )
         except Exception as e:
-            raise ParseException(f'Bad dayOfMonth expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad dayOfMonth expression: {ctx.getText()}'
+            ) from e
         self.context['day'] = day
 
     def exitMonthName(self, ctx: dateparse_utilsParser.MonthNameContext) -> None:
@@ -924,9 +935,13 @@ class DateParser(dateparse_utilsListener):
             month = month[:3].lower()
             month = self.month_name_to_number.get(month, None)
             if month is None:
-                raise ParseException(f'Bad monthName expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Bad monthName expression: {ctx.getText()}'
+                )
         except Exception as e:
-            raise ParseException(f'Bad monthName expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad monthName expression: {ctx.getText()}'
+            ) from e
         else:
             self.context['month'] = month
 
@@ -934,9 +949,13 @@ class DateParser(dateparse_utilsListener):
         try:
             month = DateParser._get_int(ctx.getText())
             if month < 1 or month > 12:
-                raise ParseException(f'Bad monthNumber expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(
+                    f'Bad monthNumber expression: {ctx.getText()}'
+                )
         except Exception as e:
-            raise ParseException(f'Bad monthNumber expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad monthNumber expression: {ctx.getText()}'
+            ) from e
         else:
             self.context['month'] = month
 
@@ -944,9 +963,11 @@ class DateParser(dateparse_utilsListener):
         try:
             year = DateParser._get_int(ctx.getText())
             if year < 1:
-                raise ParseException(f'Bad year expression: {ctx.getText()}')
+                raise PyUtilsDateParseException(f'Bad year expression: {ctx.getText()}')
         except Exception as e:
-            raise ParseException(f'Bad year expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad year expression: {ctx.getText()}'
+            ) from e
         else:
             self.saw_overt_year = True
             self.context['year'] = year
@@ -958,7 +979,7 @@ class DateParser(dateparse_utilsListener):
             special = ctx.specialDate().getText().lower()
             self.context['special'] = special
         except Exception as e:
-            raise ParseException(
+            raise PyUtilsDateParseException(
                 f'Bad specialDate expression: {ctx.specialDate().getText()}'
             ) from e
         try:
@@ -971,7 +992,7 @@ class DateParser(dateparse_utilsListener):
                 elif mod.LAST() is not None:
                     self.context['special_next_last'] = 'last'
         except Exception as e:
-            raise ParseException(
+            raise PyUtilsDateParseException(
                 f'Bad specialDateNextLast expression: {ctx.getText()}'
             ) from e
 
@@ -984,7 +1005,9 @@ class DateParser(dateparse_utilsListener):
             unit = ctx.deltaUnit().getText().lower()
             ago_from_now = ctx.AGO_FROM_NOW().getText()
         except Exception as e:
-            raise ParseException(f'Bad NFoosFromTodayAgoExpr: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad NFoosFromTodayAgoExpr: {ctx.getText()}'
+            ) from e
 
         if "ago" in ago_from_now or "back" in ago_from_now:
             count = -count
@@ -1038,9 +1061,9 @@ class DateParser(dateparse_utilsListener):
                 else:
                     count = +1
             else:
-                raise ParseException(f'Bad This/Next/Last modifier: {mod}')
+                raise PyUtilsDateParseException(f'Bad This/Next/Last modifier: {mod}')
         except Exception as e:
-            raise ParseException(
+            raise PyUtilsDateParseException(
                 f'Bad DeltaRelativeToTodayExpr: {ctx.getText()}'
             ) from e
         d = n_timeunits_from_base(count, TimeUnit(unit), d)
@@ -1054,7 +1077,9 @@ class DateParser(dateparse_utilsListener):
         try:
             txt = ctx.specialTime().getText().lower()
         except Exception as e:
-            raise ParseException(f'Bad special time expression: {ctx.getText()}') from e
+            raise PyUtilsDateParseException(
+                f'Bad special time expression: {ctx.getText()}'
+            ) from e
         else:
             if txt in {'noon', 'midday'}:
                 self.context['hour'] = 12
@@ -1067,13 +1092,11 @@ class DateParser(dateparse_utilsListener):
                 self.context['seconds'] = 0
                 self.context['micros'] = 0
             else:
-                raise ParseException(f'Bad special time expression: {txt}')
+                raise PyUtilsDateParseException(f'Bad special time expression: {txt}')
 
-        try:
+        if ctx.tzExpr():
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
-        except Exception:
-            logger.exception("Ignoring exception from DateParser")
 
     def exitTwelveHourTimeExpr(
         self, ctx: dateparse_utilsParser.TwelveHourTimeExprContext
@@ -1084,16 +1107,16 @@ class DateParser(dateparse_utilsListener):
                 hour = hour[:-1]
             hour = DateParser._get_int(hour)
         except Exception as e:
-            raise ParseException(f'Bad hour: {ctx.hour().getText()}') from e
+            raise PyUtilsDateParseException(f'Bad hour: {ctx.hour().getText()}') from e
         if hour <= 0 or hour > 12:
-            raise ParseException(f'Bad hour (out of range): {hour}')
+            raise PyUtilsDateParseException(f'Bad hour (out of range): {hour}')
 
         try:
             minute = DateParser._get_int(ctx.minute().getText())
         except Exception:
             minute = 0
         if minute < 0 or minute > 59:
-            raise ParseException(f'Bad minute (out of range): {minute}')
+            raise PyUtilsDateParseException(f'Bad minute (out of range): {minute}')
         self.context['minute'] = minute
 
         try:
@@ -1101,7 +1124,7 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             seconds = 0
         if seconds < 0 or seconds > 59:
-            raise ParseException(f'Bad second (out of range): {seconds}')
+            raise PyUtilsDateParseException(f'Bad second (out of range): {seconds}')
         self.context['seconds'] = seconds
 
         try:
@@ -1109,24 +1132,22 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             micros = 0
         if micros < 0 or micros > 1000000:
-            raise ParseException(f'Bad micros (out of range): {micros}')
+            raise PyUtilsDateParseException(f'Bad micros (out of range): {micros}')
         self.context['micros'] = micros
 
         try:
             ampm = ctx.ampm().getText()
         except Exception as e:
-            raise ParseException(f'Bad ampm: {ctx.ampm().getText()}') from e
+            raise PyUtilsDateParseException(f'Bad ampm: {ctx.ampm().getText()}') from e
         if hour == 12:
             hour = 0
         if ampm[0] == 'p':
             hour += 12
         self.context['hour'] = hour
 
-        try:
+        if ctx.tzExpr():
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
-        except Exception:
-            logger.exception("Ignoring exception from DateParser")
 
     def exitTwentyFourHourTimeExpr(
         self, ctx: dateparse_utilsParser.TwentyFourHourTimeExprContext
@@ -1137,9 +1158,9 @@ class DateParser(dateparse_utilsListener):
                 hour = hour[:-1]
             hour = DateParser._get_int(hour)
         except Exception as e:
-            raise ParseException(f'Bad hour: {ctx.hour().getText()}') from e
+            raise PyUtilsDateParseException(f'Bad hour: {ctx.hour().getText()}') from e
         if hour < 0 or hour > 23:
-            raise ParseException(f'Bad hour (out of range): {hour}')
+            raise PyUtilsDateParseException(f'Bad hour (out of range): {hour}')
         self.context['hour'] = hour
 
         try:
@@ -1147,7 +1168,9 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             minute = 0
         if minute < 0 or minute > 59:
-            raise ParseException(f'Bad minute (out of range): {ctx.getText()}')
+            raise PyUtilsDateParseException(
+                f'Bad minute (out of range): {ctx.getText()}'
+            )
         self.context['minute'] = minute
 
         try:
@@ -1155,7 +1178,9 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             seconds = 0
         if seconds < 0 or seconds > 59:
-            raise ParseException(f'Bad second (out of range): {ctx.getText()}')
+            raise PyUtilsDateParseException(
+                f'Bad second (out of range): {ctx.getText()}'
+            )
         self.context['seconds'] = seconds
 
         try:
@@ -1163,14 +1188,14 @@ class DateParser(dateparse_utilsListener):
         except Exception:
             micros = 0
         if micros < 0 or micros >= 1000000:
-            raise ParseException(f'Bad micros (out of range): {ctx.getText()}')
+            raise PyUtilsDateParseException(
+                f'Bad micros (out of range): {ctx.getText()}'
+            )
         self.context['micros'] = micros
 
-        try:
+        if ctx.tzExpr():
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
-        except Exception:
-            logger.exception("Ignoring exception from DateParser")
 
 
 @bootstrap.initialize

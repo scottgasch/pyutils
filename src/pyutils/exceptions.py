@@ -27,3 +27,7 @@ class PyUtilsUnreadableConsoleException(PyUtilsException):
 
 class PyUtilsUnreachableConditionException(PyUtilsException):
     pass
+
+
+class PyUtilsDateParseException(PyUtilsException):
+    pass

@@ -1392,7 +1392,7 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
         filesystem_mode: Optional[int] = 0o600,
         open_mode: Optional[str] = "w",
         *,
-        encoding: Optional[str] = 'utf-8',
+        encoding: Optional[str] = None,
     ) -> None:
         """
         Args:

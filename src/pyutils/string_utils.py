@@ -61,6 +61,7 @@ from typing import (
 from uuid import uuid4
 
 from pyutils import list_utils
+from pyutils.exceptions import PyUtilsDateParseException
 
 logger = logging.getLogger(__name__)
 
@@ -1745,7 +1746,7 @@ def to_date(in_str: str) -> Optional[datetime.date]:
         d = du.DateParser()  # type: ignore
         d.parse(in_str)
         return d.get_date()
-    except du.ParseException:  # type: ignore
+    except PyUtilsDateParseException:  # type: ignore
         pass
     return None
 
@@ -1785,7 +1786,7 @@ def extract_date(in_str: Any) -> Optional[datetime.datetime]:
             logger.debug("Trying %s", expr)
             if d.parse(expr):
                 return d.get_datetime()
-        except du.ParseException:  # type: ignore
+        except PyUtilsDateParseException:  # type: ignore
             pass
     return None
 
@@ -1818,7 +1819,7 @@ def is_valid_date(in_str: str) -> bool:
         d = dp.DateParser()  # type: ignore
         _ = d.parse(in_str)
         return True
-    except dp.ParseException:  # type: ignore
+    except PyUtilsDateParseException:  # type: ignore
         pass
     return False
 
