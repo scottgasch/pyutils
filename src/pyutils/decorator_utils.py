@@ -463,17 +463,20 @@ def predicated_retry_with_backoff(
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay_sec  # make mutable
             logger.debug("deco_retry: will make up to %d attempts...", mtries)
-            retval = f(*args, **kwargs)
-            while mtries > 0:
+            while True:
+                logger.debug('Calling wrapped function; up to %d tries remain.', mtries)
+                retval = f(*args, **kwargs)
                 if predicate(retval) is True:
-                    logger.debug("Predicate succeeded, deco_retry is done.")
+                    logger.debug("Predicate indicates succeess, we're done.")
                     return retval
-                logger.debug("Predicate failed, sleeping and retrying.")
+                logger.error("Predicate indicates failure...")
                 mtries -= 1
+                if mtries <= 0:
+                    logger.error('Giving up and returning the failed return value')
+                    return retval
+                logger.debug('Sleeping for %5.1f sec', mdelay)
                 time.sleep(mdelay)
                 mdelay *= backoff
-                retval = f(*args, **kwargs)
-            return retval
 
         return f_retry
 
