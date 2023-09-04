@@ -139,6 +139,12 @@ def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
         CalledProcessError: the child process didn't exit cleanly
         TimeoutExpired: the child process ran too long
 
+    .. warning::
+        This function invokes a subshell, beware of shell-injection
+        attacks.  Your code should sanitize the command using
+        :meth:`shlex.quote` on user-provided data before invoking
+        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
+
     >>> cmd('/bin/echo foo')[:-1]
     'foo'
 
@@ -146,7 +152,6 @@ def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
     Traceback (most recent call last):
     ...
     subprocess.TimeoutExpired: Command '/bin/sleep 2' timed out after 0.01 seconds
-
     """
     ret = subprocess.run(
         command,
@@ -175,6 +180,12 @@ def run_silently(command: str, timeout_seconds: Optional[float] = None) -> None:
     Raises:
         CalledProcessError: if the child process fails (i.e. exit != 0)
         TimeoutExpired: if the child process executes too long.
+
+    .. warning::
+        This function invokes a subshell, beware of shell-injection
+        attacks.  Your code should sanitize the command using
+        :meth:`shlex.quote` on user-provided data before invoking
+        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
 
     >>> run_silently("/usr/bin/true")
 
