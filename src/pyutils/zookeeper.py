@@ -58,7 +58,7 @@ def get_zookeeper_config() -> Optional[Tuple[str, str, str]]:
         config_file = f'{os.environ["HOME"]}/.zookeeper_secrets'
 
     try:
-        with open(config_file, 'r') as rf:
+        with open(config_file, 'r', encoding='utf-8') as rf:
             contents = rf.read()
         json_dict = json.loads(contents)
         if (

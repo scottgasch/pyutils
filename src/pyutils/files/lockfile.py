@@ -144,7 +144,7 @@ class LockFile(contextlib.AbstractContextManager):
         try:
             logger.debug("Trying to acquire local lock %s.", self.lockfile)
             fd = os.open(self.lockfile, os.O_CREAT | os.O_EXCL | os.O_RDWR)
-            with os.fdopen(fd, "a") as f:
+            with os.fdopen(fd, "a", encoding='utf-8') as f:
                 contents = self._construct_local_lockfile_contents()
                 logger.debug(contents)
                 f.write(contents)

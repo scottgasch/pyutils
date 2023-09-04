@@ -88,7 +88,7 @@ def slurp_file(
             xforms.append(x)
     if not is_readable(filename):
         raise PyUtilsException(f"{filename} can't be read.")
-    with open(str(filename)) as rf:
+    with open(str(filename), encoding='utf-8') as rf:
         for line in rf:
             for transformation in xforms:
                 line = transformation(line)
@@ -1343,7 +1343,7 @@ class FileWriter(contextlib.AbstractContextManager):
 
     def __enter__(self) -> IO[Any]:
         assert not does_path_exist(self.tempfile)
-        self.handle = open(self.tempfile, mode="w")
+        self.handle = open(self.tempfile, mode="w", encoding='utf-8')
         assert self.handle
         return self.handle
 
@@ -1384,7 +1384,6 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
         >>> contents
         'This is a test\\n'
         >>> remove(filename)
-
     """
 
     def __init__(
@@ -1392,6 +1391,8 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
         filename: StrOrPath,
         filesystem_mode: Optional[int] = 0o600,
         open_mode: Optional[str] = "w",
+        *,
+        encoding: Optional[str] = 'utf-8',
     ) -> None:
         """
         Args:
@@ -1400,6 +1401,8 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
                 the filename.  Defaults to 0o600.
             open_mode: the mode to use when opening the file (e.g. 'w', 'wb',
                 etc...)
+            encoding: optional encoding you're using to write the opened file.
+                Use None for binary files (e.g. 'wb' mode).
 
         .. warning::
 
@@ -1417,6 +1420,7 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
             self.open_mode = "w"
         self.handle: Optional[IO[Any]] = None
         self.old_umask = os.umask(0)
+        self.encoding = encoding
 
     def __enter__(self) -> IO[Any]:
         descriptor = os.open(
@@ -1424,7 +1428,7 @@ class CreateFileWithMode(contextlib.AbstractContextManager):
             flags=(os.O_WRONLY | os.O_CREAT | os.O_TRUNC),
             mode=self.filesystem_mode,
         )
-        self.handle = open(descriptor, self.open_mode)
+        self.handle = open(descriptor, self.open_mode, encoding=self.encoding)
         assert self.handle
         return self.handle
 

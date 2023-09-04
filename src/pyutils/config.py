@@ -510,7 +510,7 @@ class Config:
     def _read_config_from_disk(self, filepath: str) -> Optional[str]:
         if not os.path.exists(filepath):
             return None
-        with open(filepath, "r") as rf:
+        with open(filepath, "r", encoding='utf-8') as rf:
             self.saved_messages.append(f"Read config from disk file {filepath}")
             return rf.read()
 
@@ -572,7 +572,7 @@ class Config:
         print()
 
     def _write_config_to_disk(self, data: str, filepath: str) -> None:
-        with open(filepath, "w") as wf:
+        with open(filepath, "w", encoding='utf-8') as wf:
             wf.write(data)
 
     def _write_config_to_zookeeper(self, data: str, zkpath: str) -> None:

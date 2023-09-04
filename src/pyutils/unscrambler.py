@@ -138,7 +138,7 @@ class Unscrambler(object):
         self.words = []
 
         filename = Unscrambler.get_indexfile(indexfile)
-        with open(filename, "r") as rf:
+        with open(filename, "r", encoding='utf-8') as rf:
             lines = rf.readlines()
         for line in lines:
             line = line[:-1]
@@ -282,7 +282,7 @@ class Unscrambler(object):
         """
         words_by_sigs: Dict[int, str] = {}
         seen = set()
-        with open(dictfile, "r") as f:
+        with open(dictfile, "r", encoding='utf-8') as f:
             for word in f:
                 word = word.replace("\n", "")
                 word = word.lower()
@@ -295,7 +295,7 @@ class Unscrambler(object):
                     words_by_sigs[sig] += f",{word}"
                 else:
                     words_by_sigs[sig] = word
-        with open(indexfile, "w") as f:
+        with open(indexfile, "w", encoding='utf-8') as f:
             for sig in sorted(words_by_sigs.keys()):
                 word = words_by_sigs[sig]
                 print(f"0x{sig:x}+{word}", file=f)
