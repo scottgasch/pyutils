@@ -43,6 +43,13 @@ def cmd_showing_output(
 
     Side effects:
         prints all output of the child process (stdout or stderr)
+
+    .. warning::
+        This function invokes a subshell, beware of shell-injection
+        attacks.  Your code should sanitize the command using
+        :meth:`shlex.quote` on user-provided data before invoking
+        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
+
     """
 
     def timer_expired(p):
