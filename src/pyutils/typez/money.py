@@ -93,7 +93,10 @@ class Money(object):
         return Money(amount=self.amount, currency=self.currency)
 
     def __neg__(self):
-        return Money(amount=-self.amount, currency=self.currency)
+        if not self.amount:
+            return Money(amount=self.amount, currency=self.currency)
+        else:
+            return Money(amount=-self.amount, currency=self.currency)
 
     def __add__(self, other):
         """

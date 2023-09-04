@@ -111,7 +111,10 @@ class CentCount(object):
         return CentCount(centcount=self.centcount, currency=self.currency)
 
     def __neg__(self):
-        return CentCount(centcount=-self.centcount, currency=self.currency)
+        if not self.centcount:
+            return CentCount(centcount=self.centcount, currency=self.currency)
+        else:
+            return CentCount(centcount=-self.centcount, currency=self.currency)
 
     def __add__(self, other):
         """
