@@ -1847,7 +1847,7 @@ def to_datetime(in_str: str) -> Optional[datetime.datetime]:
         if isinstance(dt, datetime.datetime):
             return dt
     except Exception:
-        pass
+        logger.exception("Ignoring exception from DateParser")
     return None
 
 

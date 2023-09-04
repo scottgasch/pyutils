@@ -1270,7 +1270,7 @@ def non_zero_return_value(ret: Any) -> bool:
                 log.error('%s (%s) Exit %s', program, args, ret)
             return True
     except Exception:
-        pass
+        logger.exception("Ignoring exception in logging system")
     return False
 
 
@@ -1311,7 +1311,7 @@ def unhandled_top_level_exception(
                 )
             return True
     except Exception:
-        pass
+        logger.exception("Ignoring exception in logging system.")
     return False
 
 

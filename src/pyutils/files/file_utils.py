@@ -26,6 +26,7 @@ import logging
 import os
 import pathlib
 import re
+import shlex
 import time
 from os.path import exists, isfile
 from typing import IO, Any, Callable, Generator, List, Literal, Optional, TypeVar
@@ -381,9 +382,6 @@ def create_path_if_not_exist(
 
     See also :meth:`does_file_exist`.
 
-    .. warning::
-        Files are created with mode 0o0777 (i.e. world read/writeable).
-
     >>> import uuid
     >>> import os
     >>> path = os.path.join("/tmp", str(uuid.uuid4()), str(uuid.uuid4()))
@@ -398,7 +396,7 @@ def create_path_if_not_exist(
     previous_umask = os.umask(0)
     try:
         os.makedirs(spath)
-        os.chmod(spath, 0o777)
+        os.chmod(spath, 0o700)
     except OSError as ex:
         if ex.errno != errno.EEXIST and not os.path.isdir(spath):
             if on_error is not None:
@@ -1350,7 +1348,9 @@ class FileWriter(contextlib.AbstractContextManager):
     def __exit__(self, exc_type, exc_val, exc_tb) -> Literal[False]:
         if self.handle is not None:
             self.handle.close()
-            cmd = f"/bin/mv -f {self.tempfile} {self.filename}"
+            qtempfile = shlex.quote(self.tempfile)
+            qfilename = shlex.quote(self.filename)
+            cmd = f"/bin/mv -f {qtempfile} {qfilename}"
             ret = os.system(cmd)
             if (ret >> 8) != 0:
                 raise Exception(f"{cmd} failed, exit value {ret>>8}!")

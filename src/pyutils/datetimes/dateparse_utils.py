@@ -543,7 +543,7 @@ class DateParser(dateparse_utilsListener):
             if tz1 is not None:
                 return tz1
         except Exception:
-            pass
+            logger.exception("Ignoring exception from pytz")
 
         # Try constructing an offset in seconds
         try:
@@ -556,7 +556,7 @@ class DateParser(dateparse_utilsListener):
                 tzoffset = datetime.timezone(datetime.timedelta(seconds=offset))
                 return tzoffset
         except Exception:
-            pass
+            logger.exception("Ignoring exception from datetime.")
         return None
 
     @staticmethod
@@ -1073,7 +1073,7 @@ class DateParser(dateparse_utilsListener):
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
         except Exception:
-            pass
+            logger.exception("Ignoring exception from DateParser")
 
     def exitTwelveHourTimeExpr(
         self, ctx: dateparse_utilsParser.TwelveHourTimeExprContext
@@ -1126,7 +1126,7 @@ class DateParser(dateparse_utilsListener):
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
         except Exception:
-            pass
+            logger.exception("Ignoring exception from DateParser")
 
     def exitTwentyFourHourTimeExpr(
         self, ctx: dateparse_utilsParser.TwentyFourHourTimeExprContext
@@ -1170,7 +1170,7 @@ class DateParser(dateparse_utilsListener):
             tz = ctx.tzExpr().getText()
             self.context['tz'] = DateParser._parse_tz(tz)
         except Exception:
-            pass
+            logger.exception("Ignoring exception from DateParser")
 
 
 @bootstrap.initialize

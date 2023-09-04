@@ -439,7 +439,7 @@ def valid_datetime(txt: str) -> datetime.datetime:
                 datetime_utils.replace_timezone(dt, tz)
                 return dt
     except Exception:
-        pass
+        logger.exception("Ignoring exception from datetime_utils.")
 
     msg = f"Cannot parse argument as datetime: {txt}"
     logger.error(msg)

@@ -71,7 +71,7 @@ def get_zookeeper_config() -> Optional[Tuple[str, str, str]]:
                 json_dict['zookeeper_client_passphrase'],
             )
     except Exception:
-        pass
+        logger.exception("Ignoring exception from json parsing")
     return None
 
 

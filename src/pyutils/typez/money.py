@@ -15,9 +15,12 @@ See also :class:`pyutils.typez.centcount.CentCount` which represents
 monetary amounts as an integral number of cents.
 """
 
+import logging
 import re
 from decimal import ROUND_FLOOR, ROUND_HALF_DOWN, Decimal
 from typing import Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 
 class Money(object):
@@ -334,7 +337,7 @@ class Money(object):
                 elif Money.CURRENCY_RE.match(chunk) is not None:
                     currency = chunk
         except Exception:
-            pass
+            logger.exception("Ignoring exception in money")
         if amount is not None and currency is not None:
             return (amount, currency)
         elif amount is not None:

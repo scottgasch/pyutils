@@ -46,8 +46,11 @@ Decimals (see: https://docs.python.org/3/library/decimal.html) to
 represent monetary amounts.
 """
 
+import logging
 import re
 from typing import Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 
 class CentCount(object):
@@ -337,7 +340,7 @@ class CentCount(object):
                 elif CentCount.CURRENCY_RE.match(chunk) is not None:
                     currency = chunk
         except Exception:
-            pass
+            logger.exception("Ignoring exception in centcount")
         if centcount is not None and currency is not None:
             return (centcount, currency)
         elif centcount is not None:
