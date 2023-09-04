@@ -37,7 +37,10 @@ import kazoo
 
 from pyutils import argparse_utils, config, decorator_utils, zookeeper
 from pyutils.datetimes import datetime_utils
-from pyutils.exceptions import PyUtilsUnreachableConditionException
+from pyutils.exceptions import (
+    PyUtilsLockfileException,
+    PyUtilsUnreachableConditionException,
+)
 from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(f"Lockfile ({__file__})", "Args related to lockfiles")
@@ -49,12 +52,6 @@ cfg.add_argument(
     help="If a lock is held for longer than this threshold we log a warning",
 )
 logger = logging.getLogger(__name__)
-
-
-class LockFileException(Exception):
-    """An exception related to lock files."""
-
-    pass
 
 
 @dataclass
@@ -251,7 +248,7 @@ class LockFile(contextlib.AbstractContextManager):
                 since = file_utils.describe_file_mtime(self.lockfile, brief=True)
                 msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} for {since} ({contents.commandline}).  Giving up."
         logger.warning(msg)
-        raise LockFileException(msg)
+        raise PyUtilsLockfileException(msg)
 
     def __exit__(self, _, value, traceback) -> Literal[False]:
         if self.locktime:
@@ -297,7 +294,7 @@ class LockFile(contextlib.AbstractContextManager):
     def _read_lockfile(self) -> Optional[str]:
         if not self.zk_client:
             try:
-                with open(self.lockfile, "r") as rf:
+                with open(self.lockfile, 'r', encoding='utf-8') as rf:
                     lines = rf.readlines()
                     return lines[0]
             except Exception:

@@ -12,18 +12,14 @@ flexible search semantics.
 from __future__ import annotations
 
 import enum
-import sys
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
+from pyutils.exceptions import PyUtilsParseError
 
-class ParseError(Exception):
-    """An error encountered while parsing a logical search expression."""
-
-    def __init__(self, message: str):
-        super().__init__()
-        self.message = message
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -277,8 +273,8 @@ class Corpus(object):
 
         try:
             root = self._parse_query(query)
-        except ParseError as e:
-            print(e.message, file=sys.stderr)
+        except PyUtilsParseError:
+            logger.exception("Parse error")
             return None
         return root.eval()
 
@@ -310,19 +306,22 @@ class Corpus(object):
                     first = token[0]
                     if first in parens:
                         tail = token[1:]
+                        logger.debug(first)
                         yield first
                         token = tail
                     last = token[-1]
                     if last in parens:
                         head = token[0:-1]
+                        logger.debug(head)
                         yield head
                         token = last
+                logger.debug(token)
                 yield token
 
         def evaluate(corpus: Corpus, stack: List[str]):
             """
             Raises:
-                ParseError: bad number of operations, unbalanced parenthesis,
+                PyUtilsParseError: bad number of operations, unbalanced parenthesis,
                     unknown operators, internal errors.
             """
             node_stack: List[Node] = []
@@ -335,7 +334,7 @@ class Corpus(object):
                     operation = Operation.from_token(token)
                     operand_count = operation.num_operands()
                     if len(node_stack) < operand_count:
-                        raise ParseError(
+                        raise PyUtilsParseError(
                             f"Incorrect number of operations for {operation}"
                         )
                     for _ in range(operation.num_operands()):
@@ -364,20 +363,22 @@ class Corpus(object):
                         ok = True
                         break
                 if not ok:
-                    raise ParseError("Unbalanced parenthesis in query expression")
+                    raise PyUtilsParseError(
+                        "Unbalanced parenthesis in query expression"
+                    )
 
             # and, or, not
             else:
                 my_precedence = operator_precedence(token)
                 if my_precedence is None:
-                    raise ParseError(f"Unknown operator: {token}")
+                    raise PyUtilsParseError(f"Unknown operator: {token}")
                 while len(operator_stack) > 0:
                     peek_operator = operator_stack[-1]
                     if not is_operator(peek_operator) or peek_operator == "(":
                         break
                     peek_precedence = operator_precedence(peek_operator)
                     if peek_precedence is None:
-                        raise ParseError("Internal error")
+                        raise PyUtilsParseError("Internal error")
                     if (
                         (peek_precedence < my_precedence)
                         or (peek_precedence == my_precedence)
@@ -389,7 +390,7 @@ class Corpus(object):
         while len(operator_stack) > 0:
             token = operator_stack.pop()
             if token in parens:
-                raise ParseError("Unbalanced parenthesis in query expression")
+                raise PyUtilsParseError("Unbalanced parenthesis in query expression")
             output_stack.append(token)
         return evaluate(self, output_stack)
 
@@ -411,7 +412,7 @@ class Node(object):
         """Evaluate this node.
 
         Raises:
-            ParseError: unexpected operands, invalid key:value syntax, wrong
+            PyUtilsParseError: unexpected operands, invalid key:value syntax, wrong
                 number of operands for operation, other invalid queries.
         """
 
@@ -422,7 +423,7 @@ class Node(object):
             elif isinstance(operand, str):
                 evaled_operands.append(operand)
             else:
-                raise ParseError(f"Unexpected operand: {operand}")
+                raise PyUtilsParseError(f"Unexpected operand: {operand}")
 
         retval = set()
         if self.op is Operation.QUERY:
@@ -432,7 +433,7 @@ class Node(object):
                         try:
                             key, value = tag.split(":")
                         except ValueError as v:
-                            raise ParseError(
+                            raise PyUtilsParseError(
                                 f'Invalid key:value syntax at "{tag}"'
                             ) from v
 
@@ -455,25 +456,31 @@ class Node(object):
                             r = self.corpus.get_docids_by_exact_tag(tag)
                     retval.update(r)
                 else:
-                    raise ParseError(f"Unexpected query {tag}")
+                    raise PyUtilsParseError(f"Unexpected query {tag}")
         elif self.op is Operation.DISJUNCTION:
             if len(evaled_operands) != 2:
-                raise ParseError("Operation.DISJUNCTION (or) expects two operands.")
+                raise PyUtilsParseError(
+                    "Operation.DISJUNCTION (or) expects two operands."
+                )
             retval.update(evaled_operands[0])
             retval.update(evaled_operands[1])
         elif self.op is Operation.CONJUNCTION:
             if len(evaled_operands) != 2:
-                raise ParseError("Operation.CONJUNCTION (and) expects two operands.")
+                raise PyUtilsParseError(
+                    "Operation.CONJUNCTION (and) expects two operands."
+                )
             retval.update(evaled_operands[0])
             retval = retval.intersection(evaled_operands[1])
         elif self.op is Operation.INVERSION:
             if len(evaled_operands) != 1:
-                raise ParseError("Operation.INVERSION (not) expects one operand.")
+                raise PyUtilsParseError(
+                    "Operation.INVERSION (not) expects one operand."
+                )
             _ = evaled_operands[0]
             if isinstance(_, set):
                 retval.update(self.corpus.invert_docid_set(_))
             else:
-                raise ParseError(f"Unexpected negation operand {_} ({type(_)})")
+                raise PyUtilsParseError(f"Unexpected negation operand {_} ({type(_)})")
         return retval
 
 

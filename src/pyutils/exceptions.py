@@ -31,3 +31,11 @@ class PyUtilsUnreachableConditionException(PyUtilsException):
 
 class PyUtilsDateParseException(PyUtilsException):
     pass
+
+
+class PyUtilsLockfileException(PyUtilsException):
+    pass
+
+
+class PyUtilsParseError(PyUtilsException):
+    pass

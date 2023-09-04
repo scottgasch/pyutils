@@ -345,12 +345,6 @@ class ProcessExecutor(BaseExecutor):
         return state
 
 
-class RemoteExecutorException(Exception):
-    """Thrown when a bundle cannot be executed despite several retries."""
-
-    pass
-
-
 def get_remote_workers_filename() -> str:
     remote_workers_record_file = config.config['remote_worker_records_file']
     if not remote_workers_record_file:
@@ -873,7 +867,7 @@ class RemoteExecutor(BaseExecutor):
             policy: A policy for selecting remote workers for tasks.
 
         Raises:
-            RemoteExecutorException: unable to find a place to schedule work.
+            PyUtilsException: unable to find a place to schedule work.
         """
 
         super().__init__()
@@ -895,7 +889,7 @@ class RemoteExecutor(BaseExecutor):
         if self.worker_count <= 0:
             msg = f"We need somewhere to schedule work; count was {self.worker_count}"
             logger.critical(msg)
-            raise RemoteExecutorException(msg)
+            raise PyUtilsException(msg)
         self.policy.register_worker_pool(self.workers)
         self.cv = threading.Condition()
         logger.debug(
@@ -1501,7 +1495,7 @@ class RemoteExecutor(BaseExecutor):
         from the beginning or throw in the towel and give up on it.
 
         Raises:
-            RemoteExecutorException: a bundle fails repeatedly.
+            PyUtilsException: a bundle fails repeatedly.
         """
 
         is_original = bundle.src_bundle is None
@@ -1522,7 +1516,7 @@ class RemoteExecutor(BaseExecutor):
                 retry_limit,
             )
             if is_original:
-                raise RemoteExecutorException(
+                raise PyUtilsException(
                     f'{bundle}: This bundle can\'t be completed despite several backups and retries',
                 )
             logger.error(
