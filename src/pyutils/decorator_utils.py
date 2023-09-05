@@ -24,6 +24,8 @@ import traceback
 import warnings
 from typing import Any, Callable, List, NoReturn, Optional, Union
 
+from pyutils.exceptions import PyUtilsException
+
 # This module is commonly used by others in here and should avoid
 # taking any unnecessary dependencies back on them.
 
@@ -403,6 +405,7 @@ def predicated_retry_with_backoff(
     on_attempt: Optional[Callable[..., None]] = None,
     on_success: Optional[Callable[..., None]] = None,
     on_failure: Optional[Callable[..., None]] = None,
+    raise_on_repeated_failures: bool = False,
 ):
     """Retries a function or method up to a certain number of times with a
     prescribed initial delay period and backoff rate (multiplier).  Note
@@ -422,15 +425,17 @@ def predicated_retry_with_backoff(
         on_attempt: an optional callable to be invoked at each attempt
         on_success: an optional callable to be invoked on success
         on_failure: an optional callable to be invoked on failure
+        raise_on_repeated_failures: if True, raise a PyUtilsException
+            if the wrapped function never succeeds (as indicated by
+            the predicate).  Otherwise simply returns the final error
+            result.
 
     Raises:
         ValueError: on invalid arguments; e.g. backoff must be >= 1.0,
             delay_sec must be >= 0.0, tries must be > 0.
-
-    .. note::
-
-        If after `tries` attempts the wrapped function is still
-        failing, this code returns the failure result to the caller.
+        PyUtilsException: if raise_on_repeated_failures is True and
+            the wrapped function fails tries times.  Otherwise simply
+            returns the final error result.
 
     Example usage that would call `make_the_RPC_call` up to three
     times (as long as it returns a tuple with `False` in the second
@@ -485,8 +490,12 @@ def predicated_retry_with_backoff(
                         on_failure()
                     mtries -= 1
                     if mtries <= 0:
-                        logger.error('Giving up and returning the failed return value')
-                        return retval
+                        msg = f'Tried wrapped function {tries}x with backoffs between them; it always failed.'
+                        if raise_on_repeated_failures:
+                            raise PyUtilsException(msg)
+                        else:
+                            logger.error(msg)
+                            return retval
                     logger.debug('Sleeping for %5.1f sec', mdelay)
                     time.sleep(mdelay)
                     mdelay *= backoff
