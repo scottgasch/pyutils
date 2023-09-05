@@ -400,6 +400,9 @@ def predicated_retry_with_backoff(
     predicate: Callable[..., bool],
     delay_sec: float = 3.0,
     backoff: float = 2.0,
+    on_attempt: Optional[Callable[..., None]] = None,
+    on_success: Optional[Callable[..., None]] = None,
+    on_failure: Optional[Callable[..., None]] = None,
 ):
     """Retries a function or method up to a certain number of times with a
     prescribed initial delay period and backoff rate (multiplier).  Note
@@ -416,6 +419,9 @@ def predicated_retry_with_backoff(
             the decorated function and must return True to indicate
             that we should stop calling or False to indicate a retry
             is necessary
+        on_attempt: an optional callable to be invoked at each attempt
+        on_success: an optional callable to be invoked on success
+        on_failure: an optional callable to be invoked on failure
 
     Raises:
         ValueError: on invalid arguments; e.g. backoff must be >= 1.0,
@@ -465,18 +471,25 @@ def predicated_retry_with_backoff(
             logger.debug("deco_retry: will make up to %d attempts...", mtries)
             while True:
                 logger.debug('Calling wrapped function; up to %d tries remain.', mtries)
+                if on_attempt:
+                    on_attempt()
                 retval = f(*args, **kwargs)
                 if predicate(retval) is True:
                     logger.debug("Predicate indicates succeess, we're done.")
+                    if on_success:
+                        on_success()
                     return retval
-                logger.error("Predicate indicates failure...")
-                mtries -= 1
-                if mtries <= 0:
-                    logger.error('Giving up and returning the failed return value')
-                    return retval
-                logger.debug('Sleeping for %5.1f sec', mdelay)
-                time.sleep(mdelay)
-                mdelay *= backoff
+                else:
+                    logger.error("Predicate indicates failure...")
+                    if on_failure:
+                        on_failure()
+                    mtries -= 1
+                    if mtries <= 0:
+                        logger.error('Giving up and returning the failed return value')
+                        return retval
+                    logger.debug('Sleeping for %5.1f sec', mdelay)
+                    time.sleep(mdelay)
+                    mdelay *= backoff
 
         return f_retry
 
