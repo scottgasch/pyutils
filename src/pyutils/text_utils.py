@@ -638,12 +638,77 @@ def box(
     return preformatted_box(title, text, width=width, color=color)
 
 
+BOX_TYPES = {
+    "single_rounded": {
+        "tr_corner": "╭",
+        "t_hline": "─",
+        "tl_corner": "╮",
+        "r_vline": "│",
+        "l_vline": "│",
+        "bl_corner": "╰",
+        "b_hline": "─",
+        "br_corner": "╯",
+    },
+    "block": {
+        "tr_corner": "▛",
+        "t_hline": "▀",
+        "tl_corner": "▜",
+        "r_vline": "▐",
+        "l_vline": "▌",
+        "bl_corner": "▙",
+        "b_hline": "▄",
+        "br_corner": "▟",
+    },
+    "single": {
+        "tr_corner": "┌",
+        "t_hline": "─",
+        "tl_corner": "┐",
+        "r_vline": "│",
+        "l_vline": "│",
+        "bl_corner": "└",
+        "b_hline": "─",
+        "br_corner": "┘",
+    },
+    "double": {
+        "tr_corner": "╔",
+        "t_hline": "═",
+        "tl_corner": "╗",
+        "r_vline": "║",
+        "l_vline": "║",
+        "bl_corner": "╚",
+        "b_hline": "═",
+        "br_corner": "╝",
+    },
+    "space": {
+        "tr_corner": " ",
+        "t_hline": " ",
+        "tl_corner": " ",
+        "r_vline": " ",
+        "l_vline": " ",
+        "bl_corner": " ",
+        "b_hline": " ",
+        "br_corner": " ",
+    },
+    "dashed": {
+        "tr_corner": "┏",
+        "t_hline": "╌",
+        "tl_corner": "┓",
+        "r_vline": "╎",
+        "l_vline": "╎",
+        "bl_corner": "┗",
+        "b_hline": "╌",
+        "br_corner": "┛",
+    },
+}
+
+
 def preformatted_box(
     title: Optional[str] = None,
     text: Optional[str] = None,
     *,
     width: int = 80,
     color: str = "",
+    kind: str = "default",
 ) -> str:
     """Creates a nice box with rounded corners and returns it as a string.
 
@@ -652,6 +717,8 @@ def preformatted_box(
         text: the text inside the box
         width: the width of the box
         color: the box's color
+        kind: the kind of box; "default", "single", "rounded", "block",
+            "double", "space", "dashed"
 
     Returns:
         the box as a string
@@ -668,6 +735,26 @@ def preformatted_box(
     │ text             │
     ╰──────────────────╯
     """
+    if kind in BOX_TYPES:
+        chars = BOX_TYPES[kind]
+        tr_corner = chars["tr_corner"]
+        t_hline = chars["t_hline"]
+        tl_corner = chars["tl_corner"]
+        r_vline = chars["r_vline"]
+        l_vline = chars["l_vline"]
+        bl_corner = chars["bl_corner"]
+        b_hline = chars["b_hline"]
+        br_corner = chars["br_corner"]
+    else:
+        tr_corner = "╭"
+        t_hline = "─"
+        tl_corner = "╮"
+        r_vline = "│"
+        l_vline = "│"
+        bl_corner = "╰"
+        b_hline = "─"
+        br_corner = "╯"
+
     assert width > 4
     ret = ""
     if color == "":
@@ -675,35 +762,37 @@ def preformatted_box(
     else:
         rset = reset()
     w = width - 2
-    ret += color + "╭" + "─" * w + "╮" + rset + "\n"
+    ret += color + tr_corner + t_hline * w + tl_corner + rset + "\n"
     if title is not None:
         ret += (
             color
-            + "│"
+            + l_vline
             + rset
             + justify_string(title, width=w, alignment="c")
             + color
-            + "│"
+            + r_vline
             + rset
             + "\n"
         )
-        ret += color + "│" + " " * w + "│" + rset + "\n"
+        ret += color + l_vline + " " * w + r_vline + rset + "\n"
     if text is not None:
         for line in text.split("\n"):
             tw = len(string_utils.strip_ansi_sequences(line))
             assert tw <= w
             ret += (
                 color
-                + "│ "
+                + l_vline
+                + " "
                 + rset
                 + line
                 + " " * (w - tw - 2)
                 + color
-                + " │"
+                + " "
+                + r_vline
                 + rset
                 + "\n"
             )
-    ret += color + "╰" + "─" * w + "╯" + rset + "\n"
+    ret += color + bl_corner + b_hline * w + br_corner + rset + "\n"
     return ret
 
 
