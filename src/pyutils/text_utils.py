@@ -802,6 +802,7 @@ def print_box(
     *,
     width: int = 80,
     color: str = "",
+    kind: str = 'default',
 ) -> None:
     """Draws a box with nice rounded corners.
 
@@ -810,6 +811,7 @@ def print_box(
         text: the text inside the box
         width: the width of the box
         color: the box's color
+        kind: the box type
 
     Returns:
         None
@@ -831,7 +833,7 @@ def print_box(
     │ OK │
     ╰────╯
     """
-    print(preformatted_box(title, text, width=width, color=color), end="")
+    print(preformatted_box(title, text, width=width, color=color, kind=kind), end="")
 
 
 if __name__ == "__main__":
