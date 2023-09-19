@@ -1325,7 +1325,7 @@ def hlog(message: str) -> None:
     TODO: this needs to move.
     """
     message = shlex.quote(message)
-    os.system(f"/usr/bin/logger -p local7.info -- '{message}'")
+    os.system(f"/usr/bin/logger -p local7.info -- {message}")
 
 
 if __name__ == "__main__":

@@ -757,8 +757,9 @@ def preformatted_box(
 
     assert width > 4
     ret = ""
-    if color == "":
+    if not color:
         rset = ""
+        color = ""
     else:
         rset = reset()
     w = width - 2
