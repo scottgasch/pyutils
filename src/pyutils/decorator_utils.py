@@ -396,6 +396,20 @@ def memoized(func: Callable) -> Callable:
     return wrapper_memoized
 
 
+def normal_delay_helper(delay: float) -> None:
+    time.sleep(delay)
+
+
+def jittery_delay_helper(delay: float) -> None:
+    jitter = delay * 0.25
+    jitter *= random.random()
+    if random.choice(['add', 'subtract']) == 'add':
+        delay += jitter
+    else:
+        delay -= jitter
+    normal_delay_helper(delay)
+
+
 def predicated_retry_with_backoff(
     tries: int,
     *,
@@ -405,6 +419,7 @@ def predicated_retry_with_backoff(
     on_attempt: Optional[Callable[..., None]] = None,
     on_success: Optional[Callable[..., None]] = None,
     on_failure: Optional[Callable[..., None]] = None,
+    delay_helper: Optional[Callable[[float], None]] = None,
     raise_on_repeated_failures: bool = False,
 ):
     """Retries a function or method up to a certain number of times with a
@@ -473,6 +488,11 @@ def predicated_retry_with_backoff(
         @functools.wraps(f)
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay_sec  # make mutable
+
+            # Delay evaluation of this until execution time to allow
+            # callers to use 'unittest.mock.patch' on normal_delay_helper.
+            mdelay_helper = delay_helper if delay_helper else normal_delay_helper
+
             logger.debug("deco_retry: will make up to %d attempts...", mtries)
             while True:
                 logger.debug('Calling wrapped function; up to %d tries remain.', mtries)
@@ -497,7 +517,7 @@ def predicated_retry_with_backoff(
                             logger.error(msg)
                             return retval
                     logger.debug('Sleeping for %5.1f sec', mdelay)
-                    time.sleep(mdelay)
+                    mdelay_helper(mdelay)
                     mdelay *= backoff
 
         return f_retry
