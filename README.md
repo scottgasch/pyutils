@@ -71,7 +71,7 @@ This package generates Sphinx docs which are available at
 [https://wannabe.guru.org/pydocs/pyutils/pyutils.html](https://wannabe.guru.org/pydocs/pyutils/pyutils.html).
 You can generate them yourself by running `make html` (with [GNU make](https://www.gnu.org/software/make/)
 under the [docs/](https://github.com/scottgasch/pyutils/tree/master/docs)
-folder.
+folder.)
 
 ## Troubleshooting
 
