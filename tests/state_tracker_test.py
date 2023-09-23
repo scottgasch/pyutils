@@ -91,9 +91,11 @@ class TestStateTracker(unittest.TestCase):
             thread = threading.Thread(target=make_something_change, args=[wast])
             thread.start()
             try:
-                wast.wait()
+                assert wast.wait() is True
                 assert wast.did_something_change() is True
                 wast.reset()
+                assert wast.did_something_change() is False
+                assert wast.wait(timeout=0.1) is False
                 assert wast.did_something_change() is False
             finally:
                 thread.join()
