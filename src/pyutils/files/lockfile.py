@@ -178,6 +178,9 @@ class LockFile(contextlib.AbstractContextManager):
                 success = True
         else:
             success = self._try_acquire_local_filesystem_lock()
+            if not success:
+                self._detect_stale_lockfile()
+                success = self._try_acquire_local_filesystem_lock()
 
         if success:
             self.locktime = datetime.datetime.now().timestamp()
