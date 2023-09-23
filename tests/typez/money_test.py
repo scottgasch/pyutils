@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# © Copyright 2021-2022, Scott Gasch
+# © Copyright 2021-2023, Scott Gasch
 
 """money unittest."""
 

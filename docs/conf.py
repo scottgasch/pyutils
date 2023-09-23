@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath("/usr/local/lib/python3.9/site-packages/"))
 # -- Project information -----------------------------------------------------
 
 project = "pyutils"
-copyright = "2021-2022, Scott Gasch"
+copyright = "2021-2023, Scott Gasch"
 author = "Scott Gasch"
 
 
