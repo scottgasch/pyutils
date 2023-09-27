@@ -2020,6 +2020,19 @@ def _find_color_by_name(name: str) -> Tuple[int, int, int]:
     return rgb
 
 
+def _closest_color_name(red: int, green: int, blue: int) -> str:
+    """Given an RGB tuple, what's the closest color name we know?"""
+    closest = None
+    closest_distance = 255 + 255 + 255 + 1
+    for name, rgb in COLOR_NAMES_TO_RGB.items():
+        distance = abs(rgb[0] - red) + abs(rgb[1] - green) + abs(rgb[2] - blue)
+        if not closest or distance < closest_distance:
+            closest = name
+            closest_distance = distance
+    assert closest
+    return closest
+
+
 @logging_utils.squelch_repeated_log_messages(1)
 def fg(
     name: Optional[str] = "",
