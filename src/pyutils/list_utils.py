@@ -202,6 +202,13 @@ def dedup_list(lst: List[Any]) -> List[Any]:
     return list(set(lst))
 
 
+def dedup(lst: List[Any]) -> List[Any]:
+    """
+    Alias for :meth:`dedup_list`.
+    """
+    return dedup_list(lst)
+
+
 def uniq(lst: List[Any]) -> List[Any]:
     """
     Alias for :meth:`dedup_list`.
