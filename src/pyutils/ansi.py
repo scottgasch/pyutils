@@ -2342,9 +2342,8 @@ if __name__ == '__main__':
                 _ = pick_contrasting_color(possibility)
                 xf = fg(None, _[0], _[1], _[2])
                 xb = bg(None, _[0], _[1], _[2])
-                print(
-                    f'{f}{xb}{possibility:<40}{reset()}'
-                    f'{b}{xf}{possibility:<40}{reset()}'
-                )
+                rgb = COLOR_NAMES_TO_RGB[possibility]
+                display = f'{possibility} ({rgb[0]},{rgb[1]},{rgb[2]})'
+                print(f'{f}{xb}{display:<40}{reset()}' f'{b}{xf}{display:<40}{reset()}')
 
     main()
