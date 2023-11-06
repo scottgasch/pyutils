@@ -12,6 +12,7 @@ from typing import Optional
 
 from pyutils import bootstrap, config, exec_utils, stopwatch
 from pyutils.datetimes import datetime_utils
+from pyutils.exceptions import PyUtilsLockfileException
 from pyutils.files import file_utils, lockfile
 
 logger = logging.getLogger(__name__)
@@ -88,7 +89,9 @@ def run_command(timeout: Optional[int], timestamp_file: Optional[str]) -> int:
         with stopwatch.Timer() as t:
             ret = exec_utils.cmd_exitcode(cmd, timeout)
         logger.debug(
-            f"____ (↑↑↑ subprocess finished in {t():.2f}s, exit value was {ret} ↑↑↑) ____"
+            "____ (↑↑↑ subprocess finished in %.2fss, exit value was %d ↑↑↑) ____",
+            t(),
+            ret,
         )
         if ret == 0 and timestamp_file is not None and os.path.exists(timestamp_file):
             logger.debug("Touching %s", timestamp_file)
@@ -170,7 +173,7 @@ def main() -> int:
                             file=wf,
                         )
                 return retval
-        except lockfile.LockFileException:
+        except PyUtilsLockfileException:
             msg = f"Failed to acquire {lockfile_path}, giving up."
             logger.exception(msg)
             print(msg, file=sys.stderr)
