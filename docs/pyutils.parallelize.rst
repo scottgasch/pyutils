@@ -50,6 +50,14 @@ pyutils.parallelize.parallelize module
    :undoc-members:
    :show-inheritance:
 
+pyutils.parallelize.selectable_event module
+----------------------------------------
+
+.. automodule:: pyutils.parallelize.selectable_event
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.parallelize.smart\_future module
 ----------------------------------------
 
