@@ -103,7 +103,7 @@ def batch_geocode_addresses(addresses: List[str]) -> Optional[List[str]]:
     ...         '700 Pennsylvania Avenue NW, Washington, DC, 20408',
     ...     ]
     ... )
-    ['"1"," 4600 Silver Hill Rd,  Washington,  DC,  20233","Match","Exact","4600 SILVER HILL RD, WASHINGTON, DC, 20233","-76.92748724199998,38.84601622400004","76355984","L","24","033","802405","2004"', '"2"," 935 Pennsylvania Avenue,  NW,  Washington,  DC","No_Match"', '"3"," 1600 Pennsylvania Avenue NW,  Washington,  DC,  20500","Match","Exact","1600 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20500","-77.03654395699994,38.898690919000046","76225813","L","11","001","980000","1034"', '"4"," 700 Pennsylvania Avenue NW,  Washington,  DC,  20408","Match","Exact","700 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20408","-77.02305485199997,38.89356562000006","76226346","L","11","001","980000","1025"']
+    ['"1"," 4600 Silver Hill Rd,  Washington,  DC,  20233","Match","Exact","4600 SILVER HILL RD, WASHINGTON, DC, 20233","-76.92748724230091,38.84601622386623","76355984","L","24","033","802405","2004"', '"2"," 935 Pennsylvania Avenue,  NW,  Washington,  DC","No_Match"', '"3"," 1600 Pennsylvania Avenue NW,  Washington,  DC,  20500","Match","Exact","1600 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20500","-77.03654395730786,38.89869091865552","76225813","L","11","001","980000","1034"', '"4"," 700 Pennsylvania Avenue NW,  Washington,  DC,  20408","Match","Exact","700 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20408","-77.02305485155983,38.89356561956657","76226346","L","11","001","980000","1025"']
     """
 
     n = 1
