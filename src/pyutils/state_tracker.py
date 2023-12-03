@@ -16,13 +16,13 @@ See also :class:`pyutils.parallelize.thread_utils.periodically_invoke`
 
 import datetime
 import logging
-import threading
 import time
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
 import pytz
 
+from pyutils.parallelize.selectable_event import SelectableEvent
 from pyutils.parallelize.thread_utils import background_thread
 
 logger = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class AutomaticStateTracker(StateTracker):
     """
 
     @background_thread
-    def _pace_maker(self, should_terminate: threading.Event) -> None:
+    def _pace_maker(self, should_terminate: SelectableEvent) -> None:
         """Entry point for a background thread to own calling :meth:`heartbeat`
         at regular intervals so that the main thread doesn't need to
         do so.
@@ -261,7 +261,7 @@ class WaitableAutomaticStateTracker(AutomaticStateTracker):
                 If this argument is non-None, it overrides this computation
                 and uses this period as the sleep in the background thread.
         """
-        self._something_changed = threading.Event()
+        self._something_changed = SelectableEvent()
         super().__init__(
             update_ids_to_update_secs, override_sleep_delay=override_sleep_delay
         )
