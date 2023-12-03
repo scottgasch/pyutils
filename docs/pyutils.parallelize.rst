@@ -51,7 +51,7 @@ pyutils.parallelize.parallelize module
    :show-inheritance:
 
 pyutils.parallelize.selectable_event module
-----------------------------------------
+-------------------------------------------
 
 .. automodule:: pyutils.parallelize.selectable_event
    :members:
