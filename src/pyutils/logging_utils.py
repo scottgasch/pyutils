@@ -858,7 +858,16 @@ def _construct_handlers_list(
             assert facility_name
             facility = SysLogHandler.__dict__.get(facility_name, SysLogHandler.LOG_USER)
             assert facility
-            syslog_handler = SysLogHandler(facility=facility, address="/dev/log")
+
+            if os.path.exists("/dev/log"):
+                syslog_handler = SysLogHandler(facility=facility, address="/dev/log")
+            elif os.path.exists("/var/run/log"):
+                syslog_handler = SysLogHandler(
+                    facility=facility, address="/var/run/log"
+                )
+            else:
+                raise Exception("I can't find a usable logging socket?!")
+
             syslog_handler.setFormatter(
                 MillisecondAwareFormatter(
                     fmt=logging_format,
