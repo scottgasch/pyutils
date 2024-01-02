@@ -416,14 +416,10 @@ def valid_datetime(txt: str) -> datetime.datetime:
     >>> valid_datetime('next christmas at 4:15am') # doctest: +ELLIPSIS
     -ANYTHING-
     """
-    from pyutils.string_utils import to_datetime
-
-    dt = to_datetime(txt)
-    if dt is not None:
-        return dt
 
     # Don't choke on the default format of unix date.  Work around the
     # shitty %Z semantics in datetime.strptime.
+    dt: Optional[datetime.datetime] = None
     try:
         chunks = txt.split()
         if len(chunks) == 6:
@@ -440,6 +436,13 @@ def valid_datetime(txt: str) -> datetime.datetime:
                 return dt
     except Exception:
         logger.exception("Ignoring exception from datetime_utils.")
+
+    # Otherwise try dateparse_utils.
+    from pyutils.string_utils import to_datetime
+
+    dt = to_datetime(txt)
+    if dt is not None:
+        return dt
 
     msg = f"Cannot parse argument as datetime: {txt}"
     logger.error(msg)
