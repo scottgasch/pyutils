@@ -26,6 +26,7 @@ from kazoo.client import KazooClient
 from kazoo.exceptions import CancelledError
 from kazoo.protocol.states import KazooState
 from kazoo.recipe.lease import NonBlockingLease
+from kazoo.retry import KazooRetry
 
 from pyutils import argparse_utils, config
 from pyutils.exceptions import PyUtilsException
@@ -89,6 +90,7 @@ def get_started_zk_client() -> KazooClient:
         raise PyUtilsException("No valid zookeeper config was found.")
 
     zk = KazooClient(
+        connection_retry=KazooRetry(max_tries=10),
         hosts=zookeeper_nodes,
         use_ssl=True,
         verify_certs=False,
@@ -133,7 +135,7 @@ class RenewableReleasableLease(NonBlockingLease):
         client: KazooClient,
         path: str,
         duration: datetime.timedelta,
-        identifier: str = None,
+        identifier: Optional[str] = None,
         utcnow=datetime.datetime.utcnow,
     ):
         """Construct the RenewableReleasableLease.
@@ -427,7 +429,7 @@ def run_for_election(
             )
             logger.debug(
                 'Invoking user code on separate thread: %s',
-                thread.getName(),
+                thread.name,
             )
             thread.start()
 

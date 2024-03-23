@@ -369,7 +369,7 @@ def get_canonical_path(filespec: StrOrPath) -> StrOrPath:
 
 
 def create_path_if_not_exist(
-    path: StrOrPath, on_error: Callable[[StrOrPath, OSError], None] = None
+    path: StrOrPath, on_error: Optional[Callable[[StrOrPath, OSError], None]] = None
 ) -> None:
     """
     Attempts to create path if it does not exist already.
@@ -807,7 +807,9 @@ def set_file_raw_mtime(filename: StrOrPath, mtime: float):
     os.utime(sfilename, (atime, mtime))
 
 
-def set_file_raw_atime_and_mtime(filename: StrOrPath, ts: float = None) -> None:
+def set_file_raw_atime_and_mtime(
+    filename: StrOrPath, ts: Optional[float] = None
+) -> None:
     """Sets both a file's raw modification and access times.
 
     Args:

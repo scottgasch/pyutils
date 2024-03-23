@@ -109,6 +109,7 @@ class FileBasedPersistent(Persistent):
     """
 
     @staticmethod
+    @abstractmethod
     def get_filename() -> str:
         """
         Returns:
@@ -117,6 +118,7 @@ class FileBasedPersistent(Persistent):
         pass
 
     @staticmethod
+    @abstractmethod
     def should_we_save_data(filename: str) -> bool:
         """
         Returns:
@@ -125,6 +127,7 @@ class FileBasedPersistent(Persistent):
         pass
 
     @staticmethod
+    @abstractmethod
     def should_we_load_data(filename: str) -> bool:
         """
         Returns:

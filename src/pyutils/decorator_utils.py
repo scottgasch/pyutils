@@ -254,7 +254,7 @@ class DelayWhen(enum.IntEnum):
 
 
 def delay(
-    _func: Callable = None,
+    _func: Optional[Callable] = None,
     *,
     seconds: float = 1.0,
     when: DelayWhen = DelayWhen.BEFORE_CALL,

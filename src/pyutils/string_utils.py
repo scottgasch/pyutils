@@ -905,7 +905,7 @@ def number_to_suffix_string(num: int) -> Optional[str]:
     """
     d = 0.0
     suffix = None
-    for (sfx, size) in NUM_SUFFIXES.items():
+    for sfx, size in NUM_SUFFIXES.items():
         if num >= size:
             d = num / size
             suffix = sfx
@@ -916,7 +916,7 @@ def number_to_suffix_string(num: int) -> Optional[str]:
         return f'{num:d}'
 
 
-def is_credit_card(in_str: Any, card_type: str = None) -> bool:
+def is_credit_card(in_str: Any, card_type: Optional[str] = None) -> bool:
     """
     Args:
         in_str: a string to check

@@ -24,7 +24,7 @@ class Dataclass(Protocol):
     __dataclass_fields__: Dict
 
 
-def dataclass_from_dict(dataclass: type[Dataclass], d: Dict[str, Any]) -> Dataclass:
+def dataclass_from_dict(dataclass: type, d: Dict[str, Any]) -> Dataclass:
     """Given a Dataclass type and a dict, return a populated instance.
 
     Args:

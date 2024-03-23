@@ -115,7 +115,7 @@ parser.add_argument(
     type=str,
     metavar='PATH_TO_REMOTE_WORKER_PY',
     help='Path to remote_worker.py on remote machines',
-    default=f'source py39-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
+    default=f'source py311-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
 )
 
 SSH = '/usr/bin/ssh -oForwardX11=no'
@@ -688,7 +688,7 @@ class RemoteWorkerSelectionPolicy(ABC):
 
     @abstractmethod
     def acquire_worker(
-        self, machine_to_avoid: str = None
+        self, machine_to_avoid: Optional[str] = None
     ) -> Optional[RemoteWorkerRecord]:
         pass
 
@@ -706,7 +706,7 @@ class WeightedRandomRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
 
     @overrides
     def acquire_worker(
-        self, machine_to_avoid: str = None
+        self, machine_to_avoid: Optional[str] = None
     ) -> Optional[RemoteWorkerRecord]:
         grabbag = []
         if self.workers:
@@ -761,7 +761,7 @@ class RoundRobinRemoteWorkerSelectionPolicy(RemoteWorkerSelectionPolicy):
 
     @overrides
     def acquire_worker(
-        self, machine_to_avoid: str = None
+        self, machine_to_avoid: Optional[str] = None
     ) -> Optional[RemoteWorkerRecord]:
         if self.workers:
             x = self.index
@@ -1052,13 +1052,13 @@ class RemoteExecutor(BaseExecutor):
         return self.policy.is_worker_available()
 
     def _acquire_worker(
-        self, machine_to_avoid: str = None
+        self, machine_to_avoid: Optional[str] = None
     ) -> Optional[RemoteWorkerRecord]:
         """Try to acquire a worker."""
         return self.policy.acquire_worker(machine_to_avoid)
 
     def _find_available_worker_or_block(
-        self, machine_to_avoid: str = None
+        self, machine_to_avoid: Optional[str] = None
     ) -> RemoteWorkerRecord:
         """Find a worker or block until one becomes available."""
         with self.cv:
