@@ -883,3 +883,58 @@ This version -------- 0.0.13
 Previous version ---- 0.0.12
 Total commits -------       19
 ```
+# 🎁 Release notes (`0.0.14`)
+
+## Changes
+- Some cleanup.  Also, make zookeeper / kazoo more pessimistic and use retries.
+- Change the order for parsing datetime arguments.
+- Look for logging socket in another location; make this work with FreeBSD jails.
+- Have state manager use a SelectableEvent.
+- Make the underline longer.
+- Adds SelectableEvent to docs.
+- SelectableEvent + fixup geocode test.
+- Remove outdated exception and cleanup a logging message.
+- Make ansi.py show rgb.
+- Add dedup.
+- Name a color tuple.
+- Update year.
+- Update state_tracker_test.
+- Adds state_tracker_test.
+- Add lockfile_test.
+- Create a jittery delay helper.
+- typo in README.
+- Adds geocode_test.
+- Bugfixes.
+- More boxy stuff.
+- Minor changes.
+- Optionally raise on repeated failures.
+- Adds on_attempt, on_success and on_failure callbacks.
+- Use PyUtilsExceptions.
+- Rewrite this to be cleaner.
+- Cleanup from changes earlier...
+- Quiet down the linter.
+- Introduce PyUtilsException(s).
+- Don't negate None or zero.
+- Log ignored exceptions.
+- Another method that starts a subshell, document it.
+- Proper quoting in hlog.
+- Document use of subshells.
+- Make GH Actions happy when it has no console at all.
+- Be smarter about width.
+- Add missing return type hint.
+- Make zookeeper parse params from a config file instead of the cmdline so that early program usage of zk code works.  Add persistent subclasses that use zookeeper to save/load state.
+- Add TODOs
+- Remove the requirement to use () with @synchronized.
+- Close race condition in @singleton.
+- Update @synchronized to optionally use a default lock.
+- Make lockfiles more resilient and informative.
+- Remove default epilog; teach the hacky formatter to format raw epilogs in addition to actions.
+- Push new tag to origin.
+- Cut version 0.0.13
+
+## Metadata
+```
+This version -------- 0.0.14
+Previous version ---- 0.0.13
+Total commits -------       45
+```

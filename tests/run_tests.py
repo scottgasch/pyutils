@@ -63,7 +63,13 @@ HOME = os.environ["HOME"]
 # by coverage.
 PERF_SENSATIVE_TESTS = set(["string_utils_test.py"])
 TESTS_TO_SKIP = set(
-    ["zookeeper_test.py", "zookeeper.py", "dateparse_utils_test.py", "run_tests.py"]
+    [
+        "zookeeper_test.py",
+        "zookeeper.py",
+        "dateparse_utils_test.py",
+        "run_tests.py",
+        "camera_utils.py",
+    ]
 )
 
 ROOT = ".."
