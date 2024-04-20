@@ -69,6 +69,7 @@ TESTS_TO_SKIP = set(
         "dateparse_utils_test.py",
         "run_tests.py",
         "camera_utils.py",
+        "geocode.py",
     ]
 )
 
