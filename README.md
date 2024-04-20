@@ -39,7 +39,7 @@ in under [examples/](https://github.com/scottgasch/pyutils/tree/master/examples)
 In addition to installing the library (`pip install pyutils` or via
 the wheels checked in under [dist/](https://github.com/scottgasch/pyutils/tree/main/dist)),
 you should configure your parallelizer remote workers file, if you
-want to use `@parallelize(mathod = Method.REMOTE)`.
+want to use `@parallelize(method = Method.REMOTE)`.
 
 This involves editing a file called `.remote_worker_records` that,
 by default, lives in your home directory.  It has [instructions inline](https://github.com/scottgasch/pyutils/blob/main/examples/parallelize_config/.remote_worker_records).
