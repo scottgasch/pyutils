@@ -130,7 +130,7 @@ def coalesce(
     aggregation_function: Callable[[Any, Any, Any], Any] = coalesce_by_creating_list,
 ) -> AnyDict:
     """Coalesce (i.e. combine) N input dicts into one output dict
-    ontaining the union of all keys / values in every input dict.
+    containing the union of all keys / values in every input dict.
     When keys collide, apply the aggregation_function which, by
     default, creates a list of values with the same key in the output
     dict.
@@ -368,7 +368,7 @@ def dict_to_key_value_lists(d: AnyDict) -> Tuple[List[Hashable], List[Any]]:
     ['scott', '555-1212', '123 main st.', '12345']
     """
     r: Tuple[List[Any], List[Any]] = ([], [])
-    for (k, v) in d.items():
+    for k, v in d.items():
         r[0].append(k)
         r[1].append(v)
     return r
