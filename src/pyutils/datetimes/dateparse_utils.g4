@@ -469,6 +469,7 @@ SPECIAL_DATE
     | PRESIDENTS_DAY
     | EASTER
     | MEMORIAL_DAY
+    | JUNETEENTH
     | INDEPENDENCE_DAY
     | LABOR_DAY
     | COLUMBUS_DAY
@@ -572,6 +573,12 @@ MEMORIAL_DAY
     | 'Memorial'
     | 'memorial day'
     | 'Memorial Day'
+    ;
+
+// junet
+JUNETEENTH
+    : 'juneteenth'
+    | 'Juneteenth'
     ;
 
 // indep
