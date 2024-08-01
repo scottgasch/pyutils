@@ -609,7 +609,7 @@ class persistent_autoloaded_singleton(object):
                 and self.persist_at_shutdown is PersistAtShutdown.IF_NOT_LOADED
             ):
                 logger.debug(
-                    "Scheduling a deferred called to save at process shutdown time."
+                    "Scheduling a deferred call to 'save' method at process shutdown time."
                 )
                 atexit.register(self.instance.save)
             return self.instance
