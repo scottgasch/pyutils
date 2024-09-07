@@ -31,9 +31,9 @@ args.add_argument(
 
 
 class Timer:
-    def __init__(self, duration: float):
-        self.running = True
-        self.start = time.time()
+    def __init__(self, duration: float, initially_running: bool = True):
+        self.running = initially_running
+        self.start_time = time.time()
         self.original_duration = duration
         self.duration = duration
         self.run_number = 1
@@ -45,7 +45,7 @@ class Timer:
     def get_elapsed_time(self) -> float:
         if self.running:
             now = time.time()
-            return now - self.start + self.elapsed_before_pause
+            return now - self.start_time + self.elapsed_before_pause
         else:
             return self.elapsed_before_pause
 
@@ -55,14 +55,14 @@ class Timer:
 
     def reset(self):
         self.run_number += 1
-        self.start = time.time()
+        self.start_time = time.time()
         self.duration = self.original_duration
         self.elapsed_before_pause = 0
         self.running = True
 
     def reset_and_pause(self):
         self.run_number += 1
-        self.start = time.time()
+        self.start_time = time.time()
         self.duration = self.original_duration
         self.elapsed_before_pause = 0
         self.running = False
@@ -72,15 +72,18 @@ class Timer:
         self.running = False
 
     def unpause(self):
-        self.start = time.time()
-        self.duration = self.original_duration - self.elapsed_before_pause
-        self.running = True
+        if not self.running:
+            self.start_time = time.time()
+            self.duration = self.original_duration - self.elapsed_before_pause
+            self.running = True
+
+    start = unpause
 
 
 @bootstrap.initialize
 def main() -> Optional[int]:
     duration = config.config["time_limit"]
-    timer = Timer(duration.seconds)
+    timer = Timer(duration.seconds, not config.config["pause_between"])
     print("Countdown timer... [space]=pause/unpause, [r]eset, [q]uit (or ^C).")
 
     with input_utils.KeystrokeReader() as get_keystroke:
@@ -96,7 +99,10 @@ def main() -> Optional[int]:
                         timer.unpause()
                 elif key == 'r':
                     print(end="\r\n")
-                    timer.reset()
+                    if config.config["pause_between"]:
+                        timer.reset_and_pause()
+                    else:
+                        timer.reset()
                 elif key == 'q' or key == chr(3):
                     sys.exit(0)
 
