@@ -2346,6 +2346,14 @@ pyutils.id\_generator module
    :undoc-members:
    :show-inheritance:
 
+pyutils.input_utils module
+--------------------------
+
+.. automodule:: pyutils.input_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pyutils.iter\_utils module
 --------------------------
 

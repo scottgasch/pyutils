@@ -19,6 +19,7 @@ class KeystrokeReader(contextlib.AbstractContextManager):
     mode on exit.
 
     Example usage::
+
         with input_utils.KeystrokeReader() as get_keystroke:
             while True:
                 # Check / parse any keys.
@@ -32,9 +33,11 @@ class KeystrokeReader(contextlib.AbstractContextManager):
                     elif key == 'r':
                         stopwatch.reset()
                     elif key == 'l':
-                        print(f"Lap: {stopwatch.get_elapsed_time():.5f}", end="\r\n")
+                        print(f"Lap: {stopwatch.get_elapsed_time():.5f}")
                     elif key == 'q' or key == chr(3):
                         break
+                ...
+
     """
 
     def __init__(self) -> None:
@@ -44,11 +47,13 @@ class KeystrokeReader(contextlib.AbstractContextManager):
     def __enter__(self) -> Callable[[], Optional[str]]:
         self.old_settings = termios.tcgetattr(self.fd)
         tty.setraw(self.fd)
-        return self.get_single_keystroke
+        return self._get_single_keystroke
 
-    def get_single_keystroke(
+    def _get_single_keystroke(
         self, timeout_seconds: Optional[float] = None
     ) -> Optional[str]:
+        """Helper to read a single raw keystroke from stdin with a timeout."""
+
         rlist, _, _ = select.select([sys.stdin], [], [], timeout_seconds)
         if rlist:
             keystroke = sys.stdin.read(1)
