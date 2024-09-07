@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-A (unix terminal)  stopwatch utility.
+A (unix terminal) stopwatch utility.
 """
 
 import logging
@@ -64,13 +64,14 @@ def main():
                     print(" " * 50, end='\r')
                     stopwatch.reset()
                 elif key == 'l':
-                    print(f"Lap: {stopwatch.get_elapsed_time():.5f}", end="\r\n")
+                    print(" " * 50, end='\r')
+                    print(f"Lap: {stopwatch.get_elapsed_time():.2f}", end="\r\n")
                 elif key == 'q' or key == chr(3):
                     print()
                     return
 
             # Update display.
-            print(f"Elapsed time: {stopwatch.get_elapsed_time():0.4f}", end="\r")
+            print(f"Elapsed time: {stopwatch.get_elapsed_time():0.2f}", end="\r")
             sys.stdout.flush()
     return None
 
