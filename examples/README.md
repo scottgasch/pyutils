@@ -44,6 +44,10 @@ Plays and helps you cheat at the Wordle word game.  Demo of using
 the `@parallelize` framework and `shared_dict` which it uses to
 precompute the solution space on several processes at once.
 
+## timer and stopwatch
+Simple (unix terminal) utilities that demonstrate the use of the
+`input_utils.KeystrokeReader` helper.
+
 ## ../tests/run_tests.py
 Though not under `examples/` this is still a stand alone program that
 uses pyutils concepts like `@parallelize` and `smart_futures` that might
