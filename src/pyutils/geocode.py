@@ -18,18 +18,19 @@ Also try::
 import functools
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import requests
 from requests.utils import requote_uri
 
 from pyutils import list_utils
+from pyutils.typez import json as jt
 
 logger = logging.getLogger(__name__)
 
 
 @functools.lru_cache(maxsize=256)
-def geocode_address(address: str) -> Optional[Dict[str, Any]]:
+def geocode_address(address: str) -> jt.ParsedJSON:
     """Send a single address to the US Census geocoding API in order to
     lookup relevant data about it (including, if possible, its
     lat/long).  The response is a parsed JSON chunk of data with N
@@ -75,7 +76,7 @@ def geocode_address(address: str) -> Optional[Dict[str, Any]]:
     return r.json()
 
 
-def batch_geocode_addresses(addresses: List[str]) -> Optional[List[str]]:
+def batch_geocode_addresses(addresses: List[str]) -> Optional[List[jt.RawJSONStr]]:
     """Send a list of addresses for batch geocoding to a web service
     operated by the US Census Bureau.
 
