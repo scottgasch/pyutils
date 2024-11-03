@@ -36,6 +36,7 @@ jobs:
           pip install overrides
           pip install pytz
           pip install requests
+          pip install typing_extensions
       - name: process dateparse_utils grammar
         run: |
           cd src/pyutils/datetimes
