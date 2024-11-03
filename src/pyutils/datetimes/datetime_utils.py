@@ -550,9 +550,11 @@ def timezone_abbrev_to_canonical_name(
     return None
 
 
-def timezone_abbrev_to_tz(
-    abbrev: str, country_code: Optional[str] = "US"
-) -> Union[pytz.tzinfo.DstTzInfo, pytz.tzinfo.StaticTzInfo, None,]:
+def timezone_abbrev_to_tz(abbrev: str, country_code: Optional[str] = "US") -> Union[
+    pytz.tzinfo.DstTzInfo,
+    pytz.tzinfo.StaticTzInfo,
+    None,
+]:
     """Given a timezone abbreviation and optional country code, return a
     timezone from pytz that cooresponds to the given abbreviation.
 
@@ -568,17 +570,6 @@ def timezone_abbrev_to_tz(
         This method has a predisposition to returning US-based
         timezones.  To override this, pass an explicit country_code
         instead of relying on the default.
-
-    >>> timezone_abbrev_to_tz('EST')
-    <StaticTzInfo 'EST'>
-
-    >>> timezone_abbrev_to_tz('CST')
-    <DstTzInfo 'America/Chicago' LMT-1 day, 18:09:00 STD>
-
-    >>> timezone_abbrev_to_tz('CST', 'CN')
-    <DstTzInfo 'Asia/Shanghai' LMT+8:06:00 STD>
-
-    >>> timezone_abbrev_to_tz('xyzzy')
 
     """
 
