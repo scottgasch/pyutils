@@ -23,6 +23,7 @@ dependencies = [
     "overrides",
     "pytz",
     "requests",
+    "typing_extensions",
 ]
 
 [project.urls]
