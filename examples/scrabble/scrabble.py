@@ -30,9 +30,10 @@ import itertools
 import logging
 import string
 import sys
+from collections import Counter
 from typing import Generator, Set
 
-from pyutils import bootstrap, config
+from pyutils import ansi, bootstrap, config
 from pyutils.unscrambler import Unscrambler
 
 cfg = config.add_commandline_args(
@@ -89,6 +90,19 @@ scrabble_score_by_letter = {
 }
 
 
+def decorate_word(word: str, given_letters: Set[str]) -> str:
+    countz = Counter(given_letters)
+    logger.debug("Decorating %s; countz=%s", word, countz)
+    out = ''
+    for letter in word:
+        if letter in countz and countz[letter] > 0:
+            countz[letter] -= 1
+            out += letter
+        else:
+            out += f'{ansi.bg("white")}{ansi.fg("black")}{letter}{ansi.reset()}'
+    return out
+
+
 def fill_in_blanks(letters: str, skip: Set[str]) -> Generator[str, None, None]:
     if '_' not in letters:
         logger.debug('Filled in blanks: %s', letters)
@@ -114,7 +128,7 @@ def lookup_letter_set(
     sig = unscrambler.compute_word_sig(letters)
     if sig not in seen_sigs:
         logger.debug('%s => %s', letters, sig)
-        for (words, exact) in unscrambler.lookup_by_sig(sig).items():
+        for words, exact in unscrambler.lookup_by_sig(sig).items():
             if exact:
                 for word in words.split(','):
                     if len(word) >= config.config['min_length']:
@@ -178,10 +192,11 @@ def main() -> None:
             output[word] = len(word)
 
     for word, n in sorted(output.items(), key=lambda x: x[1]):
+        decorated_word = decorate_word(word, orig_letters)
         if config.config['show_scrabble_score']:
-            print(f'{word} => {n}')
+            print(f'{decorated_word} => {n}')
         else:
-            print(word)
+            print(decorated_word)
 
 
 if __name__ == "__main__":
