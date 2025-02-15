@@ -1635,25 +1635,8 @@ def asciify(in_str: str) -> str:
     return ascii_bytes.decode("utf-8")
 
 
-def normalize_punctuation(in_str: str) -> str:
-    """
-    Args:
-        in_str: the string to normalize.
-
-    Returns:
-        An output string roughly equivalent to the original string
-        where all punctuation marks are normalized to use the same
-        ASCII character.
-
-    Raises:
-        TypeError: the input argument isn't a string
-
-    See also :meth:`to_ascii`, :meth:`asciify`, :meth:`normalize_whitespace`
-
-    >>> normalize_punctuation('“hello，” said the cat； wow！')
-    '"hello," said the cat; wow!'
-    """
-    replacements = {
+NORMALIZE_PUNCTUATION_REPLACEMENTS = str.maketrans(
+    {
         '—': '-',  # Em dash
         '–': '-',  # En dash
         '‒': '-',  # Figure dash
@@ -1678,10 +1661,52 @@ def normalize_punctuation(in_str: str) -> str:
         '⸿': ',',  # Low-comma
         ';': ';',  # Greek question mark
     }
-    normalized_chars = []
-    for char in in_str:
-        normalized_chars.append(replacements.get(char, char))
-    return ''.join(normalized_chars)
+)
+
+
+def normalize_punctuation(in_str: str) -> str:
+    """
+    Args:
+        in_str: the string to normalize.
+
+    Returns:
+        An output string roughly equivalent to the original string
+        where all punctuation marks are normalized to use the same
+        ASCII character.
+
+    Raises:
+        TypeError: the input argument isn't a string
+
+    See also :meth:`to_ascii`, :meth:`asciify`, :meth:`normalize_whitespace`
+
+    >>> normalize_punctuation('“hello，” said the cat； wow！')
+    '"hello," said the cat; wow!'
+    """
+    return in_str.translate(NORMALIZE_PUNCTUATION_REPLACEMENTS)
+
+
+NORMALIZE_WHITESPACE_REPLACEMENTS = str.maketrans(
+    {
+        '\u00A0': ' ',  # Non-Breaking Space
+        '\u2000': ' ',  # En Quad
+        '\u2001': ' ',  # Em Quad
+        '\u2002': ' ',  # En Space
+        '\u2003': ' ',  # Em Space
+        '\u2004': ' ',  # Three-Per-Em Space
+        '\u2005': ' ',  # Four-Per-Em Space
+        '\u2006': ' ',  # Six-Per-Em Space
+        '\u2007': ' ',  # Figure Space
+        '\u2008': ' ',  # Punctuation Space
+        '\u2009': ' ',  # Thin Space
+        '\u200A': ' ',  # Hair Space
+        '\u200B': ' ',  # Zero Width Space
+        '\u200C': ' ',  # Zero Width Non-Joiner
+        '\u200D': ' ',  # Zero Width Joiner
+        '\u202F': ' ',  # Narrow No-Break Space
+        '\u205F': ' ',  # Medium Mathematical Space
+        '\u3000': ' ',  # Ideographic Space
+    }
+)
 
 
 def normalize_whitespace(in_str: str) -> str:
@@ -1702,30 +1727,7 @@ def normalize_whitespace(in_str: str) -> str:
     >>> normalize_whitespace('testing\u00A0\u00A0123')
     'testing  123'
     """
-    replacements = {
-        '\u00A0': ' ',  # Non-Breaking Space
-        '\u2000': ' ',  # En Quad
-        '\u2001': ' ',  # Em Quad
-        '\u2002': ' ',  # En Space
-        '\u2003': ' ',  # Em Space
-        '\u2004': ' ',  # Three-Per-Em Space
-        '\u2005': ' ',  # Four-Per-Em Space
-        '\u2006': ' ',  # Six-Per-Em Space
-        '\u2007': ' ',  # Figure Space
-        '\u2008': ' ',  # Punctuation Space
-        '\u2009': ' ',  # Thin Space
-        '\u200A': ' ',  # Hair Space
-        '\u200B': ' ',  # Zero Width Space
-        '\u200C': ' ',  # Zero Width Non-Joiner
-        '\u200D': ' ',  # Zero Width Joiner
-        '\u202F': ' ',  # Narrow No-Break Space
-        '\u205F': ' ',  # Medium Mathematical Space
-        '\u3000': ' ',  # Ideographic Space
-    }
-    normalized_chars = []
-    for char in in_str:
-        normalized_chars.append(replacements.get(char, char))
-    return ''.join(normalized_chars)
+    return in_str.translate(NORMALIZE_WHITESPACE_REPLACEMENTS)
 
 
 def slugify(in_str: str, *, separator: str = "-") -> str:

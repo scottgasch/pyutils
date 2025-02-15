@@ -194,7 +194,7 @@ def bar_graph_string(
         raise ValueError(percentage)
     txt = _make_bar_graph_text(text, current, total, percentage)
     whole_width = math.floor(percentage * width)
-    if whole_width == width:
+    if whole_width == width and width != 0:
         whole_width -= 1
         part_char = "▉"
     elif whole_width == 0 and percentage > 0.0:
