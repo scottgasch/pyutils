@@ -88,12 +88,15 @@ class DirectoryFileFilter(object):
             mtime = file_utils.get_file_raw_mtime(filename)
         assert mtime is not None
         if self.mtime_by_filename.get(filename, 0) != mtime:
-            md5 = file_utils.get_file_md5(filename)
-            logger.debug(
-                "Computed/stored %s's MD5 at ts=%.2f (%s)", filename, mtime, md5
-            )
-            self.mtime_by_filename[filename] = mtime
-            self.md5_by_filename[filename] = md5
+            try:
+                md5 = file_utils.get_file_md5(filename)
+                logger.debug(
+                    "Computed/stored %s's MD5 at ts=%.2f (%s)", filename, mtime, md5
+                )
+                self.mtime_by_filename[filename] = mtime
+                self.md5_by_filename[filename] = md5
+            except PermissionError:
+                pass
 
     def apply(self, proposed_contents: Any, filename: str) -> bool:
         """Call this with the proposed new contents of filename in
@@ -171,10 +174,13 @@ class DirectoryAllFilesFilter(DirectoryFileFilter):
             mtime = file_utils.get_file_raw_mtime(filename)
         assert mtime is not None
         if self.mtime_by_filename.get(filename, 0) != mtime:
-            md5 = file_utils.get_file_md5(filename)
-            self.mtime_by_filename[filename] = mtime
-            self.md5_by_filename[filename] = md5
-            self.all_md5s.add(md5)
+            try:
+                md5 = file_utils.get_file_md5(filename)
+                self.mtime_by_filename[filename] = mtime
+                self.md5_by_filename[filename] = md5
+                self.all_md5s.add(md5)
+            except PermissionError:
+                pass
 
     def apply(
         self, proposed_contents: Any, ignored_filename: Optional[str] = None
