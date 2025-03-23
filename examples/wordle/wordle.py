@@ -682,6 +682,7 @@ class AutoPlayer(object):
 
         possible_solutions = []
         for word in self.all_possible_solutions_by_length[self.solution_length]:
+            assert self.word_state
             if is_possible_solution(word, self.word_state):
                 possible_solutions.append(word)
 
@@ -703,6 +704,7 @@ class AutoPlayer(object):
            letters in positions that occur frequently in the solutions.
 
         """
+        assert self.word_state
         template = self.word_state.get_template()
         pfreq: List[Dict[Letter, float]] = []
         pop_letters: List[Dict[Letter, int]] = []
@@ -777,6 +779,7 @@ class AutoPlayer(object):
     def guess_word(self) -> Optional[Word]:
         """Compute a guess word and return it.  Returns None on error."""
 
+        assert self.word_state
         template = self.word_state.get_template()
         possible_solutions = self.get_all_possible_solutions()
         num_possible_solutions = len(possible_solutions)
@@ -887,6 +890,7 @@ class AutoPlayer(object):
                 # make/unmake moves works:
                 #
                 # before = self.word_state.__repr__()
+                assert self.word_state
                 self.word_state.record_guess_and_hint(guess, hints)
                 # during = self.word_state.__repr__()
 
@@ -1010,6 +1014,7 @@ class AutoPlayer(object):
         """
         num_possible_solutions = len(possible_solutions)
         assert num_possible_solutions > 1
+        assert self.word_state
         template = self.word_state.get_template()
 
         # Give every word a score composed of letter frequencies and letter
@@ -1217,7 +1222,8 @@ def selftest():
     num_losses = 0
 
     player = AutoPlayer()
-    with open(config.config['solutions_file'], 'r') as rf:
+    filename = str(config.config['solutions_file'])
+    with open(filename, 'r') as rf:
         contents = rf.readlines()
 
     max_letter_pop_per_word = get_max_letter_population()
@@ -1386,7 +1392,8 @@ def precompute():
     results in a file.
 
     """
-    with open(config.config['solutions_file'], 'r') as rf:
+    filename = str(config.config['solutions_file'])
+    with open(filename, 'r') as rf:
         contents = rf.readlines()
     all_words = []
     length = None
@@ -1426,7 +1433,8 @@ def precompute():
             )
         smart_future.wait_all(results)
 
-        with open(config.config['hash_file'], 'a') as wf:
+        filename = str(config.config['hash_file'])
+        with open(filename, 'a') as wf:
             for key, value in shared_cache.items():
                 print(f'{key[0]} @ {key[1]}: {value}', file=wf)
     finally:
@@ -1437,7 +1445,8 @@ def precompute():
 
 def get_legal_guesses() -> Set[Word]:
     legal_guesses = set()
-    with open(config.config['guesses_file'], 'r') as rf:
+    filename = str(config.config['guesses_file'])
+    with open(filename, 'r') as rf:
         contents = rf.readlines()
     for line in contents:
         line = line[:-1]
@@ -1451,12 +1460,14 @@ def get_solution() -> Word:
         solution = config.config['template']
         print(ansi.clear())
     else:
-        with open(config.config['solutions_file'], 'r') as rf:
+        filename = str(config.config['solutions_file'])
+        with open(filename, 'r') as rf:
             contents = rf.readlines()
         solution = random.choice(contents)
         solution = solution[:-1]
         solution = solution.lower()
         solution = solution.strip()
+    assert solution
     return solution
 
 
@@ -1581,7 +1592,8 @@ def main() -> Optional[int]:
         autoplay(solution, oracle, word_state, player)
         return None
     elif mode == 'CHEAT':
-        return cheat()
+        cheat()
+        return None
     elif mode == 'PLAY':
         play()
         return None
