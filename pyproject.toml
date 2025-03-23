@@ -54,3 +54,7 @@ packages = [
 
 [tool.setuptools.package-dir]
 pyutils = "src/pyutils"
+
+[tool.pyright]
+include = ["src/pyutils"]
+
