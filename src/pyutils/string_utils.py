@@ -87,7 +87,7 @@ URLS_RAW_STRING = (
 
 URL_RE = re.compile(rf"^{URLS_RAW_STRING}$", re.IGNORECASE)
 
-URLS_RE = re.compile(rf"({URLS_RAW_STRING})", re.IGNORECASE)
+ANYWHERE_URL_RE = re.compile(rf"{URLS_RAW_STRING}", re.IGNORECASE)
 
 ESCAPED_AT_SIGN = re.compile(r'(?!"[^"]*)@+(?=[^"]*")|\\@')
 
@@ -707,7 +707,7 @@ def strip_escape_sequences(in_str: str) -> str:
         by a regular expression.  While this gets common ones,
         there may exist valid sequences that it doesn't match.
 
-    >>> strip_escape_sequences('\x1B[12;11;22mthis is a test!')
+    >>> strip_escape_sequences('\x1b[12;11;22mthis is a test!')
     'this is a test!'
     """
     in_str = ESCAPE_SEQUENCE_RE.sub("", in_str)
@@ -793,6 +793,44 @@ def is_url(in_str: Any, allowed_schemes: Optional[List[str]] = None) -> bool:
     if allowed_schemes:
         return valid and any([in_str.startswith(s) for s in allowed_schemes])
     return valid
+
+
+def extract_url(
+    in_str: Any, allowed_schemes: Optional[List[str]] = None
+) -> Optional[str]:
+    """
+    Args:
+        in_str: the string to test
+        allowed_schemes: an optional list of allowed schemes (e.g.
+            ['http', 'https', 'ftp'].  If passed, only URLs that
+            begin with the one of the schemes passed will be considered
+            to be valid.  Otherwise, any scheme:// will be considered
+            valid.
+
+    Returns:
+        The extracted url or None
+
+    >>> extract_url('The website is at http://www.mysite.com')
+    'http://www.mysite.com'
+    >>> extract_url('https://mysite.com is the site.')
+    'https://mysite.com'
+    >>> extract_url('Prefix ftp://ftp.yourmom.com/ Suffix', ['http', 'https'])
+    >>> extract_url('Prefix scheme://username:password@www.domain.com:8042/folder/subfolder/file.extension?param=value&param2=value2#hash Suffix')
+    'scheme://username:password@www.domain.com:8042/folder/subfolder/file.extension?param=value&param2=value2#hash'
+    """
+    if not is_full_string(in_str):
+        return None
+
+    match = ANYWHERE_URL_RE.search(in_str)
+    if not match:
+        return None
+
+    url = match.group(0)
+    if not allowed_schemes:
+        return url
+    if any([url.startswith(s) for s in allowed_schemes]):
+        return url
+    return None
 
 
 def is_email(in_str: Any) -> bool:
@@ -1687,7 +1725,7 @@ def normalize_punctuation(in_str: str) -> str:
 
 NORMALIZE_WHITESPACE_REPLACEMENTS = str.maketrans(
     {
-        '\u00A0': ' ',  # Non-Breaking Space
+        '\u00a0': ' ',  # Non-Breaking Space
         '\u2000': ' ',  # En Quad
         '\u2001': ' ',  # Em Quad
         '\u2002': ' ',  # En Space
@@ -1698,12 +1736,12 @@ NORMALIZE_WHITESPACE_REPLACEMENTS = str.maketrans(
         '\u2007': ' ',  # Figure Space
         '\u2008': ' ',  # Punctuation Space
         '\u2009': ' ',  # Thin Space
-        '\u200A': ' ',  # Hair Space
-        '\u200B': ' ',  # Zero Width Space
-        '\u200C': ' ',  # Zero Width Non-Joiner
-        '\u200D': ' ',  # Zero Width Joiner
-        '\u202F': ' ',  # Narrow No-Break Space
-        '\u205F': ' ',  # Medium Mathematical Space
+        '\u200a': ' ',  # Hair Space
+        '\u200b': ' ',  # Zero Width Space
+        '\u200c': ' ',  # Zero Width Non-Joiner
+        '\u200d': ' ',  # Zero Width Joiner
+        '\u202f': ' ',  # Narrow No-Break Space
+        '\u205f': ' ',  # Medium Mathematical Space
         '\u3000': ' ',  # Ideographic Space
     }
 )
@@ -1724,7 +1762,7 @@ def normalize_whitespace(in_str: str) -> str:
 
     See also :meth:`to_ascii`, :meth:`asciify`, :meth:`normalize_punctuation`
 
-    >>> normalize_whitespace('testing\u00A0\u00A0123')
+    >>> normalize_whitespace('testing\u00a0\u00a0123')
     'testing  123'
     """
     return in_str.translate(NORMALIZE_WHITESPACE_REPLACEMENTS)
