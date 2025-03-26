@@ -15,8 +15,10 @@ etc...
 
 Also allows for Zookeeper-based locks when lockfile path is prefixed
 with 'zk:' in order to synchronize processes across different
-machines.
-
+machines.  Because Zookeeper-based locks will permit multiple
+processes on the same machine to acquire the lock, this class also
+obtains a local file-based lock in addition to the Zookeeker-based
+lock.
 """
 
 from __future__ import annotations
@@ -37,10 +39,7 @@ import kazoo
 
 from pyutils import argparse_utils, config, decorator_utils, zookeeper
 from pyutils.datetimes import datetime_utils
-from pyutils.exceptions import (
-    PyUtilsLockfileException,
-    PyUtilsUnreachableConditionException,
-)
+from pyutils.exceptions import PyUtilsLockfileException
 from pyutils.files import file_utils
 
 cfg = config.add_commandline_args(f"Lockfile ({__file__})", "Args related to lockfiles")
@@ -109,20 +108,25 @@ class LockFile(contextlib.AbstractContextManager):
         """
         self.is_locked: bool = False
         self.lockfile: str = ""
+        self.zk_lockfile: str = ""
         self.zk_client: Optional[kazoo.client.KazooClient] = None
         self.zk_lease: Optional[zookeeper.RenewableReleasableLease] = None
 
         if lockfile_path.startswith("zk:"):
-            logger.debug("Lockfile is on Zookeeper.")
+            logger.debug("Lockfile is on Zookeeper (with local lock for backup).")
             if expiration_timestamp is None:
-                raise ValueError("Zookeeper locks require an expiration timestamp")
-            self.lockfile = lockfile_path[3:]
-            if not self.lockfile.startswith("/leases"):
-                self.lockfile = "/leases" + self.lockfile
+                raise ValueError("Zookeeper locks require an expiration timestamp.")
+            self.zk_lockfile = lockfile_path[3:]
+            if not self.zk_lockfile.startswith("/leases"):
+                self.zk_lockfile = "/leases" + self.zk_lockfile
+            logger.debug("Zookeeker lockfile is: %s", self.zk_lockfile)
             self.zk_client = zookeeper.get_started_zk_client()
+            self.lockfile = f"/tmp{lockfile_path[3:]}"
+            logger.debug("Backup local lockfile is: %s", self.lockfile)
         else:
             logger.debug("Lockfile is local.")
             self.lockfile = lockfile_path
+            logger.debug("Local lockfile is: %s", self.lockfile)
         self.locktime: Optional[float] = None
         self.override_command: Optional[str] = override_command
         if do_signal_cleanup:
@@ -140,6 +144,7 @@ class LockFile(contextlib.AbstractContextManager):
         """
         try:
             logger.debug("Trying to acquire local lock %s.", self.lockfile)
+            os.makedirs(os.path.dirname(self.lockfile), exist_ok=True)
             fd = os.open(self.lockfile, os.O_CREAT | os.O_EXCL | os.O_RDWR)
             with os.fdopen(fd, "a", encoding='utf-8') as f:
                 contents = self._construct_local_lockfile_contents()
@@ -158,13 +163,14 @@ class LockFile(contextlib.AbstractContextManager):
         expiration_delta_seconds_from_now = (
             self.expiration_timestamp - datetime.datetime.now().timestamp()
         )
+        assert self.zk_client
         self.zk_lease = zookeeper.RenewableReleasableLease(
             self.zk_client,
-            self.lockfile,
+            self.zk_lockfile,
             datetime.timedelta(seconds=expiration_delta_seconds_from_now),
             identifier,
         )
-        return self.zk_lease
+        return self.zk_lease is not None
 
     def try_acquire_lock_once(self) -> bool:
         """Attempt to acquire the lock with no blocking.
@@ -173,19 +179,33 @@ class LockFile(contextlib.AbstractContextManager):
             True if the lock was acquired and False otherwise.
         """
         success = False
+
+        # Attempt to acquire the zookeeper lease first.
         if self.zk_client:
-            if self._try_acquire_zk_lock():
-                success = True
-        else:
+            if not self._try_acquire_zk_lock():
+                logger.debug(
+                    "Unable to acquire zookeeper lock %s, giving up.", self.zk_lockfile
+                )
+                return False
+            logger.debug("Success; I own zookeeper lock %s.", self.zk_lockfile)
+
+        # Even if there's a zookeeper lock, also acquire a local lock, too.
+        success = self._try_acquire_local_filesystem_lock()
+        if not success:
+            self._detect_stale_lockfile()
             success = self._try_acquire_local_filesystem_lock()
-            if not success:
-                self._detect_stale_lockfile()
-                success = self._try_acquire_local_filesystem_lock()
 
         if success:
             self.locktime = datetime.datetime.now().timestamp()
             logger.debug("Success; I own %s.", self.lockfile)
             self.is_locked = True
+        else:
+            logger.debug(
+                "Unable to acquire local file lock %s, giving up.", self.lockfile
+            )
+            if self.zk_client and self.zk_lease:
+                logger.debug("Releasing zookeeper lock %s", self.zk_lease)
+                self.zk_lease.release()
         return success
 
     def acquire_with_retries(
@@ -224,14 +244,15 @@ class LockFile(contextlib.AbstractContextManager):
 
     def release(self) -> None:
         """Release the lock"""
+        try:
+            logger.debug("Releasing local lock %s", self.lockfile)
+            os.unlink(self.lockfile)
+        except Exception:
+            logger.exception("Failed to unlink path %s; giving up.", self.lockfile)
 
-        if not self.zk_client:
-            try:
-                os.unlink(self.lockfile)
-            except Exception:
-                logger.exception("Failed to unlink path %s; giving up.", self.lockfile)
-        else:
+        if self.zk_client:
             if self.zk_lease:
+                logger.debug("Releasing zookeeper lock %s", self.zk_lease)
                 self.zk_lease.release()
             self.zk_client.stop()
         self.is_locked = False
@@ -239,7 +260,6 @@ class LockFile(contextlib.AbstractContextManager):
     def __enter__(self):
         if self.acquire_with_retries():
             return self
-
         msg = "Couldn't acquire lockfile; giving up."
         if not self.zk_client:
             raw_contents = self._read_lockfile()
@@ -279,61 +299,53 @@ class LockFile(contextlib.AbstractContextManager):
             self.release()
 
     def _construct_local_lockfile_contents(self) -> str:
-        if not self.zk_client:
-            if self.override_command:
-                cmd = self.override_command
-            else:
-                cmd = " ".join(sys.argv)
-            contents = LocalLockFileContents(
-                pid=os.getpid(),
-                commandline=cmd,
-                expiration_timestamp=self.expiration_timestamp,
-            )
-            return json.dumps(contents.__dict__)
-        raise PyUtilsUnreachableConditionException(
-            "Non-local lockfiles should not call this?!"
+        if self.override_command:
+            cmd = self.override_command
+        else:
+            cmd = " ".join(sys.argv)
+        contents = LocalLockFileContents(
+            pid=os.getpid(),
+            commandline=cmd,
+            expiration_timestamp=self.expiration_timestamp,
         )
+        return json.dumps(contents.__dict__)
 
     def _read_lockfile(self) -> Optional[str]:
-        if not self.zk_client:
-            try:
-                with open(self.lockfile, 'r', encoding='utf-8') as rf:
-                    lines = rf.readlines()
-                    return lines[0]
-            except Exception:
-                logger.exception(
-                    "Failed to read from path %s; giving up.", self.lockfile
-                )
+        try:
+            with open(self.lockfile, 'r', encoding='utf-8') as rf:
+                lines = rf.readlines()
+                return lines[0]
+        except Exception:
+            logger.exception("Failed to read from path %s; giving up.", self.lockfile)
         return None
 
     def _detect_stale_lockfile(self) -> None:
-        if not self.zk_client:
-            raw_contents = self._read_lockfile()
-            if not raw_contents:
-                return
-            try:
-                contents = LocalLockFileContents(**json.loads(raw_contents))
-            except Exception:
-                return
-            logger.debug('Blocking lock contents="%s"', contents)
+        raw_contents = self._read_lockfile()
+        if not raw_contents:
+            return
+        try:
+            contents = LocalLockFileContents(**json.loads(raw_contents))
+        except Exception:
+            return
+        logger.debug('Blocking lock contents="%s"', contents)
 
-            # Does the PID exist still?
-            try:
-                os.kill(contents.pid, 0)
-            except OSError:
+        # Does the PID exist still?
+        try:
+            os.kill(contents.pid, 0)
+        except OSError:
+            logger.warning(
+                "Lockfile %s's pid (%d) is stale; force acquiring...",
+                self.lockfile,
+                contents.pid,
+            )
+            self.release()
+
+        # Has the lock expiration expired?
+        if contents.expiration_timestamp is not None:
+            now = datetime.datetime.now().timestamp()
+            if now > contents.expiration_timestamp:
                 logger.warning(
-                    "Lockfile %s's pid (%d) is stale; force acquiring...",
+                    "Lockfile %s's expiration time has passed; force acquiring",
                     self.lockfile,
-                    contents.pid,
                 )
                 self.release()
-
-            # Has the lock expiration expired?
-            if contents.expiration_timestamp is not None:
-                now = datetime.datetime.now().timestamp()
-                if now > contents.expiration_timestamp:
-                    logger.warning(
-                        "Lockfile %s's expiration time has passed; force acquiring",
-                        self.lockfile,
-                    )
-                    self.release()
