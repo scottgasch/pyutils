@@ -203,9 +203,8 @@ class LockFile(contextlib.AbstractContextManager):
             logger.debug(
                 "Unable to acquire local file lock %s, giving up.", self.lockfile
             )
-            if self.zk_client and self.zk_lease:
-                logger.debug("Releasing zookeeper lock %s", self.zk_lease)
-                self.zk_lease.release()
+            # note: do not release the zookeeper lock; it's possible that it is
+            # held by another process on the same machine too.
         return success
 
     def acquire_with_retries(
