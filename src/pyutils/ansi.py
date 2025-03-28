@@ -1677,7 +1677,7 @@ def clear() -> str:
     """Returns:
     An ANSI escape sequence that clears the screen.
     """
-    return "\x1B[H\x1B[2J"
+    return "\x1b[H\x1b[2J"
 
 
 def clear_screen() -> str:
@@ -1692,7 +1692,7 @@ def clear_line() -> str:
     An ANSI escape sequence that clears the current line from the cursor
     position to the end of the line.
     """
-    return "\x1B[2K\r"
+    return "\x1b[2K\r"
 
 
 def reset() -> str:
@@ -1704,7 +1704,7 @@ def reset() -> str:
 
     See also :py:meth:`reset_bg` and :py:meth:`reset_fg`.
     """
-    return "\x1B[m"
+    return "\x1b[m"
 
 
 def normal() -> str:
@@ -1723,14 +1723,21 @@ def bold() -> str:
     """Returns:
     The ANSI escape sequence to set text to bold weight.
     """
-    return "\x1B[1m"
+    return "\x1b[1m"
+
+
+def reset_bold() -> str:
+    """Returns:
+    The ANSI escape sequence to turn off bold character weight.
+    """
+    return "\x1b[22m"
 
 
 def italic() -> str:
     """Returns:
     The ANSI escape sequence to set text to italics style.
     """
-    return "\x1B[3m"
+    return "\x1b[3m"
 
 
 def italics() -> str:
@@ -1740,18 +1747,39 @@ def italics() -> str:
     return italic()
 
 
+def reset_italic() -> str:
+    """Returns:
+    The ANSI escape sequence to turn off text italics style.
+    """
+    return "\x1b[23m"
+
+
+def reset_italics() -> str:
+    """Returns:
+    The ANSI escape sequence to turn off text italics style.
+    """
+    return reset_italic()
+
+
 def underline() -> str:
     """Returns:
     The ANSI escape sequence to set text to underlined style.
     """
-    return "\x1B[4m"
+    return "\x1b[4m"
+
+
+def reset_underline() -> str:
+    """Returns:
+    The ANSI escape sequence to stop underlining text.
+    """
+    return "\x1b[24m"
 
 
 def strikethrough() -> str:
     """Returns:
     The ANSI escape sequence to set text to strike-through mode.
     """
-    return "\x1B[9m"
+    return "\x1b[9m"
 
 
 def strike_through() -> str:
@@ -1759,6 +1787,20 @@ def strike_through() -> str:
     The ANSI escape sequence to set text to strike-through mode.
     """
     return strikethrough()
+
+
+def reset_strikethrough() -> str:
+    """Returns:
+    The ANSI escape sequence to stop text strikethrough mode.
+    """
+    return "\x1b[29m"
+
+
+def reset_strike_through() -> str:
+    """Returns:
+    The ANSI escape sequence to stop text strikethrough mode.
+    """
+    return reset_strikethrough()
 
 
 def _is_16color(num: int) -> bool:
@@ -1824,7 +1866,7 @@ def fg_16color(red: int, green: int, blue: int) -> str:
         bright_count += 1
     if bright_count > 1:
         code += 60
-    return f"\x1B[{code}m"
+    return f"\x1b[{code}m"
 
 
 def bg_16color(red: int, green: int, blue: int) -> str:
@@ -1866,7 +1908,7 @@ def bg_16color(red: int, green: int, blue: int) -> str:
         bright_count += 1
     if bright_count > 1:
         code += 60
-    return f"\x1B[{code}m"
+    return f"\x1b[{code}m"
 
 
 def _pixel_to_216color(n: int) -> int:
@@ -1913,7 +1955,7 @@ def fg_216color(red: int, green: int, blue: int) -> str:
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
     code = 16 + r * 36 + g * 6 + b
-    return f"\x1B[38;5;{code}m"
+    return f"\x1b[38;5;{code}m"
 
 
 def bg_216color(red: int, green: int, blue: int) -> str:
@@ -1945,7 +1987,7 @@ def bg_216color(red: int, green: int, blue: int) -> str:
     g = _pixel_to_216color(green)
     b = _pixel_to_216color(blue)
     code = 16 + r * 36 + g * 6 + b
-    return f"\x1B[48;5;{code}m"
+    return f"\x1b[48;5;{code}m"
 
 
 def _pixel_to_24bit_color(value: int) -> int:
@@ -1980,7 +2022,7 @@ def fg_24bit(red: int, green: int, blue: int) -> str:
     This is used by :py:meth:`fg` internally but can be invoked directly
     if useful.  See also :py:meth:`fg_216color` and :py:meth:`bg_24bit`.
     """
-    return f"\x1B[38;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
+    return f"\x1b[38;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
 
 
 def bg_24bit(red: int, green: int, blue: int) -> str:
@@ -2006,7 +2048,7 @@ def bg_24bit(red: int, green: int, blue: int) -> str:
     This is used by :py:meth:`fg` internally but can be invoked directly
     if useful.  See also :py:meth:`fg_216color` and :py:meth:`bg_24bit`.
     """
-    return f"\x1B[48;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
+    return f"\x1b[48;2;{_pixel_to_24bit_color(red)};{_pixel_to_24bit_color(green)};{_pixel_to_24bit_color(blue)}m"
 
 
 def _find_color_by_name(name: str) -> Tuple[int, int, int]:
