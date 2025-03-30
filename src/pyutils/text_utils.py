@@ -708,6 +708,7 @@ def preformatted_box(
     *,
     width: int = 80,
     color: str = "",
+    color_background: bool = False,
     kind: str = "default",
 ) -> str:
     """Creates a nice box with rounded corners and returns it as a string.
@@ -717,6 +718,7 @@ def preformatted_box(
         text: the text inside the box
         width: the width of the box
         color: the box's color
+        color_background: if True, color the whole box's background
         kind: the kind of box; "default", "single", "rounded", "block",
             "double", "space", "dashed"
 
@@ -765,34 +767,58 @@ def preformatted_box(
     w = width - 2
     ret += color + tr_corner + t_hline * w + tl_corner + rset + "\n"
     if title is not None:
-        ret += (
-            color
-            + l_vline
-            + rset
-            + justify_string(title, width=w, alignment="c")
-            + color
-            + r_vline
-            + rset
-            + "\n"
-        )
-        ret += color + l_vline + " " * w + r_vline + rset + "\n"
-    if text is not None:
-        for line in text.split("\n"):
-            tw = len(string_utils.strip_ansi_sequences(line))
-            assert tw <= w
+        if not color_background:
             ret += (
                 color
                 + l_vline
-                + " "
                 + rset
-                + line
-                + " " * (w - tw - 2)
+                + justify_string(title, width=w, alignment="c")
                 + color
-                + " "
                 + r_vline
                 + rset
                 + "\n"
             )
+            ret += color + l_vline + rset + " " * w + color + r_vline + rset + "\n"
+        else:
+            ret += (
+                color
+                + l_vline
+                + justify_string(title, width=w, alignment="c")
+                + r_vline
+                + rset
+                + "\n"
+            )
+            ret += color + l_vline + " " * w + r_vline + rset + "\n"
+    if text is not None:
+        for line in text.split("\n"):
+            tw = len(string_utils.strip_ansi_sequences(line))
+            assert tw <= w
+            if not color_background:
+                ret += (
+                    color
+                    + l_vline
+                    + " "
+                    + rset
+                    + line
+                    + " " * (w - tw - 2)
+                    + color
+                    + " "
+                    + r_vline
+                    + rset
+                    + "\n"
+                )
+            else:
+                ret += (
+                    color
+                    + l_vline
+                    + " "
+                    + line
+                    + " " * (w - tw - 2)
+                    + " "
+                    + r_vline
+                    + rset
+                    + "\n"
+                )
     ret += color + bl_corner + b_hline * w + br_corner + rset + "\n"
     return ret
 
