@@ -537,7 +537,7 @@ def header(
     Creates a nice header line with a title.
 
     Args:
-        title: the title
+        title: the title, if none, just make a line
         width: how wide to make the header
         align: "left" or "right"
         style: "ascii", "solid" or "dashed"
@@ -590,17 +590,21 @@ def header(
     else:
         col = ""
         reset_seq = ""
-    return (
-        line_char * left
-        + begin
-        + col
-        + " "
-        + title
-        + " "
-        + reset_seq
-        + end
-        + line_char * right
-    )
+
+    if title:
+        return (
+            line_char * left
+            + begin
+            + col
+            + " "
+            + title
+            + " "
+            + reset_seq
+            + end
+            + line_char * right
+        )
+    else:
+        return line_char * width
 
 
 def box(
