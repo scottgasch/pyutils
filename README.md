@@ -24,6 +24,16 @@ so you can get it via a:
 
     pip install pyutils
 
+Alternately, if you want to make changes, consider an "editable install":
+
+    git clone https://github.com/scottgasch/pyutils.git
+    cd pyutils
+    pip install -e .
+
+If you do this, consider reading the [README](https://github.com/scottgasch/pyutils/blob/main/tests/README.md)
+under tests and sending a PR if you think your change would be good to
+contribute to the main repo.
+
 The [LICENSE](https://github.com/scottgasch/pyutils/blob/master/LICENSE)
 and [NOTICE](https://github.com/scottgasch/pyutils/blob/master/NOTICE)
 files at the root of the project describe reusing this code and where
