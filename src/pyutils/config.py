@@ -188,7 +188,7 @@ class OptionalRawFormatter(argparse.HelpFormatter):
 
     def _fill_text(self, text, width, indent):
         if text.startswith("RAW|"):
-            return ''.join(indent + line for line in text[4:].splitlines(keepends=True))
+            return "".join(indent + line for line in text[4:].splitlines(keepends=True))
         return argparse.HelpFormatter._fill_text(self, text, width, indent)
 
 
@@ -305,8 +305,17 @@ class Config:
     def __contains__(self, key: str) -> bool:
         return key in self.config
 
-    def get(self, key: str, default: Any = None) -> Optional[Any]:
+    def get(self, key: str, default: Any = None) -> Any:
         return self.config.get(key, default)
+
+    def get_with_default(self, key: str, default: Any = None) -> Any:
+        return self.get(key, default)
+
+    def get_or_raise(self, key: str) -> Any:
+        try:
+            return self.config[key]
+        except KeyError as e:
+            raise PyUtilsUnrecognizedArgumentsException(e)
 
     @staticmethod
     def add_commandline_args(
@@ -510,7 +519,7 @@ class Config:
     def _read_config_from_disk(self, filepath: str) -> Optional[str]:
         if not os.path.exists(filepath):
             return None
-        with open(filepath, "r", encoding='utf-8') as rf:
+        with open(filepath, "r", encoding="utf-8") as rf:
             self.saved_messages.append(f"Read config from disk file {filepath}")
             return rf.read()
 
@@ -572,7 +581,7 @@ class Config:
         print()
 
     def _write_config_to_disk(self, data: str, filepath: str) -> None:
-        with open(filepath, "w", encoding='utf-8') as wf:
+        with open(filepath, "w", encoding="utf-8") as wf:
             wf.write(data)
 
     def _write_config_to_zookeeper(self, data: str, zkpath: str) -> None:
