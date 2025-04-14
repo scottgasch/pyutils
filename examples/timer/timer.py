@@ -12,7 +12,7 @@ from typing import Optional
 from pyutils import argparse_utils, bootstrap, config, input_utils
 
 logger = logging.getLogger(__name__)
-args = config.add_commandline_args(f'({__file__})', f'Args related to {__file__}')
+args = config.add_commandline_args(f"({__file__})", f"Args related to {__file__}")
 args.add_argument(
     "time_limit",
     type=argparse_utils.valid_duration,
@@ -82,7 +82,7 @@ class Timer:
 
 @bootstrap.initialize
 def main() -> Optional[int]:
-    duration = config.config["time_limit"]
+    duration = config.config.get_or_raise("time_limit")
     timer = Timer(duration.seconds, not config.config["pause_between"])
     print("Countdown timer... [space]=pause/unpause, [r]eset, [q]uit (or ^C).")
 
@@ -92,23 +92,23 @@ def main() -> Optional[int]:
             # Check for input / parse any.
             key = get_keystroke(timeout_seconds=0.01)
             if key:
-                if key == ' ':
+                if key == " ":
                     if timer.running:
                         timer.pause()
                     else:
                         timer.unpause()
-                elif key == 'r':
+                elif key == "r":
                     print(end="\r\n")
                     if config.config["pause_between"]:
                         timer.reset_and_pause()
                     else:
                         timer.reset()
-                elif key == 'q' or key == chr(3):
+                elif key == "q" or key == chr(3):
                     sys.exit(0)
 
             # Display remaining countdown.
             remaining = timer.get_remaining_time()
-            print(f"{remaining:0.2f}  ", end='\r')
+            print(f"{remaining:0.2f}  ", end="\r")
 
             # Done?
             if timer.is_expired():
@@ -127,5 +127,5 @@ def main() -> Optional[int]:
     return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
