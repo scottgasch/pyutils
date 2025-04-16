@@ -78,7 +78,7 @@ cron.py's exit value:
 
 def run_command(timeout: Optional[int], timestamp_file: Optional[str]) -> int:
     """Run cron command"""
-    cmd = " ".join(config.config["command"])
+    cmd = " ".join(config.config.get_or_raise("command"))
     logger.info('cron cmd = "%s"', cmd)
     logger.debug("shell environment:")
     for var in os.environ:
@@ -129,11 +129,14 @@ def main() -> int:
             max_delta = datetime_utils.parse_duration(max_frequency)
             if max_delta > 0:
                 mtime = file_utils.get_file_mtime_as_datetime(timestamp_file)
+                assert mtime
                 delta = now - mtime
                 if delta.total_seconds() < max_delta:
                     logger.info(
                         "It's only been %s since we last ran successfully; bailing out.",
-                        datetime_utils.describe_duration_briefly(delta.total_seconds()),
+                        datetime_utils.describe_duration_briefly(
+                            int(delta.total_seconds())
+                        ),
                     )
                     sys.exit(0)
 
@@ -154,19 +157,22 @@ def main() -> int:
             with lockfile.LockFile(
                 lockfile_path,
                 do_signal_cleanup=True,
-                override_command=" ".join(config.config["command"]),
+                override_command=" ".join(config.config.get_or_raise("command")),
                 expiration_timestamp=lockfile_expiration,
             ) as lf:
                 record = config.config["lockfile_audit_record"]
-                cmd = " ".join(config.config["command"])
+                cmd = " ".join(config.config.get_or_raise("command"))
                 if record:
                     start = lf.locktime
                     with open(record, "a") as wf:
                         print(f"{lockfile_path}, ACQUIRE, {start}, {cmd}", file=wf)
                 retval = run_command(timeout, timestamp_file)
                 if record:
+                    assert start
                     end = datetime.datetime.now().timestamp()
-                    duration = datetime_utils.describe_duration_briefly(end - start)
+                    duration = datetime_utils.describe_duration_briefly(
+                        int(end - start)
+                    )
                     with open(record, "a") as wf:
                         print(
                             f"{lockfile_path}, RELEASE({duration}), {end}, {cmd}",

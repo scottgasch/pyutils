@@ -2299,7 +2299,7 @@ class _StdoutInterceptor(io.TextIOBase, contextlib.AbstractContextManager):
 
     def __init__(self):
         super().__init__()
-        self.saved_stdout: io.TextIOWrapper = None
+        self.saved_stdout: Optional[io.TextIOWrapper] = None
         self.buf = ''
 
     @abstractmethod

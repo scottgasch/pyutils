@@ -146,7 +146,7 @@ class LockFile(contextlib.AbstractContextManager):
             logger.debug("Trying to acquire local lock %s.", self.lockfile)
             os.makedirs(os.path.dirname(self.lockfile), exist_ok=True)
             fd = os.open(self.lockfile, os.O_CREAT | os.O_EXCL | os.O_RDWR)
-            with os.fdopen(fd, "a", encoding='utf-8') as f:
+            with os.fdopen(fd, "a", encoding="utf-8") as f:
                 contents = self._construct_local_lockfile_contents()
                 logger.debug(contents)
                 f.write(contents)
@@ -170,7 +170,7 @@ class LockFile(contextlib.AbstractContextManager):
             datetime.timedelta(seconds=expiration_delta_seconds_from_now),
             identifier,
         )
-        return self.zk_lease is not None
+        return self.zk_lease is not None and bool(self.zk_lease)
 
     def try_acquire_lock_once(self) -> bool:
         """Attempt to acquire the lock with no blocking.
@@ -181,6 +181,7 @@ class LockFile(contextlib.AbstractContextManager):
         success = False
 
         # Attempt to acquire the zookeeper lease first.
+        should_release_zk_lock = False
         if self.zk_client:
             if not self._try_acquire_zk_lock():
                 logger.debug(
@@ -188,6 +189,7 @@ class LockFile(contextlib.AbstractContextManager):
                 )
                 return False
             logger.debug("Success; I own zookeeper lock %s.", self.zk_lockfile)
+            should_release_zk_lock = True
 
         # Even if there's a zookeeper lock, also acquire a local lock, too.
         success = self._try_acquire_local_filesystem_lock()
@@ -203,8 +205,9 @@ class LockFile(contextlib.AbstractContextManager):
             logger.debug(
                 "Unable to acquire local file lock %s, giving up.", self.lockfile
             )
-            # note: do not release the zookeeper lock; it's possible that it is
-            # held by another process on the same machine too.
+            if should_release_zk_lock:
+                assert self.zk_lease
+                self.zk_lease.release()
         return success
 
     def acquire_with_retries(
@@ -266,7 +269,7 @@ class LockFile(contextlib.AbstractContextManager):
                 try:
                     contents = LocalLockFileContents(**json.loads(raw_contents))
                 except Exception:
-                    contents = LocalLockFileContents(0, 'UNKNOWN', 0)
+                    contents = LocalLockFileContents(0, "UNKNOWN", 0)
                 since = file_utils.describe_file_mtime(self.lockfile, brief=True)
                 msg = f"Couldn't acquire {self.lockfile} after several attempts.  It's held by pid={contents.pid} for {since} ({contents.commandline}).  Giving up."
         logger.warning(msg)
@@ -311,7 +314,7 @@ class LockFile(contextlib.AbstractContextManager):
 
     def _read_lockfile(self) -> Optional[str]:
         try:
-            with open(self.lockfile, 'r', encoding='utf-8') as rf:
+            with open(self.lockfile, "r", encoding="utf-8") as rf:
                 lines = rf.readlines()
                 return lines[0]
         except Exception:

@@ -35,15 +35,15 @@ from pyutils.files import file_utils
 logger = logging.getLogger(__name__)
 
 cfg = config.add_commandline_args(
-    f'Zookeeper ({__file__})',
-    'Args related python-zookeeper interactions',
+    f"Zookeeper ({__file__})",
+    "Args related python-zookeeper interactions",
 )
 cfg.add_argument(
-    '--zookeeper_config',
+    "--zookeeper_config",
     type=argparse_utils.valid_filename,
     default=None,
-    metavar='FILENAME',
-    help='Path to file zookeeper configuration',
+    metavar="FILENAME",
+    help="Path to file zookeeper configuration",
 )
 
 
@@ -54,23 +54,23 @@ PROGRAM_NAME: str = os.path.basename(sys.argv[0])
 
 
 def get_zookeeper_config() -> Optional[Tuple[str, str, str]]:
-    config_file = config.config['zookeeper_config']
+    config_file = config.config["zookeeper_config"]
     if not config_file:
         config_file = f'{os.environ["HOME"]}/.zookeeper_secrets'
 
     try:
-        with open(config_file, 'r', encoding='utf-8') as rf:
+        with open(config_file, "r", encoding="utf-8") as rf:
             contents = rf.read()
         json_dict = json.loads(contents)
         if (
-            'zookeeper_nodes' in json_dict
-            and 'zookeeper_client_cert_path' in json_dict
-            and 'zookeeper_client_passphrase' in json_dict
+            "zookeeper_nodes" in json_dict
+            and "zookeeper_client_cert_path" in json_dict
+            and "zookeeper_client_passphrase" in json_dict
         ):
             return (
-                json_dict['zookeeper_nodes'],
-                json_dict['zookeeper_client_cert_path'],
-                json_dict['zookeeper_client_passphrase'],
+                json_dict["zookeeper_nodes"],
+                json_dict["zookeeper_client_cert_path"],
+                json_dict["zookeeper_client_passphrase"],
             )
     except Exception:
         logger.exception("Ignoring exception from json parsing")
@@ -99,7 +99,7 @@ def get_started_zk_client() -> KazooClient:
         certfile=zookeeper_client_cert_path,
     )
     zk.start()
-    logger.debug('We have an active zookeeper connection.')
+    logger.debug("We have an active zookeeper connection.")
     return zk
 
 
@@ -136,7 +136,7 @@ class RenewableReleasableLease(NonBlockingLease):
         path: str,
         duration: datetime.timedelta,
         identifier: Optional[str] = None,
-        utcnow=datetime.datetime.utcnow,
+        utcnow=datetime.datetime.now(datetime.timezone.utc),
     ):
         """Construct the RenewableReleasableLease.
 
@@ -179,17 +179,17 @@ class RenewableReleasableLease(NonBlockingLease):
 
                 # Release by moving end to now.
                 data = {
-                    'version': self._version,
-                    'holder': self.identifier,
-                    'end': end_lease,
+                    "version": self._version,
+                    "holder": self.identifier,
+                    "end": end_lease,
                 }
                 self.client.create(holder_path, self._encode(data))
                 self.obtained = False
-                logger.debug('Successfully released lease')
+                logger.debug("Successfully released lease")
                 return True
 
         except CancelledError as e:
-            logger.debug('Exception %s in zookeeper?', e)
+            logger.debug("Exception %s in zookeeper?", e)
         return False
 
     def try_renew(self, duration: datetime.timedelta) -> bool:
@@ -223,9 +223,9 @@ class RenewableReleasableLease(NonBlockingLease):
             data = self._decode(raw)
             if data["version"] != self._version:
                 return False
-            current_end = datetime.datetime.strptime(data['end'], self._date_format)
-            if data['holder'] == self.identifier and now <= current_end:
-                logger.debug('Yes, we hold the lease and it isn\'t expired.')
+            current_end = datetime.datetime.strptime(data["end"], self._date_format)
+            if data["holder"] == self.identifier and now <= current_end:
+                logger.debug("Yes, we hold the lease and it isn't expired.")
                 return True
         return False
 
@@ -286,8 +286,8 @@ def obtain_lease(
     123
 
     """
-    if not lease_id.startswith('/leases/'):
-        lease_id = f'/leases/{lease_id}'
+    if not lease_id.startswith("/leases/"):
+        lease_id = f"/leases/{lease_id}"
         lease_id = file_utils.fix_multiple_slashes(lease_id)
 
     def wrapper(func: Callable) -> Callable:
@@ -295,7 +295,7 @@ def obtain_lease(
         def wrapper2(*args, **kwargs) -> Optional[Any]:
             zk = get_started_zk_client()
             logger.debug(
-                'Trying to obtain %s for contender %s now...',
+                "Trying to obtain %s for contender %s now...",
                 lease_id,
                 contender_id,
             )
@@ -307,7 +307,7 @@ def obtain_lease(
             )
             if lease:
                 logger.debug(
-                    'Successfully obtained %s for contender %s; invoking user function.',
+                    "Successfully obtained %s for contender %s; invoking user function.",
                     lease_id,
                     contender_id,
                 )
@@ -324,12 +324,12 @@ def obtain_lease(
                 lease.release()
             else:
                 logger.debug(
-                    'Failed to obtain %s for contender %s, shutting down.',
+                    "Failed to obtain %s for contender %s, shutting down.",
                     lease_id,
                     contender_id,
                 )
                 ret = None
-            logger.debug('Shutting down zookeeper client.')
+            logger.debug("Shutting down zookeeper client.")
             zk.stop()
             return ret
 
@@ -393,8 +393,8 @@ def run_for_election(
     I'm sick of being leader.
 
     """
-    if not election_id.startswith('/elections/'):
-        election_id = f'/elections/{election_id}'
+    if not election_id.startswith("/elections/"):
+        election_id = f"/elections/{election_id}"
         election_id = file_utils.fix_multiple_slashes(election_id)
 
     class wrapper:
@@ -408,10 +408,10 @@ def run_for_election(
             self.stop_event.clear()
 
         def zk_listener(self, state: KazooState) -> None:
-            logger.debug('Listener received state %s.', state)
+            logger.debug("Listener received state %s.", state)
             if state != KazooState.CONNECTED:
                 logger.debug(
-                    'Bad connection to zookeeper (state=%s); bailing out.',
+                    "Bad connection to zookeeper (state=%s); bailing out.",
                     state,
                 )
                 self.stop_event.set()
@@ -428,7 +428,7 @@ def run_for_election(
                 kwargs=kwargs,
             )
             logger.debug(
-                'Invoking user code on separate thread: %s',
+                "Invoking user code on separate thread: %s",
                 thread.name,
             )
             thread.start()
@@ -439,18 +439,18 @@ def run_for_election(
                 state = self.zk.client_state
                 if state != KazooState.CONNECTED:
                     logger.error(
-                        'Bad connection to zookeeper (state=%s); bailing out.',
+                        "Bad connection to zookeeper (state=%s); bailing out.",
                         state,
                     )
                     self.stop_event.set()
-                    logger.debug('Waiting for user thread to tear down...')
+                    logger.debug("Waiting for user thread to tear down...")
                     thread.join()
-                    logger.debug('User thread exited after our notification.')
+                    logger.debug("User thread exited after our notification.")
                     return
 
                 thread.join(timeout=5.0)
                 if not thread.is_alive():
-                    logger.info('User thread exited on its own.')
+                    logger.info("User thread exited on its own.")
                     return
 
         def __call__(self, *args, **kwargs):
@@ -465,7 +465,7 @@ def run_for_election(
         return wrapper(f)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
