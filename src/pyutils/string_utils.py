@@ -180,6 +180,7 @@ NUM_SUFFIXES = {
     "M": (1024**2),
     "Kb": (1024**1),
     "K": (1024**1),
+    "B": (1),  # Handle ZFS' "123B" output.
 }
 
 UNIT_WORDS = [
@@ -238,7 +239,7 @@ for i, word in enumerate(MAGNITUDE_SCALES):
         NUM_WORDS[word] = (100, 0)
     else:
         NUM_WORDS[word] = (10 ** (i * 3), 0)
-NUM_WORDS['score'] = (20, 0)
+NUM_WORDS["score"] = (20, 0)
 
 
 def is_none_or_empty(in_str: Optional[str]) -> bool:
@@ -596,7 +597,7 @@ def number_string_to_integer(in_str: str) -> int:
         return int(in_str)
 
     current = result = 0
-    in_str = in_str.replace('-', ' ')
+    in_str = in_str.replace("-", " ")
     for w in in_str.split():
         if w not in NUM_WORDS:
             if is_integer_number(w):
@@ -644,7 +645,7 @@ def integer_to_number_string(num: int) -> str:
         ret = TENS_WORDS[num // 10]
         leftover = num % 10
         if leftover != 0:
-            ret += ' ' + UNIT_WORDS[leftover]
+            ret += " " + UNIT_WORDS[leftover]
         return ret
 
     # If num > 100 go find the highest chunk and convert that, then recursively
@@ -661,10 +662,10 @@ def integer_to_number_string(num: int) -> str:
 
     # scale[1] = numeric magnitude (e.g. 1000)
     # scale[0] = name (e.g. "thousand")
-    ret = integer_to_number_string(num // scale[1]) + ' ' + scale[0]
+    ret = integer_to_number_string(num // scale[1]) + " " + scale[0]
     leftover = num % scale[1]
     if leftover != 0:
-        ret += ' ' + integer_to_number_string(leftover)
+        ret += " " + integer_to_number_string(leftover)
     return ret
 
 
@@ -715,7 +716,7 @@ def strip_escape_sequences(in_str: str) -> str:
 
 
 def add_thousands_separator(
-    in_str: str, *, separator_char: str = ',', places: int = 3
+    in_str: str, *, separator_char: str = ",", places: int = 3
 ) -> str:
     """
     Args:
@@ -742,7 +743,7 @@ def add_thousands_separator(
 
     """
     if isinstance(in_str, numbers.Number):
-        in_str = f'{in_str}'
+        in_str = f"{in_str}"
     if is_number(in_str):
         return _add_thousands_separator(
             in_str, separator_char=separator_char, places=places
@@ -750,15 +751,15 @@ def add_thousands_separator(
     raise ValueError(in_str)
 
 
-def _add_thousands_separator(in_str: str, *, separator_char=',', places=3) -> str:
+def _add_thousands_separator(in_str: str, *, separator_char=",", places=3) -> str:
     """Internal helper"""
     decimal_part = ""
-    if '.' in in_str:
-        (in_str, decimal_part) = in_str.split('.')
+    if "." in in_str:
+        (in_str, decimal_part) = in_str.split(".")
     tmp = [iter(in_str[::-1])] * places
     ret = separator_char.join("".join(x) for x in zip_longest(*tmp, fillvalue=""))[::-1]
     if decimal_part:
-        ret += '.'
+        ret += "."
         ret += decimal_part
     return ret
 
@@ -894,6 +895,8 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     14066017894
     >>> suffix_string_to_number('12345')
     12345
+    >>> suffix_string_to_number('123B')
+    123
     >>> x = suffix_string_to_number('a lot')
     >>> x is None
     True
@@ -944,6 +947,9 @@ def number_to_suffix_string(num: int) -> Optional[str]:
     d = 0.0
     suffix = None
     for sfx, size in NUM_SUFFIXES.items():
+        if sfx == "B":
+            # do not produce 123B type output
+            continue
         if num >= size:
             d = num / size
             suffix = sfx
@@ -951,7 +957,7 @@ def number_to_suffix_string(num: int) -> Optional[str]:
     if suffix is not None:
         return f"{d:.1f}{suffix}"
     else:
-        return f'{num:d}'
+        return f"{num:d}"
 
 
 def is_credit_card(in_str: Any, card_type: Optional[str] = None) -> bool:
@@ -1675,29 +1681,29 @@ def asciify(in_str: str) -> str:
 
 NORMALIZE_PUNCTUATION_REPLACEMENTS = str.maketrans(
     {
-        '—': '-',  # Em dash
-        '–': '-',  # En dash
-        '‒': '-',  # Figure dash
-        '−': '-',  # Minus sign
-        '‐': '-',  # Hyphen
-        '―': '-',  # Horizontal bar
-        '…': '.',  # Ellipsis
-        '•': '*',  # Bullet
-        '“': '"',  # Left double quote
-        '”': '"',  # Right double quote
-        '‘': "'",  # Left single quote
-        '’': "'",  # Right single quote
-        '·': '.',  # Middle dot
-        '！': '!',  # Full-width exclamation mark
-        '？': '?',  # Full-width question mark
-        '；': ';',  # Full-width semicolon
-        '：': ':',  # Full-width colon
-        '，': ',',  # Full-width comma
-        '„': '"',  # Heavy double low-quoted
-        '‚': "'",  # Heavy single low-quoted
-        '∘': '.',  # Ring operator
-        '⸿': ',',  # Low-comma
-        ';': ';',  # Greek question mark
+        "—": "-",  # Em dash
+        "–": "-",  # En dash
+        "‒": "-",  # Figure dash
+        "−": "-",  # Minus sign
+        "‐": "-",  # Hyphen
+        "―": "-",  # Horizontal bar
+        "…": ".",  # Ellipsis
+        "•": "*",  # Bullet
+        "“": '"',  # Left double quote
+        "”": '"',  # Right double quote
+        "‘": "'",  # Left single quote
+        "’": "'",  # Right single quote
+        "·": ".",  # Middle dot
+        "！": "!",  # Full-width exclamation mark
+        "？": "?",  # Full-width question mark
+        "；": ";",  # Full-width semicolon
+        "：": ":",  # Full-width colon
+        "，": ",",  # Full-width comma
+        "„": '"',  # Heavy double low-quoted
+        "‚": "'",  # Heavy single low-quoted
+        "∘": ".",  # Ring operator
+        "⸿": ",",  # Low-comma
+        ";": ";",  # Greek question mark
     }
 )
 
@@ -1725,24 +1731,24 @@ def normalize_punctuation(in_str: str) -> str:
 
 NORMALIZE_WHITESPACE_REPLACEMENTS = str.maketrans(
     {
-        '\u00a0': ' ',  # Non-Breaking Space
-        '\u2000': ' ',  # En Quad
-        '\u2001': ' ',  # Em Quad
-        '\u2002': ' ',  # En Space
-        '\u2003': ' ',  # Em Space
-        '\u2004': ' ',  # Three-Per-Em Space
-        '\u2005': ' ',  # Four-Per-Em Space
-        '\u2006': ' ',  # Six-Per-Em Space
-        '\u2007': ' ',  # Figure Space
-        '\u2008': ' ',  # Punctuation Space
-        '\u2009': ' ',  # Thin Space
-        '\u200a': ' ',  # Hair Space
-        '\u200b': ' ',  # Zero Width Space
-        '\u200c': ' ',  # Zero Width Non-Joiner
-        '\u200d': ' ',  # Zero Width Joiner
-        '\u202f': ' ',  # Narrow No-Break Space
-        '\u205f': ' ',  # Medium Mathematical Space
-        '\u3000': ' ',  # Ideographic Space
+        "\u00a0": " ",  # Non-Breaking Space
+        "\u2000": " ",  # En Quad
+        "\u2001": " ",  # Em Quad
+        "\u2002": " ",  # En Space
+        "\u2003": " ",  # Em Space
+        "\u2004": " ",  # Three-Per-Em Space
+        "\u2005": " ",  # Four-Per-Em Space
+        "\u2006": " ",  # Six-Per-Em Space
+        "\u2007": " ",  # Figure Space
+        "\u2008": " ",  # Punctuation Space
+        "\u2009": " ",  # Thin Space
+        "\u200a": " ",  # Hair Space
+        "\u200b": " ",  # Zero Width Space
+        "\u200c": " ",  # Zero Width Non-Joiner
+        "\u200d": " ",  # Zero Width Joiner
+        "\u202f": " ",  # Narrow No-Break Space
+        "\u205f": " ",  # Medium Mathematical Space
+        "\u3000": " ",  # Ideographic Space
     }
 )
 
@@ -2010,7 +2016,7 @@ def valid_datetime(in_str: str) -> bool:
     return False
 
 
-def squeeze(in_str: str, character_to_squeeze: str = ' ') -> str:
+def squeeze(in_str: str, character_to_squeeze: str = " ") -> str:
     """
     Args:
         in_str: the string to squeeze
@@ -2028,7 +2034,7 @@ def squeeze(in_str: str, character_to_squeeze: str = ' ') -> str:
 
     """
     return re.sub(
-        r'(' + re.escape(character_to_squeeze) + r')+',
+        r"(" + re.escape(character_to_squeeze) + r")+",
         character_to_squeeze,
         in_str,
     )
@@ -2049,8 +2055,8 @@ def dedent(in_str: str) -> Optional[str]:
     """
     if not is_string(in_str):
         return None
-    line_separator = '\n'
-    lines = [MARGIN_RE.sub('', line) for line in in_str.split(line_separator)]
+    line_separator = "\n"
+    lines = [MARGIN_RE.sub("", line) for line in in_str.split(line_separator)]
     return line_separator.join(lines)
 
 
@@ -2073,7 +2079,7 @@ def indent(in_str: str, amount: int) -> str:
     """
     if not is_string(in_str):
         raise TypeError(in_str)
-    line_separator = '\n'
+    line_separator = "\n"
     lines = [" " * amount + line for line in in_str.split(line_separator)]
     return line_separator.join(lines)
 
@@ -2135,7 +2141,7 @@ def strip_ansi_sequences(in_str: str) -> str:
     'blue!'
 
     """
-    return re.sub(r'\x1b\[[\d+;]*[a-z]', '', in_str)
+    return re.sub(r"\x1b\[[\d+;]*[a-z]", "", in_str)
 
 
 class SprintfStdout(contextlib.AbstractContextManager):
@@ -2312,19 +2318,19 @@ def make_contractions(txt: str) -> str:
     first_second = [
         (
             [
-                'are',
-                'could',
-                'did',
-                'has',
-                'have',
-                'is',
-                'must',
-                'should',
-                'was',
-                'were',
-                'would',
+                "are",
+                "could",
+                "did",
+                "has",
+                "have",
+                "is",
+                "must",
+                "should",
+                "was",
+                "were",
+                "would",
             ],
-            ['(n)o(t)'],
+            ["(n)o(t)"],
         ),
         (
             [
@@ -2342,17 +2348,17 @@ def make_contractions(txt: str) -> str:
                 "who",
                 "there",
             ],
-            ['woul(d)', 'i(s)', 'a(re)', 'ha(s)', 'ha(ve)', 'ha(d)', 'wi(ll)'],
+            ["woul(d)", "i(s)", "a(re)", "ha(s)", "ha(ve)", "ha(d)", "wi(ll)"],
         ),
     ]
 
     # Special cases: can't, shan't and won't.
-    txt = re.sub(r'\b(can)\s*no(t)\b', r"\1'\2", txt, count=0, flags=re.IGNORECASE)
+    txt = re.sub(r"\b(can)\s*no(t)\b", r"\1'\2", txt, count=0, flags=re.IGNORECASE)
     txt = re.sub(
-        r'\b(sha)ll\s*(n)o(t)\b', r"\1\2'\3", txt, count=0, flags=re.IGNORECASE
+        r"\b(sha)ll\s*(n)o(t)\b", r"\1\2'\3", txt, count=0, flags=re.IGNORECASE
     )
     txt = re.sub(
-        r'\b(w)ill\s*(n)(o)(t)\b',
+        r"\b(w)ill\s*(n)(o)(t)\b",
         r"\1\3\2'\4",
         txt,
         count=0,
@@ -2364,11 +2370,11 @@ def make_contractions(txt: str) -> str:
             for second in second_list:
                 # Disallow there're/where're.  They're valid English
                 # but sound weird.
-                if (first in set(['there', 'where'])) and second == 'a(re)':
+                if (first in set(["there", "where"])) and second == "a(re)":
                     continue
 
-                pattern = fr'\b({first})\s+{second}\b'
-                if second == '(n)o(t)':
+                pattern = rf"\b({first})\s+{second}\b"
+                if second == "(n)o(t)":
                     replacement = r"\1\2'\3"
                 else:
                     replacement = r"\1'\2"
@@ -2439,7 +2445,7 @@ def add_cardinal_suffix(n: int):
     >>> add_cardinal_suffix(-123)
     '-123rd'
     """
-    return f'{n}{get_cardinal_suffix(n)}'
+    return f"{n}{get_cardinal_suffix(n)}"
 
 
 def remove_cardinal_suffix(txt: str) -> Optional[str]:
@@ -2460,7 +2466,7 @@ def remove_cardinal_suffix(txt: str) -> Optional[str]:
     True
     """
     suffix = txt[-2:]
-    if suffix in set(['st', 'nd', 'rd', 'th']):
+    if suffix in set(["st", "nd", "rd", "th"]):
         return txt[:-2]
     return None
 
@@ -2481,9 +2487,9 @@ def ngrams(txt: str, n: int) -> Generator[str, str, None]:
     """
     words = txt.split()
     for ngram in ngrams_presplit(words, n):
-        ret = ''
+        ret = ""
         for w in ngram:
-            ret += f'{w} '
+            ret += f"{w} "
         yield ret.strip()
 
 
@@ -2518,7 +2524,7 @@ def trigrams(txt: str) -> Generator[str, str, None]:
 
 
 def shuffle_columns_into_list(
-    input_lines: Sequence[str], column_specs: Iterable[Iterable[int]], delim: str = ''
+    input_lines: Sequence[str], column_specs: Iterable[Iterable[int]], delim: str = ""
 ) -> Iterable[str]:
     """Helper to shuffle / parse columnar data and return the results as a
     list.
@@ -2552,7 +2558,7 @@ def shuffle_columns_into_list(
     # Column specs map input lines' columns into outputs.
     # [col1, col2...]
     for spec in column_specs:
-        hunk = ''
+        hunk = ""
         for n in spec:
             hunk = hunk + delim + input_lines[n]
         hunk = hunk.strip(delim)
@@ -2563,7 +2569,7 @@ def shuffle_columns_into_list(
 def shuffle_columns_into_dict(
     input_lines: Sequence[str],
     column_specs: Iterable[Tuple[str, Iterable[int]]],
-    delim: str = '',
+    delim: str = "",
 ) -> Dict[str, str]:
     """Helper to shuffle / parse columnar data and return the results
     as a dict.
@@ -2596,7 +2602,7 @@ def shuffle_columns_into_dict(
     # Column specs map input lines' columns into outputs.
     # "key", [col1, col2...]
     for spec in column_specs:
-        hunk = ''
+        hunk = ""
         for n in spec[1]:
             hunk = hunk + delim + input_lines[n]
         hunk = hunk.strip(delim)
@@ -2618,7 +2624,7 @@ def interpolate_using_dict(txt: str, values: Dict[str, str]) -> str:
     ...                        {'adjective': 'good', 'noun': 'example'})
     'This is a good example.'
     """
-    return _sprintf(txt.format(**values), end='')
+    return _sprintf(txt.format(**values), end="")
 
 
 def to_ascii(txt: str):
@@ -2642,14 +2648,14 @@ def to_ascii(txt: str):
     b'1, 2, 3'
     """
     if isinstance(txt, str):
-        return txt.encode('ascii')
+        return txt.encode("ascii")
     if isinstance(txt, bytes):
         return txt
-    raise TypeError('to_ascii works with strings and bytes')
+    raise TypeError("to_ascii works with strings and bytes")
 
 
 def to_base64(
-    txt: str, *, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+    txt: str, *, encoding: str = "utf-8", errors: str = "surrogatepass"
 ) -> bytes:
     """
     Args:
@@ -2692,8 +2698,8 @@ def is_base64(txt: str) -> bool:
     True
 
     """
-    a = string.ascii_uppercase + string.ascii_lowercase + string.digits + '+/'
-    alphabet = set(a.encode('ascii'))
+    a = string.ascii_uppercase + string.ascii_lowercase + string.digits + "+/"
+    alphabet = set(a.encode("ascii"))
     for char in to_ascii(txt.strip()):
         if char not in alphabet:
             return False
@@ -2701,7 +2707,7 @@ def is_base64(txt: str) -> bool:
 
 
 def from_base64(
-    b64: bytes, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+    b64: bytes, encoding: str = "utf-8", errors: str = "surrogatepass"
 ) -> str:
     """
     Args:
@@ -2734,14 +2740,14 @@ def chunk(txt: str, chunk_size: int):
     '01001101 11000101 10101010 10101010 10011111 10101000'
     """
     if len(txt) % chunk_size != 0:
-        msg = f'String to chunk\'s length ({len(txt)} is not an even multiple of chunk_size ({chunk_size})'
+        msg = f"String to chunk's length ({len(txt)} is not an even multiple of chunk_size ({chunk_size})"
         logger.warning(msg)
         warnings.warn(msg, stacklevel=2)
     for x in range(0, len(txt), chunk_size):
         yield txt[x : x + chunk_size]
 
 
-def to_bitstring(txt: str, *, delimiter: str = '') -> str:
+def to_bitstring(txt: str, *, delimiter: str = "") -> str:
     """
     Args:
         txt: the string to convert into a bitstring
@@ -2765,7 +2771,7 @@ def to_bitstring(txt: str, *, delimiter: str = '') -> str:
     '01110100011001010111001101110100'
     """
     etxt = to_ascii(txt)
-    bits = bin(int.from_bytes(etxt, 'big'))
+    bits = bin(int.from_bytes(etxt, "big"))
     bits = bits[2:]
     return delimiter.join(chunk(bits.zfill(8 * ((len(bits) + 7) // 8)), 8))
 
@@ -2789,11 +2795,11 @@ def is_bitstring(txt: str) -> bool:
     >>> is_bitstring('1234')
     False
     """
-    return is_binary_integer_number(f'0b{txt}')
+    return is_binary_integer_number(f"0b{txt}")
 
 
 def from_bitstring(
-    bits: str, encoding: str = 'utf-8', errors: str = 'surrogatepass'
+    bits: str, encoding: str = "utf-8", errors: str = "surrogatepass"
 ) -> str:
     """
     Args:
@@ -2812,7 +2818,7 @@ def from_bitstring(
     'hello?'
     """
     n = int(bits, 2)
-    return n.to_bytes((n.bit_length() + 7) // 8, 'big').decode(encoding, errors) or '\0'
+    return n.to_bytes((n.bit_length() + 7) // 8, "big").decode(encoding, errors) or "\0"
 
 
 def ip_v4_sort_key(txt: str) -> Optional[Tuple[int, ...]]:
@@ -2837,7 +2843,7 @@ def ip_v4_sort_key(txt: str) -> Optional[Tuple[int, ...]]:
     if not is_ip_v4(txt):
         print(f"not IP: {txt}")
         return None
-    return tuple(int(x) for x in txt.split('.'))
+    return tuple(int(x) for x in txt.split("."))
 
 
 def path_ancestors_before_descendants_sort_key(volume: str) -> Tuple[str, ...]:
@@ -2859,7 +2865,7 @@ def path_ancestors_before_descendants_sort_key(volume: str) -> Tuple[str, ...]:
     >>> sorted(paths, key=lambda x: path_ancestors_before_descendants_sort_key(x))
     ['/usr', '/usr/local', '/usr/local/bin']
     """
-    return tuple(x for x in volume.split('/') if len(x) > 0)
+    return tuple(x for x in volume.split("/") if len(x) > 0)
 
 
 def replace_all(in_str: str, replace_set: str, replacement: str) -> str:
@@ -2908,7 +2914,7 @@ def replace_nth(in_str: str, source: str, target: str, nth: int):
     return before + after
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
