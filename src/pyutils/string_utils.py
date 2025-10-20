@@ -46,18 +46,8 @@ import string
 import unicodedata
 import warnings
 from itertools import zip_longest
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import (Any, Callable, Dict, Generator, Iterable, List, Literal,
+                    Optional, Sequence, Tuple)
 from uuid import uuid4
 
 from pyutils import list_utils
@@ -403,6 +393,8 @@ def is_integer_number(in_str: str) -> bool:
     True
     >>> is_integer_number('42.0')
     False
+    >>> is_integer_number('-42')
+    True
     """
     return (
         (is_number(in_str) and "." not in in_str)
@@ -897,6 +889,8 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     12345
     >>> suffix_string_to_number('123B')
     123
+    >>> suffix_string_to_number('-13Mb')
+    -13631488
     >>> x = suffix_string_to_number('a lot')
     >>> x is None
     True
@@ -943,19 +937,25 @@ def number_to_suffix_string(num: int) -> Optional[str]:
     '13.1Gb'
     >>> number_to_suffix_string(1024 * 1024)
     '1.0Mb'
+    >>> number_to_suffix_string(-13631488)
+    '-13.0Mb'
     """
+    negative = ''
+    if num < 0:
+        negative = '-'
+    pnum = abs(num)
     d = 0.0
     suffix = None
     for sfx, size in NUM_SUFFIXES.items():
         if sfx == "B":
             # do not produce 123B type output
             continue
-        if num >= size:
-            d = num / size
+        if pnum >= size:
+            d = pnum / size
             suffix = sfx
             break
     if suffix is not None:
-        return f"{d:.1f}{suffix}"
+        return f"{negative}{d:.1f}{suffix}"
     else:
         return f"{num:d}"
 
