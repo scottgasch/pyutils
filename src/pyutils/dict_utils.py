@@ -5,18 +5,20 @@
 """This module contains helper functions for dealing with Python dictionaries."""
 
 from itertools import islice
-from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple
+from typing import (Any, Callable, Dict, Hashable, Iterator, List, Tuple,
+                    TypeVar)
 
 from pyutils import dataclass_utils
 from pyutils.typez.type_hints import Comparable
 
-AnyDict = Dict[Hashable, Any]
+AnyHashable = TypeVar("AnyHashable", bound=Hashable)
+AnyDict = Dict[AnyHashable, Any]
 DictWithComparableKeys = Dict[Comparable, Any]
 
 
 def init_or_inc(
     d: AnyDict,
-    key: Hashable,
+    key: AnyHashable,
     *,
     init_value: Any = 1,
     inc_function: Callable[..., Any] = lambda x: x + 1,
@@ -121,7 +123,7 @@ def raise_on_duplicated_keys(key, new_value, old_value):
     """Helper for use with :meth:`coalesce` that raises an exception
     when a collision is detected.
     """
-    raise KeyError(f'Key {key} is duplicated in more than one input dict.')
+    raise KeyError(f"Key {key} is duplicated in more than one input dict.")
 
 
 def coalesce(
@@ -182,7 +184,7 @@ def coalesce(
     return out
 
 
-def item_with_max_value(d: AnyDict) -> Tuple[Hashable, Any]:
+def item_with_max_value(d: AnyDict) -> Tuple[AnyHashable, Any]:
     """
     Args:
         d: a dict with comparable values
@@ -203,7 +205,7 @@ def item_with_max_value(d: AnyDict) -> Tuple[Hashable, Any]:
     return max(d.items(), key=lambda _: _[1])
 
 
-def item_with_min_value(d: AnyDict) -> Tuple[Hashable, Any]:
+def item_with_min_value(d: AnyDict) -> Tuple[AnyHashable, Any]:
     """
     Args:
         d: a dict with comparable values
@@ -326,7 +328,7 @@ def min_key(d: DictWithComparableKeys) -> Comparable:
     return min(d.keys())
 
 
-def parallel_lists_to_dict(keys: List[Hashable], values: List[Any]) -> AnyDict:
+def parallel_lists_to_dict(keys: List[AnyHashable], values: List[Any]) -> AnyDict:
     """Given two parallel lists (keys and values), create and return
     a dict.
 
@@ -350,7 +352,7 @@ def parallel_lists_to_dict(keys: List[Hashable], values: List[Any]) -> AnyDict:
     return dict(zip(keys, values))
 
 
-def dict_to_key_value_lists(d: AnyDict) -> Tuple[List[Hashable], List[Any]]:
+def dict_to_key_value_lists(d: AnyDict) -> Tuple[List[AnyHashable], List[Any]]:
     """Given a dict, decompose it into a list of keys and values.
 
     Args:
@@ -379,7 +381,7 @@ dict_to_dataclass = dataclass_utils.dataclass_from_dict
 dict_from_dataclass = dataclass_utils.dataclass_to_dict
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod()
