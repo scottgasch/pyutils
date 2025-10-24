@@ -222,19 +222,17 @@ def item_with_min_value(d: AnyDict) -> Tuple[AnyHashable, Any]:
     return min(d.items(), key=lambda _: _[1])
 
 
-def key_with_max_value(d: AnyDict) -> Hashable:
+def key_of_item_with_max_value(d: AnyDict) -> Hashable:
     """
     Args:
-        d: a dict with comparable keys
+        d: a dict
 
     Returns:
-        The maximum key in the dict when comparing the keys with
-        each other.
+        The key associated with the maximum value in the dict.
 
-    .. note:: This code totally ignores values; it is comparing key
-        against key to find the maximum key in the keyspace.
-
-    >>> d = {'a': 1, 'b': 2, 'c': 3}
+    >>> d = {'a': 3, 'b': 2, 'c': 1}
+    >>> key_of_item_with_max_value(d)
+    'a'
     >>> key_with_max_value(d)
     'c'
 
@@ -242,19 +240,17 @@ def key_with_max_value(d: AnyDict) -> Hashable:
     return item_with_max_value(d)[0]
 
 
-def key_with_min_value(d: AnyDict) -> Hashable:
+def key_of_item_with_min_value(d: AnyDict) -> Hashable:
     """
     Args:
-        d: a dict with comparable keys
+        d: a dict
 
     Returns:
-        The minimum key in the dict when comparing the keys with
-        each other.
+        The key associated with the minimum value in the dict.
 
-    .. note:: This code totally ignores values; it is comparing key
-        against key to find the minimum key in the keyspace.
-
-    >>> d = {'a': 1, 'b': 2, 'c': 3}
+    >>> d = {'a': 10, 'b': 2, 'c': 1}
+    >>> key_of_item_with_min_value(d)
+    'c'
     >>> key_with_min_value(d)
     'a'
 
@@ -310,6 +306,9 @@ def max_key(d: DictWithComparableKeys) -> Comparable:
     return max(d.keys())
 
 
+key_with_max_value = max_key
+
+
 def min_key(d: DictWithComparableKeys) -> Comparable:
     """
     Args:
@@ -326,6 +325,9 @@ def min_key(d: DictWithComparableKeys) -> Comparable:
     'a'
     """
     return min(d.keys())
+
+
+key_with_min_value = min_key
 
 
 def parallel_lists_to_dict(keys: List[AnyHashable], values: List[Any]) -> AnyDict:

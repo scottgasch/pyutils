@@ -36,14 +36,16 @@ class TestDictUtils(unittest.TestCase):
         d = {'a': 4, 'b': 3, 'c': 2, 'd': 1, 'e': 1}
         self.assertEqual('a', du.item_with_max_value(d)[0])
         self.assertEqual(4, du.item_with_max_value(d)[1])
-        self.assertEqual('a', du.key_with_max_value(d))
+        self.assertEqual('a', du.key_of_item_with_max_value(d))
+        self.assertEqual('e', du.key_with_max_value(d))
         self.assertEqual(4, du.max_value(d))
 
     def test_item_with_min_value(self):
         d = {'a': 4, 'b': 3, 'c': 2, 'd': 1, 'e': 0}
         self.assertEqual('e', du.item_with_min_value(d)[0])
         self.assertEqual(0, du.item_with_min_value(d)[1])
-        self.assertEqual('e', du.key_with_min_value(d))
+        self.assertEqual('e', du.key_of_item_with_min_value(d))
+        self.assertEqual('a', du.key_with_min_value(d))
         self.assertEqual(0, du.min_value(d))
 
     def test_min_max_key(self):
