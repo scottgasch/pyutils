@@ -9,12 +9,16 @@
 
 """This is a grab bag of, hopefully, useful decorators."""
 
+import atexit
+import datetime
 import enum
 import functools
 import inspect
 import logging
 import math
 import multiprocessing
+import os
+import pickle
 import random
 import signal
 import sys
@@ -22,7 +26,7 @@ import threading
 import time
 import traceback
 import warnings
-from typing import Any, Callable, List, NoReturn, Optional, Union
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Union
 
 from pyutils.exceptions import PyUtilsException
 
@@ -357,6 +361,8 @@ def memoized(func: Callable) -> Callable:
     implementation.  See:
     https://docs.python.org/3/library/functools.html#functools.cache
 
+    See also: :py:meth:`persistent_cache`.
+
     >>> import time
     >>> @memoized
     ... def expensive(arg) -> int:
@@ -394,6 +400,143 @@ def memoized(func: Callable) -> Callable:
 
     wrapper_memoized.cache = {}  # type: ignore
     return wrapper_memoized
+
+
+# Define the structure for a persistent cached item
+PersistentCachedItem = Dict[str, Union[Any, datetime.datetime]]
+
+
+def should_use_cached_data_default(cached_time: datetime.datetime, cached_result: Any) -> bool:
+    """
+    Default policy: determines if the cached data is fresh.
+    Data is considered fresh if it is less than 7 days old.
+    """
+    age = datetime.datetime.now() - cached_time
+    return age < datetime.timedelta(days=7)
+
+
+def save_persistent_cache_to_disk(cache: Dict[Tuple, PersistentCachedItem], cache_file: str):
+    """
+    Function registered with atexit to save the cache to disk on
+    program shutdown.
+    """
+    try:
+        with open(cache_file, 'wb') as f:
+            pickle.dump(cache, f)
+        logger.debug("Saved cache file: %s", cache_file)
+    except Exception:
+        logger.exception("Problem saving cache file: %s")
+
+
+def persistent_cache(
+    cache_file: str,
+    use_result_policy: Callable[[datetime.datetime, Any], bool] = should_use_cached_data_default
+) -> Callable:
+    """
+    A decorator that caches function results to disk, persisting data
+    across invocations.  Persistence is now handled once, at program
+    exit, via atexit.
+
+    See also :py:meth:`pyutils.persistent.persistent_autoloaded_singleton`,
+             :py:meth:`decorator_utils.memoized`.
+
+    Args:
+        cache_file: The path to the file where the cache will be stored.
+        use_result_policy: A function
+                (timestamp: datetime, result: Any) -> bool
+                that determines if the cached data should be reused (True)
+                or recalculated (False).
+
+    >>> cache_file = "/tmp/persistent_cache_test.pkl"
+    >>> import time
+    >>> @persistent_cache(cache_file)
+    ... def expensive(arg) -> int:
+    ...     # Simulate something slow to compute or lookup, like a
+    ...     # computationally expensive task or a network read.
+    ...     time.sleep(1.0)
+    ...     return arg * arg
+
+    >>> start = time.time()
+    >>> expensive(5)           # Takes about 1 sec
+    25
+    >>> expensive(3)           # Also takes about 1 sec
+    9
+    >>> expensive(5)           # Pulls from cache, fast
+    25
+    >>> expensive(3)           # Pulls from cache again, fast
+    9
+    >>> dur = time.time() - start
+    >>> dur < 3.0
+    True
+    """
+
+    # Initialize cache and attempt to load it once when the decorator is applied
+    cache: Dict[Tuple, PersistentCachedItem] = {}
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'rb') as f:
+                cache = pickle.load(f)
+            logger.debug("Loaded persistent_cache from %s successfully.", cache_file)
+        except Exception:
+            logger.exception(
+                "Failed to load persistent_cache from %s; using empty cache.",
+                cache_file
+            )
+            cache = {}
+    else:
+        logger.debug(
+            "The persistent_cache file %s was not found; using empty cache.",
+            cache_file,
+        )
+
+    # Save hook to persist the cache to disk on (normal) program exit.
+    atexit.register(save_persistent_cache_to_disk, cache, cache_file)
+
+    # The actual decorator itself...
+    def decorator(func: Callable) -> Callable:
+
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+
+            # Construct the cache key based on arguments.
+            key_kwargs = tuple(sorted(kwargs.items()))
+            cache_key = (args, key_kwargs)
+
+            # Check the cache.
+            if cache_key in cache:
+                cached_item = cache[cache_key]
+                cached_time = cached_item['timestamp']
+                cached_result = cached_item['result']
+
+                # Apply the provided freshness policy
+                if use_result_policy(cached_time, cached_result):
+                    logger.debug("Got a cache hit for %s, using result.", cache_key)
+                    return cached_result
+                else:
+                    logger.debug(
+                        "Got a cache hit for %s but policy says it's stale; recomputing",
+                        cache_key
+                    )
+                    del cache[cache_key]
+
+            # Handle miss or stale via recomputation.
+            logger.debug(
+                "Cache miss for %s, calling the wrapped function.",
+                cache_key
+            )
+            result = func(*args, **kwargs)
+
+            # Populate the cache with the results.
+            cache[cache_key] = {
+                'result': result,
+                'timestamp': datetime.datetime.now()
+            }
+            return result
+
+        wrapper.cache = cache
+        return wrapper
+
+    return decorator
 
 
 def normal_delay_helper(delay: float) -> None:
@@ -440,6 +583,7 @@ def predicated_retry_with_backoff(
         on_attempt: an optional callable to be invoked at each attempt
         on_success: an optional callable to be invoked on success
         on_failure: an optional callable to be invoked on failure
+        delay_helper: an optional callable to modify the delay
         raise_on_repeated_failures: if True, raise a PyUtilsException
             if the wrapped function never succeeds (as indicated by
             the predicate).  Otherwise simply returns the final error
