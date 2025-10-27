@@ -13,7 +13,8 @@ from pyutils.typez.type_hints import Comparable
 
 AnyHashable = TypeVar("AnyHashable", bound=Hashable)
 AnyDict = Dict[AnyHashable, Any]
-DictWithComparableKeys = Dict[Comparable, Any]
+AnyComparable = TypeVar("AnyComparable", bound=Comparable)
+DictWithComparableKeys = Dict[AnyComparable, Any]
 
 
 def init_or_inc(
