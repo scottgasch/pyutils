@@ -406,6 +406,14 @@ def memoized(func: Callable) -> Callable:
 PersistentCachedItem = Dict[str, Union[Any, datetime.datetime]]
 
 
+# Wrapped function can return an instance of this class to
+# communicate with the decorator that this result ought not
+# to be cached.
+class DontCacheThisResult:
+    def __init__(self, actual_result: Optional[Any]):
+        self.actual_result = actual_result
+
+
 def should_use_cached_data_default(cached_time: datetime.datetime, cached_result: Any) -> bool:
     """
     Default policy: determines if the cached data is fresh.
@@ -526,12 +534,14 @@ def persistent_cache(
             )
             result = func(*args, **kwargs)
 
-            # Populate the cache with the results.
-            cache[cache_key] = {
-                'result': result,
-                'timestamp': datetime.datetime.now()
-            }
-            return result
+            if not isinstance(result, DontCacheThisResult):
+                cache[cache_key] = {
+                    'result': result,
+                    'timestamp': datetime.datetime.now()
+                }
+                return result
+            else:
+                return result.actual_result
 
         wrapper.cache = cache
         return wrapper
