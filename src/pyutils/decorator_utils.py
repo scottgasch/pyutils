@@ -347,6 +347,14 @@ def singleton(cls):
     return _SingletonWrapper(cls)
 
 
+# Wrapped function can return an instance of this class to
+# communicate with the decorator that this result ought not
+# to be cached.
+class DontCacheThisResult:
+    def __init__(self, actual_result: Optional[Any]):
+        self.actual_result = actual_result
+
+
 def memoized(func: Callable) -> Callable:
     """Keep a cache of previous function call results.  Use this with
     pure functions without side effects that do expensive work.
@@ -389,13 +397,17 @@ def memoized(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper_memoized(*args, **kwargs):
-        cache_key = args + tuple(kwargs.items())
+        key_kwargs = tuple(sorted(kwargs.items()))
+        cache_key = (args, key_kwargs)
         if cache_key not in wrapper_memoized.cache:
             value = func(*args, **kwargs)
-            logger.debug("Memoizing %s => %s for %s", cache_key, value, func.__name__)
-            wrapper_memoized.cache[cache_key] = value
-        else:
-            logger.debug("Returning memoized value for %s", {func.__name__})
+            if not isinstance(value, DontCacheThisResult):
+                logger.debug("Memoizing %s => %s for %s", cache_key, value, func.__name__)
+                wrapper_memoized.cache[cache_key] = value
+                return value
+            else:
+                return value.actual_result
+        logger.debug("Returning memoized value for %s", {func.__name__})
         return wrapper_memoized.cache[cache_key]
 
     wrapper_memoized.cache = {}  # type: ignore
@@ -404,14 +416,6 @@ def memoized(func: Callable) -> Callable:
 
 # Define the structure for a persistent cached item
 PersistentCachedItem = Dict[str, Union[Any, datetime.datetime]]
-
-
-# Wrapped function can return an instance of this class to
-# communicate with the decorator that this result ought not
-# to be cached.
-class DontCacheThisResult:
-    def __init__(self, actual_result: Optional[Any]):
-        self.actual_result = actual_result
 
 
 def should_use_cached_data_default(cached_time: datetime.datetime, cached_result: Any) -> bool:
