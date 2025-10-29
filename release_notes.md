@@ -938,3 +938,55 @@ This version -------- 0.0.14
 Previous version ---- 0.0.13
 Total commits -------       45
 ```
+# 🎁 Release notes (`0.0.15`)
+
+## Changes
+- Make @memoized also use the DontCacheResult wrapper.
+- Adds a way for cached functions to communicate with the cache itself.
+- Fix AnyComparable too.
+- Adds persistent_cache.
+- Fix two confusingly named methods.
+- Use a TypeVar to indicate a subtype of Hashable instead of Hashable.
+- Handle negative quantities for suffix strings.
+- Handle output like "123B" which is produced by ZFS.
+- Update project def per new rules.
+- Drop zookeeper lockfile if backup lock can't be obtained.
+- Update README.md
+- Example of using the new config method.
+- Make it easier to deal with the Any|None type coming back from config.
+- A header without a title is just a line, please.
+- Adds color_background param to preformatted_box.
+- Add some new reset functions.
+- Backoff on releasing the zookeeper based lock if the local lock can't be acquired as some other process on the same machine may hold it still.
+- Make lockfile also take a local lock when a zookeeper based lock is indicated since zookeeper locks will happily allow more than one process on the same machine to acquire the lock at the same time since the lease is at the machine-level granularity.
+- Add pyright.
+- Make pyright happy.
+- Extract URL.
+- Don't assume you can read all the files in /tmp.
+- Some optimizations.
+- Make scrabble show what the blank was used for
+- Remove system-dependent doctests, we'll test this another way.
+- Update run-tests.yml to install typing_extensions
+- Declare dependency on typing_extensions module.
+- Adds normalization methods to string_utils.
+- Move dataclass type hint into typez
+- Add JSON type hints
+- Docs for input_utils.
+- Start paused.
+- Update README.md
+- Bugfixes.
+- Examples of using that keystroke reader thing.
+- Adds a keystroke reader context that messes with and restores the terminal for you.
+- Fix typo on logging message.
+- Parse Juneteenth holiday name.
+- Typo.
+- Skip geocode.py's doctests b/c they make http requests.
+- Typo.
+- Cut version 0.0.14
+
+## Metadata
+```
+This version -------- 0.0.15
+Previous version ---- 0.0.14
+Total commits -------       42
+```

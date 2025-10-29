@@ -1,17 +1,17 @@
 [project]
 name = "pyutils"
-version = "0.0.14"
+version = "0.0.15"
 authors = [
   { name="Scott Gasch", email="scott.gasch@gmail.com" },
 ]
 description = "Python Utilities"
 readme = "README.md"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+license = { file="LICENSE" }
 requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
@@ -23,6 +23,7 @@ dependencies = [
     "overrides",
     "pytz",
     "requests",
+    "typing_extensions",
 ]
 
 [project.urls]
@@ -54,7 +55,3 @@ packages = [
 
 [tool.setuptools.package-dir]
 pyutils = "src/pyutils"
-
-[tool.pyright]
-include = ["src/pyutils"]
-
