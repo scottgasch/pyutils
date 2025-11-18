@@ -216,12 +216,19 @@ def bar_graph_string(
     )
 
 
-def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
+def sparkline(
+        numbers: List[float],
+        *,
+        width: Optional[int] = None
+) -> Tuple[float, float, str]:
     """
     Makes a "sparkline" little inline histogram graph.  Auto scales.
 
     Args:
         numbers: the population over which to create the sparkline
+        width: the desired width.  If None, width will be len(numbers).
+            Cannot be > len(numbers).  If < len(numbers), sampling is
+            used.
 
     Returns:
         a three tuple containing:
@@ -241,6 +248,9 @@ def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
     >>> sparkline([10, 10, 10, 10, 10, 10, 10, 10])
     (10, 10, '▁▁▁▁▁▁▁▁')
 
+    >>> sparkline([5, 6, 2, 6, 2, 4, 6, 7, 3, 1, 6, 8, 9, 3, 5, 2, 9, 1, 6, 7, 8, 8, 9, 1, 4, 3], width=10)
+    (1, 9, '▅▂▂▆▃▆█▅█▆')
+
     """
     _bar = "▁▂▃▄▅▆▇█"  # Unicode: 9601, 9602, 9603, 9604, 9605, 9606, 9607, 9608
 
@@ -249,9 +259,18 @@ def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
     span = max_num - min_num
     if span == 0:
         span = 1
-    sline = "".join(
-        _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in numbers
-    )
+
+    if width and width < len(numbers):
+        step = math.floor(len(numbers) / width)
+        sampled_numbers = numbers[::step]
+        sampled_numbers = sampled_numbers[:width]
+        sline = "".join(
+            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in sampled_numbers
+        )
+    else:
+        sline = "".join(
+            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in numbers
+        )
     return min_num, max_num, sline
 
 
