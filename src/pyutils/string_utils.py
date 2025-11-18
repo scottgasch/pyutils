@@ -891,6 +891,8 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     123
     >>> suffix_string_to_number('-13Mb')
     -13631488
+    >>> suffix_string_to_number('+13Mb')
+    13631488
     >>> x = suffix_string_to_number('a lot')
     >>> x is None
     True
@@ -921,7 +923,7 @@ def suffix_string_to_number(in_str: str) -> Optional[int]:
     return None
 
 
-def number_to_suffix_string(num: int) -> Optional[str]:
+def number_to_suffix_string(num: int, *, positive_sign=False) -> Optional[str]:
     """Take a number (of bytes) and returns a string like "43.8Gb".
 
     Args:
@@ -939,10 +941,14 @@ def number_to_suffix_string(num: int) -> Optional[str]:
     '1.0Mb'
     >>> number_to_suffix_string(-13631488)
     '-13.0Mb'
+    >>> number_to_suffix_string(1024 * 1024, positive_sign=True)
+    '+1.0Mb'
     """
-    negative = ''
+    sign = ''
     if num < 0:
-        negative = '-'
+        sign = '-'
+    elif positive_sign:
+        sign = '+'
     pnum = abs(num)
     d = 0.0
     suffix = None
@@ -955,7 +961,7 @@ def number_to_suffix_string(num: int) -> Optional[str]:
             suffix = sfx
             break
     if suffix is not None:
-        return f"{negative}{d:.1f}{suffix}"
+        return f"{sign}{d:.1f}{suffix}"
     else:
         return f"{num:d}"
 
