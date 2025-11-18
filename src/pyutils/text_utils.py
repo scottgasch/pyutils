@@ -238,12 +238,17 @@ def sparkline(numbers: List[float]) -> Tuple[float, float, str]:
     >>> sparkline([104, 99, 93, 96, 82, 77, 85, 73])
     (73, 104, '█▇▆▆▃▂▄▁')
 
+    >>> sparkline([10, 10, 10, 10, 10, 10, 10, 10])
+    (10, 10, '▁▁▁▁▁▁▁▁')
+
     """
     _bar = "▁▂▃▄▅▆▇█"  # Unicode: 9601, 9602, 9603, 9604, 9605, 9606, 9607, 9608
 
     barcount = len(_bar)
     min_num, max_num = min(numbers), max(numbers)
     span = max_num - min_num
+    if span == 0:
+        span = 1
     sline = "".join(
         _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in numbers
     )
@@ -359,7 +364,7 @@ def justify_string(
             else:
                 string = padding + string
         else:
-            raise ValueError('alignment must be l, r, j, or c.')
+            raise ValueError("alignment must be l, r, j, or c.")
     return string
 
 
@@ -833,7 +838,7 @@ def print_box(
     *,
     width: int = 80,
     color: str = "",
-    kind: str = 'default',
+    kind: str = "default",
 ) -> None:
     """Draws a box with nice rounded corners.
 
