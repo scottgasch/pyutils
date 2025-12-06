@@ -402,7 +402,9 @@ def memoized(func: Callable) -> Callable:
         if cache_key not in wrapper_memoized.cache:
             value = func(*args, **kwargs)
             if not isinstance(value, DontCacheThisResult):
-                logger.debug("Memoizing %s => %s for %s", cache_key, value, func.__name__)
+                logger.debug(
+                    "Memoizing %s => %s for %s", cache_key, value, func.__name__
+                )
                 wrapper_memoized.cache[cache_key] = value
                 return value
             else:
@@ -418,7 +420,9 @@ def memoized(func: Callable) -> Callable:
 PersistentCachedItem = Dict[str, Union[Any, datetime.datetime]]
 
 
-def should_use_cached_data_default(cached_time: datetime.datetime, cached_result: Any) -> bool:
+def should_use_cached_data_default(
+    cached_time: datetime.datetime, cached_result: Any
+) -> bool:
     """
     Default policy: determines if the cached data is fresh.
     Data is considered fresh if it is less than 7 days old.
@@ -427,22 +431,26 @@ def should_use_cached_data_default(cached_time: datetime.datetime, cached_result
     return age < datetime.timedelta(days=7)
 
 
-def save_persistent_cache_to_disk(cache: Dict[Tuple, PersistentCachedItem], cache_file: str):
+def save_persistent_cache_to_disk(
+    cache: Dict[Tuple, PersistentCachedItem], cache_file: str
+):
     """
     Function registered with atexit to save the cache to disk on
     program shutdown.
     """
     try:
-        with open(cache_file, 'wb') as f:
+        with open(cache_file, "wb") as f:
             pickle.dump(cache, f)
         logger.debug("Saved cache file: %s", cache_file)
     except Exception:
-        logger.exception("Problem saving cache file: %s")
+        logger.exception("Problem saving cache file: %s", cache_file)
 
 
 def persistent_cache(
     cache_file: str,
-    use_result_policy: Callable[[datetime.datetime, Any], bool] = should_use_cached_data_default
+    use_result_policy: Callable[
+        [datetime.datetime, Any], bool
+    ] = should_use_cached_data_default,
 ) -> Callable:
     """
     A decorator that caches function results to disk, persisting data
@@ -486,13 +494,13 @@ def persistent_cache(
     cache: Dict[Tuple, PersistentCachedItem] = {}
     if os.path.exists(cache_file):
         try:
-            with open(cache_file, 'rb') as f:
+            with open(cache_file, "rb") as f:
                 cache = pickle.load(f)
             logger.debug("Loaded persistent_cache from %s successfully.", cache_file)
         except Exception:
             logger.exception(
                 "Failed to load persistent_cache from %s; using empty cache.",
-                cache_file
+                cache_file,
             )
             cache = {}
     else:
@@ -507,18 +515,32 @@ def persistent_cache(
     # The actual decorator itself...
     def decorator(func: Callable) -> Callable:
 
+        signature = inspect.signature(func)
+        arg_names = list(signature.parameters.keys())
+
+        # Determine if the function is a method that needs its first argument skipped.
+        skip_first_arg = False
+        if arg_names and arg_names[0] in ("self", "cls"):
+            skip_first_arg = True
+            logger.debug(
+                "%s identified as a method; skipping first arg.", func.__name__
+            )
+
         @functools.wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
 
             # Construct the cache key based on arguments.
             key_kwargs = tuple(sorted(kwargs.items()))
-            cache_key = (args, key_kwargs)
+            if skip_first_arg:
+                cache_key = (args[1:], key_kwargs)
+            else:
+                cache_key = (args, key_kwargs)
 
             # Check the cache.
             if cache_key in cache:
                 cached_item = cache[cache_key]
-                cached_time = cached_item['timestamp']
-                cached_result = cached_item['result']
+                cached_time = cached_item["timestamp"]
+                cached_result = cached_item["result"]
 
                 # Apply the provided freshness policy
                 if use_result_policy(cached_time, cached_result):
@@ -527,21 +549,18 @@ def persistent_cache(
                 else:
                     logger.debug(
                         "Got a cache hit for %s but policy says it's stale; recomputing",
-                        cache_key
+                        cache_key,
                     )
                     del cache[cache_key]
 
             # Handle miss or stale via recomputation.
-            logger.debug(
-                "Cache miss for %s, calling the wrapped function.",
-                cache_key
-            )
+            logger.debug("Cache miss for %s, calling the wrapped function.", cache_key)
             result = func(*args, **kwargs)
 
             if not isinstance(result, DontCacheThisResult):
                 cache[cache_key] = {
-                    'result': result,
-                    'timestamp': datetime.datetime.now()
+                    "result": result,
+                    "timestamp": datetime.datetime.now(),
                 }
                 return result
             else:
@@ -560,7 +579,7 @@ def normal_delay_helper(delay: float) -> None:
 def jittery_delay_helper(delay: float) -> None:
     jitter = delay * 0.25
     jitter *= random.random()
-    if random.choice(['add', 'subtract']) == 'add':
+    if random.choice(["add", "subtract"]) == "add":
         delay += jitter
     else:
         delay -= jitter
@@ -653,7 +672,7 @@ def predicated_retry_with_backoff(
 
             logger.debug("deco_retry: will make up to %d attempts...", mtries)
             while True:
-                logger.debug('Calling wrapped function; up to %d tries remain.', mtries)
+                logger.debug("Calling wrapped function; up to %d tries remain.", mtries)
                 if on_attempt:
                     on_attempt()
                 retval = f(*args, **kwargs)
@@ -668,13 +687,13 @@ def predicated_retry_with_backoff(
                         on_failure()
                     mtries -= 1
                     if mtries <= 0:
-                        msg = f'Tried wrapped function {tries}x with backoffs between them; it always failed.'
+                        msg = f"Tried wrapped function {tries}x with backoffs between them; it always failed."
                         if raise_on_repeated_failures:
                             raise PyUtilsException(msg)
                         else:
                             logger.error(msg)
                             return retval
-                    logger.debug('Sleeping for %5.1f sec', mdelay)
+                    logger.debug("Sleeping for %5.1f sec", mdelay)
                     mdelay_helper(mdelay)
                     mdelay *= backoff
 
