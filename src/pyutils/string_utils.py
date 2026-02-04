@@ -46,8 +46,19 @@ import string
 import unicodedata
 import warnings
 from itertools import zip_longest
-from typing import (Any, Callable, Dict, Generator, Iterable, List, Literal,
-                    Optional, Sequence, Tuple)
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
 from uuid import uuid4
 
 from pyutils import list_utils
@@ -944,11 +955,11 @@ def number_to_suffix_string(num: int, *, positive_sign=False) -> Optional[str]:
     >>> number_to_suffix_string(1024 * 1024, positive_sign=True)
     '+1.0Mb'
     """
-    sign = ''
+    sign = ""
     if num < 0:
-        sign = '-'
+        sign = "-"
     elif positive_sign:
-        sign = '+'
+        sign = "+"
     pnum = abs(num)
     d = 0.0
     suffix = None
@@ -2918,6 +2929,53 @@ def replace_nth(in_str: str, source: str, target: str, nth: int):
     after = in_str[where:]
     after = after.replace(source, target, 1)
     return before + after
+
+
+class FuzzyStringComparator:
+    """This is a helper to compare string(s) against an anchor string.
+    It does so by incrementing a score for every normalized token overlap
+    and decrementing the same score for every normalized token non-overlap.
+    The details of how to tokenize and score are user-overridable.
+
+    >>> fsc = FuzzyStringComparator("the quick fox jumped over the lazy dog!")
+    >>> fsc.compare("MY DOG IS QUICK BUT CAN'T JUMP")
+    1
+    >>> fsc.compare("THE JUMP OVER THE FOX IS A DOG")
+    17
+    >>> fsc.compare("  THe quicK Fox   jumped  above the dog that's lazy")
+    28
+
+    """
+
+    def __init__(
+        self,
+        anchor_text: str,
+        norm_func: Callable[[str], str] = lambda txt: re.sub(
+            r"\W+", " ", txt.lower()
+        ).strip(),
+        match_score_func: Callable[[str], int] = lambda token: len(token) + 1,
+        penalty_score_func: Callable[[str], int] = lambda token: -len(token) // 2,
+    ):
+        self.norm_func = norm_func
+        self.match_score_func = match_score_func
+        self.penalty_score_func = penalty_score_func
+        self.anchor_tokens: Set[str] = set(self._tokenize(anchor_text))
+
+    def _tokenize(self, text: str) -> List[str]:
+        normalized = self.norm_func(text)
+        return normalized.split()
+
+    def compare(self, text: str) -> int:
+        """Compare text tokens against anchor_text; returns aggregate score."""
+        score = 0
+        tokens = self._tokenize(text)
+
+        for token in tokens:
+            if token in self.anchor_tokens:
+                score += self.match_score_func(token)
+            else:
+                score += self.penalty_score_func(token)
+        return score
 
 
 if __name__ == "__main__":
