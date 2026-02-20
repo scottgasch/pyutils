@@ -2950,6 +2950,7 @@ class FuzzyStringComparator:
     def __init__(
         self,
         anchor_text: str,
+        *,
         norm_func: Callable[[str], str] = lambda txt: re.sub(
             r"\W+", " ", txt.lower()
         ).strip(),
