@@ -39,7 +39,8 @@ jobs:
           pip install typing_extensions
       - name: setup unittest performance db
         run: |
-          mkdir -p .config/scott
+          mkdir -p /home/runner/.config/scott
+          touch /home/runner/.config/scott/.python_unittest_performance_db
       - name: process dateparse_utils grammar
         run: |
           cd src/pyutils/datetimes
