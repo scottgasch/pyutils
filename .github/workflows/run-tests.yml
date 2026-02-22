@@ -37,6 +37,9 @@ jobs:
           pip install pytz
           pip install requests
           pip install typing_extensions
+      - name: setup unittest performance db
+        run: |
+          mkdir -p .config/scott
       - name: process dateparse_utils grammar
         run: |
           cd src/pyutils/datetimes
