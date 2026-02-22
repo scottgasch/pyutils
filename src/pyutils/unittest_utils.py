@@ -62,7 +62,7 @@ cfg.add_argument(
     "--unittests_perfdb_filename",
     type=str,
     metavar="FILENAME",
-    default=f'{os.environ["HOME"]}/.python_unittest_performance_db',
+    default=f'{os.environ["HOME"]}/.config/scott/.python_unittest_performance_db',
     help="File in which to store perf data (iff --unittests_persistance_strategy is FILE)",
 )
 cfg.add_argument(
