@@ -18,7 +18,7 @@ stored beneath that node.  See examples below.
 """
 
 import logging
-from typing import Any, Dict, Generator, Sequence
+from typing import Any, Dict, Generator, List, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -384,6 +384,70 @@ class Trie(object):
         if child_count > 1:
             my_rep = f"[{my_rep}]"
         return my_rep
+
+    def repr_compressed_tree(
+        self, node: Dict[Any, Any], delimiter: str, prefix: str = ""
+    ) -> str:
+        """
+        A "compressed" tree representation of the Trie.
+
+        Args:
+            node: the root of the trie to represent.
+            delimiter: character or string to stuff between edges.
+            prefix: prefix string used to recursively construst the tree.
+
+        Returns:
+            A brief string representation of the trie.  See example.
+
+        >>> t = Trie()
+        >>> t.insert([10, 0, 0, 1])
+        >>> t.insert([10, 0, 0, 2])
+        >>> t.insert([10, 0, 0, 3])
+        >>> t.insert([10, 1, 0, 1])
+        >>> r = t.repr_compressed_tree(t.root, '.')
+        >>> print(r)
+        └── 10
+            ├── 0.0
+            │   ├── 1
+            │   ├── 2
+            │   └── 3
+            └── 1.0.1
+
+        """
+        # Filter for real children only
+        children = [c for c in node if c != self.end]
+
+        # If we are at a leaf (only the end marker exists)
+        if not children:
+            return ""
+
+        lines: List[str] = []
+
+        for i, child in enumerate(children):
+            is_last = i == len(children) - 1
+
+            curr_label = str(child)
+            curr_node = node[child]
+
+            # Path compression; look ahead: while the next node has
+            # exactly one real child and isn't a terminal node (an
+            # 'end' of a sequence)...
+            next_children = [c for c in curr_node if c != self.end]
+            while len(next_children) == 1 and self.end not in curr_node:
+                only_child = next_children[0]
+                curr_label += f"{delimiter}{only_child}"
+                curr_node = curr_node[only_child]
+                next_children = [c for c in curr_node if c != self.end]
+
+            connector = "└── " if is_last else "├── "
+            lines.append(f"{prefix}{connector}{curr_label}")
+            extension = "    " if is_last else "│   "
+            child_text = self.repr_compressed_tree(
+                curr_node, delimiter, prefix + extension
+            )
+            if child_text:
+                lines.append(child_text)
+        return "\n".join(lines)
 
     def __repr__(self):
         """
