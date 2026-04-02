@@ -696,6 +696,25 @@ def is_decimal_number(in_str: str) -> bool:
     return is_number(in_str) and "." in in_str
 
 
+def format_coords(latitude: float, longitude: float) -> str:
+    """
+    Args:
+        latitude: a latitude coordinate.
+        longitude: a longitude coordinate.
+
+    Returns:
+        Renders lat/lon floats into a human-readable strings.
+
+    >>> format_coords(47.6101, -122.2015)
+    '47.6101° N, 122.2015° W'
+    """
+    lat_dir: str = "N" if latitude >= 0 else "S"
+    lon_dir: str = "E" if longitude >= 0 else "W"
+
+    # Use 4 decimal places for ~11m precision
+    return f"{abs(latitude):.4f}° {lat_dir}, {abs(longitude):.4f}° {lon_dir}"
+
+
 def strip_escape_sequences(in_str: str) -> str:
     """
     Args:
@@ -2031,6 +2050,38 @@ def valid_datetime(in_str: str) -> bool:
     if _ is not None:
         return True
     return False
+
+
+def human_join(items: Sequence[Any], use_oxford_comma: bool = True) -> str:
+    """
+    Args:
+        items: the items that comprise the list.
+        use_oxford_comma: include or omit the last comma.
+
+    Returns:
+        A list of items as a natural language sentence fragment.
+
+    >>> human_join(['A'])
+    'A'
+    >>> human_join([1, 2])
+    '1 and 2'
+    >>> human_join(["A", "B", "C"])
+    'A, B, and C'
+    >>> human_join(["A", "B", "C"], use_oxford_comma = False)
+    'A, B and C'
+
+    """
+    count = len(items)
+    if count == 0:
+        return ""
+    if count == 1:
+        return items[0]
+    if count == 2:
+        return f"{items[0]} and {items[1]}"
+
+    prefix = ", ".join(items[:-1])
+    suffix = f", and {items[-1]}" if use_oxford_comma else f" and {items[-1]}"
+    return f"{prefix}{suffix}"
 
 
 def squeeze(in_str: str, character_to_squeeze: str = " ") -> str:

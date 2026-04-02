@@ -59,10 +59,6 @@ class ActionNoYes(argparse.Action):
         required: bool = False,
         help: Optional[str] = None,
     ):
-        if default is None:
-            msg = "You must provide a default with Yes/No action"
-            logger.critical(msg)
-            raise ValueError(msg)
         if len(option_strings) != 1:
             msg = "Only single argument is allowed with NoYes action"
             logger.critical(msg)
