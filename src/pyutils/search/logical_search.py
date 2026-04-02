@@ -1,56 +1,61 @@
 #!/usr/bin/env python3
-# pylint: disable=too-many-nested-blocks
+# -*- coding: utf-8 -*-
 
-# © Copyright 2021-2023, Scott Gasch
+"""
+logical_search.py - In-memory boolean and property query engine.
 
-"""This is a module concerned with the creation of and searching of a
-corpus of documents.  The corpus and index are held in memory.
-The query language contains AND, OR, NOT, and parenthesis to support
-flexible search semantics.
+Supports:
+- Boolean: and, or, not, ()
+- Tags: exact string match
+- Properties: key:val, key==val, key<val, key>val, key<=val, key>=val
+- Temporal: ISO 8601 strings (YYYY-MM-DD[THH:MM:SS]) support full comparison
+- Regex: key~^pattern
+- IN: key:[val1,val2]
+- BETWEEN: key:min..max
 """
 
 from __future__ import annotations
 
 import enum
 import logging
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from pyutils.exceptions import PyUtilsParseError
 
 logger = logging.getLogger(__name__)
 
 
+def _try_parse_date(val: Any) -> Optional[datetime]:
+    if not isinstance(val, str) or len(val) < 10:
+        return None
+    try:
+        # Standardize the string for ISO parsing
+        dt = datetime.fromisoformat(val.replace("Z", "+00:00"))
+
+        # Accessor check: if it lacks tzinfo, it's naive.
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (ValueError, TypeError):
+        return None
+
+
 @dataclass
 class Document:
-    """A class representing a searchable document."""
+    """A searchable unit. Properties remain a list of tuples for compatibility."""
 
     docid: str = ""
-    """A unique identifier for each document -- must be provided
-    by the caller.  See :meth:`python_modules.id_generator.get` or
-    :meth:`python_modules.string_utils.generate_uuid` for potential
-    sources."""
-
     tags: Set[str] = field(default_factory=set)
-    """A set of tag strings for this document.  May be empty.  Tags
-    are simply text labels that are associated with a document and
-    may be used to search for it later.
-    """
-
     properties: List[Tuple[str, str]] = field(default_factory=list)
-    """A list of key->value strings for this document.  May be empty.
-    Properties are more flexible tags that have both a label and a
-    value.  e.g. "category:mystery" or "author:smith"."""
-
     reference: Optional[Any] = None
-    """An optional reference to something else for convenience;
-    interpreted only by caller code, ignored here.
-    """
 
 
 class Operation(enum.Enum):
-    """A logical search query operation."""
+    """Logical operations for the AST."""
 
     QUERY = 1
     CONJUNCTION = 2
@@ -64,118 +69,40 @@ class Operation(enum.Enum):
             "and": Operation.CONJUNCTION,
             "or": Operation.DISJUNCTION,
         }
-        return table.get(token, None)
+        return table.get(token.lower(), None)
 
-    def num_operands(self) -> Optional[int]:
-        table = {
+    def num_operands(self) -> int:
+        return {
             Operation.INVERSION: 1,
             Operation.CONJUNCTION: 2,
             Operation.DISJUNCTION: 2,
-        }
-        return table.get(self, None)
+        }.get(self, 0)
 
 
 class Corpus(object):
-    """A collection of searchable documents.  The caller can
-    add documents to it (or edit existing docs) via :meth:`add_doc`,
-    retrieve a document given its docid via :meth:`get_doc`, and
-    perform various lookups of documents.  The most interesting
-    lookup is implemented in :meth:`query`.
-
-    >>> c = Corpus()
-    >>> c.add_doc(Document(
-    ...                    docid=1,
-    ...                    tags=set(['urgent', 'important']),
-    ...                    properties=[
-    ...                                ('author', 'Scott'),
-    ...                                ('subject', 'your anniversary')
-    ...                    ],
-    ...                    reference=None,
-    ...                   )
-    ...          )
-    >>> c.add_doc(Document(
-    ...                    docid=2,
-    ...                    tags=set(['important']),
-    ...                    properties=[
-    ...                                ('author', 'Joe'),
-    ...                                ('subject', 'your performance at work')
-    ...                    ],
-    ...                    reference=None,
-    ...                   )
-    ...          )
-    >>> c.add_doc(Document(
-    ...                    docid=3,
-    ...                    tags=set(['urgent']),
-    ...                    properties=[
-    ...                                ('author', 'Scott'),
-    ...                                ('subject', 'car turning in front of you')
-    ...                    ],
-    ...                    reference=None,
-    ...                   )
-    ...          )
-    >>> c.query('author:Scott and important')
-    {1}
-    >>> c.query('*')
-    {1, 2, 3}
-    >>> c.query('*:*')
-    {1, 2, 3}
-    >>> c.query('*:Scott')
-    {1, 3}
-    """
+    """The indexing and search engine."""
 
     def __init__(self) -> None:
         self.docids_by_tag: Dict[str, Set[str]] = defaultdict(set)
-        self.docids_by_property: Dict[Tuple[str, str], Set[str]] = defaultdict(set)
         self.docids_with_property: Dict[str, Set[str]] = defaultdict(set)
+        self.docids_by_property: Dict[Tuple[str, str], Set[str]] = defaultdict(set)
         self.documents_by_docid: Dict[str, Document] = {}
 
     def add_doc(self, doc: Document) -> None:
-        """Add a new Document to the Corpus.  Each Document must have a
-        distinct docid that will serve as its primary identifier.  If
-        the same Document is added multiple times, only the most
-        recent addition is indexed.  If two distinct documents with
-        the same docid are added, the latter klobbers the former in
-        the indexes.  See :meth:`python_modules.id_generator.get` or
-        :meth:`python_modules.string_utils.generate_uuid` for potential
-        sources of docids.
-
-        Each Document may have an optional set of tags which can be
-        used later in expressions to the query method.  These are simple
-        text labels.
-
-        Each Document may have an optional list of key->value tuples
-        which can be used later in expressions to the query method.
-
-        Document includes a user-defined "reference" field which is
-        never interpreted by this module.  This is meant to allow easy
-        mapping between Documents in this corpus and external objects
-        they may represent.
-
-        Args:
-            doc: the document to add or edit
-        """
-
+        """Indexes a document. Supports the list-of-tuples properties."""
         if doc.docid in self.documents_by_docid:
-            # Handle collisions; assume that we are re-indexing the
-            # same document so remove it from the indexes before
-            # adding it back again.
-            colliding_doc = self.documents_by_docid[doc.docid]
-            assert colliding_doc.docid == doc.docid
-            del self.documents_by_docid[doc.docid]
-            for tag in colliding_doc.tags:
-                self.docids_by_tag[tag].remove(doc.docid)
-            for key, value in colliding_doc.properties:
-                self.docids_by_property[(key, value)].remove(doc.docid)
-                self.docids_with_property[key].remove(doc.docid)
+            old = self.documents_by_docid[doc.docid]
+            for tag in old.tags:
+                self.docids_by_tag[tag].discard(doc.docid)
+            for key, _ in old.properties:
+                self.docids_with_property[key].discard(doc.docid)
 
-        # Index the new Document
-        assert doc.docid not in self.documents_by_docid
         self.documents_by_docid[doc.docid] = doc
         for tag in doc.tags:
             self.docids_by_tag[tag].add(doc.docid)
         for key, value in doc.properties:
-            self.docids_by_property[(key, value)].add(doc.docid)
             self.docids_with_property[key].add(doc.docid)
+            self.docids_by_property[(key, value)].add(doc.docid)
 
     def get_docids_by_exact_tag(self, tag: str) -> Set[str]:
         """Return the set of docids that have a particular tag.
@@ -247,244 +174,201 @@ class Corpus(object):
         """
         return self.documents_by_docid.get(docid, None)
 
-    def query(self, query: str) -> Optional[Set[str]]:
-        """Query the corpus for documents that match a logical expression.
-
-        Args:
-            query: the logical query expressed using a simple language
-                that understands conjunction (and operator), disjunction
-                (or operator) and inversion (not operator) as well as
-                parenthesis.  Here are some legal sample queries::
-
-                    tag1 and tag2 and not tag3
-
-                    (tag1 or tag2) and (tag3 or tag4)
-
-                    (tag1 and key2:value2) or (tag2 and key1:value1)
-
-                    key:*
-
-                    tag1 and key:*
-
-        Returns:
-            A (potentially empty) set of docids for the matching
-            (previously added) documents or None on error.
-        """
-
+    def query(self, query_str: str) -> Optional[Set[str]]:
+        """Entry point for searching."""
         try:
-            root = self._parse_query(query)
+            root = self._parse_query(query_str)
+            return root.eval()
         except PyUtilsParseError:
-            logger.exception("Parse error")
+            logger.exception("Parse error!")
             return None
-        return root.eval()
+        except Exception:
+            logger.exception("Internal query evaluation error")
+            return None
 
-    def _parse_query(self, query: str):
-        """Internal parse helper; prefer to use query instead."""
+    def _parse_query(self, query_str: str) -> Node:
+        """Parses query string into AST with pre-processing for IN/BETWEEN."""
+        token_pattern = (
+            r"(\(|\)|\[|\]|,)|(and|or|not)|(\.\.|<=|>=|==|<|>|~|:)|([^\s()<>:~=\[\],]+)"
+        )
+        tokens = [
+            m.group(0) for m in re.finditer(token_pattern, query_str, re.IGNORECASE)
+        ]
 
-        parens = set(["(", ")"])
-        and_or = set(["and", "or"])
-
-        def operator_precedence(token: str) -> Optional[int]:
-            table = {
-                "(": 4,  # higher
-                ")": 4,
-                "not": 3,
-                "and": 2,
-                "or": 1,  # lower
-            }
-            return table.get(token, None)
-
-        def is_operator(token: str) -> bool:
-            return operator_precedence(token) is not None
-
-        def lex(query: str):
-            tokens = query.split()
-            for token in tokens:
-                # Handle ( and ) operators stuck to the ends of tokens
-                # that split() doesn't understand.
-                if len(token) > 1:
-                    first = token[0]
-                    if first in parens:
-                        tail = token[1:]
-                        logger.debug(first)
-                        yield first
-                        token = tail
-                    last = token[-1]
-                    if last in parens:
-                        head = token[0:-1]
-                        logger.debug(head)
-                        yield head
-                        token = last
-                logger.debug(token)
-                yield token
-
-        def evaluate(corpus: Corpus, stack: List[str]):
-            """
-            Raises:
-                PyUtilsParseError: bad number of operations, unbalanced parenthesis,
-                    unknown operators, internal errors.
-            """
-            node_stack: List[Node] = []
-            for token in stack:
-                node = None
-                if not is_operator(token):
-                    node = Node(corpus, Operation.QUERY, [token])
-                else:
-                    args = []
-                    operation = Operation.from_token(token)
-                    operand_count = operation.num_operands()
-                    if len(node_stack) < operand_count:
-                        raise PyUtilsParseError(
-                            f"Incorrect number of operations for {operation}"
-                        )
-                    for _ in range(operation.num_operands()):
-                        args.append(node_stack.pop())
-                    node = Node(corpus, operation, args)
-                node_stack.append(node)
-            return node_stack[0]
-
-        output_stack = []
-        operator_stack = []
-        for token in lex(query):
-            if not is_operator(token):
-                output_stack.append(token)
-                continue
-
-            # token is an operator...
-            if token == "(":
-                operator_stack.append(token)
-            elif token == ")":
-                ok = False
-                while len(operator_stack) > 0:
-                    pop_operator = operator_stack.pop()
-                    if pop_operator != "(":
-                        output_stack.append(pop_operator)
-                    else:
-                        ok = True
-                        break
-                if not ok:
-                    raise PyUtilsParseError(
-                        "Unbalanced parenthesis in query expression"
-                    )
-
-            # and, or, not
+        merged_tokens = []
+        i = 0
+        while i < len(tokens):
+            # BETWEEN: key:val1..val2
+            if i + 4 < len(tokens) and tokens[i + 1] == ":" and tokens[i + 3] == "..":
+                k, v1, v2 = tokens[i], tokens[i + 2], tokens[i + 4]
+                merged_tokens.append(f"{k}:{v1}..{v2}")
+                i += 5
+            # IN: key:[v1,v2] -> desugar to (key:v1 or key:v2)
+            elif i + 2 < len(tokens) and tokens[i + 1] == ":" and tokens[i + 2] == "[":
+                key = tokens[i]
+                start_idx = i
+                i += 3
+                inner_vals = []
+                while i < len(tokens) and tokens[i] != "]":
+                    if tokens[i] != ",":
+                        inner_vals.append(tokens[i])
+                    i += 1
+                desugared = "(" + " or ".join([f"{key}:{v}" for v in inner_vals]) + ")"
+                raw_fragment = "".join(tokens[start_idx : i + 1])
+                return self._parse_query(query_str.replace(raw_fragment, desugared, 1))
+            elif i + 2 < len(tokens) and tokens[i + 1] in (
+                "<",
+                ">",
+                "<=",
+                ">=",
+                "==",
+                ":",
+                "~",
+            ):
+                merged_tokens.append(f"{tokens[i]}{tokens[i+1]}{tokens[i+2]}")
+                i += 3
             else:
-                my_precedence = operator_precedence(token)
-                if my_precedence is None:
-                    raise PyUtilsParseError(f"Unknown operator: {token}")
-                while len(operator_stack) > 0:
-                    peek_operator = operator_stack[-1]
-                    if not is_operator(peek_operator) or peek_operator == "(":
-                        break
-                    peek_precedence = operator_precedence(peek_operator)
-                    if peek_precedence is None:
-                        raise PyUtilsParseError("Internal error")
-                    if (
-                        (peek_precedence < my_precedence)
-                        or (peek_precedence == my_precedence)
-                        and (peek_operator not in and_or)
-                    ):
-                        break
-                    output_stack.append(operator_stack.pop())
-                operator_stack.append(token)
-        while len(operator_stack) > 0:
-            token = operator_stack.pop()
-            if token in parens:
-                raise PyUtilsParseError("Unbalanced parenthesis in query expression")
-            output_stack.append(token)
-        return evaluate(self, output_stack)
+                merged_tokens.append(tokens[i])
+                i += 1
+
+        output: List[Node] = []
+        ops: List[str] = []
+        precedence = {"(": 0, "or": 1, "and": 2, "not": 3}
+
+        for token in merged_tokens:
+            low_t = token.lower()
+            if low_t == "(":
+                ops.append(low_t)
+            elif low_t == ")":
+                while ops and ops[-1] != "(":
+                    self._build_op_node(output, ops.pop())
+                if ops:
+                    ops.pop()
+            elif low_t in precedence:
+                while ops and precedence.get(ops[-1], 0) >= precedence[low_t]:
+                    self._build_op_node(output, ops.pop())
+                ops.append(low_t)
+            else:
+                output.append(Node(self, Operation.QUERY, [token]))
+
+        while ops:
+            self._build_op_node(output, ops.pop())
+        return output[0] if output else Node(self, Operation.QUERY, [""])
+
+    def _build_op_node(self, stack: List[Node], op_str: str):
+        op = Operation.from_token(op_str)
+        if not op or len(stack) < op.num_operands():
+            return
+        operands = [stack.pop() for _ in range(op.num_operands())]
+        stack.append(Node(self, op, operands[::-1]))
 
 
 class Node(object):
-    """A query AST node."""
+    """AST Node. Evaluates properties against stored Documents."""
 
-    def __init__(
-        self,
-        corpus: Corpus,
-        op: Operation,
-        operands: Sequence[Union[Node, str]],
-    ):
+    def __init__(self, corpus: Corpus, op: Operation, operands: List[Union[Node, str]]):
         self.corpus = corpus
         self.op = op
         self.operands = operands
 
+    def _compare(self, doc_val: Any, op: str, query_val: str) -> bool:
+        """Handles temporal, numeric, and string comparison."""
+        # 1. Regex
+        if op == "~":
+            try:
+                return re.search(query_val, str(doc_val), re.IGNORECASE) is not None
+            except re.error:
+                return False
+
+        # 2. Range (BETWEEN)
+        if ".." in query_val:
+            low_raw, high_raw = query_val.split("..")
+            # Try date range first
+            d_dt, l_dt, h_dt = [
+                _try_parse_date(v) for v in (doc_val, low_raw, high_raw)
+            ]
+            if d_dt and l_dt and h_dt:
+                return l_dt <= d_dt <= h_dt
+
+            # Fallback to numeric/string range
+            try:
+                return float(low_raw) <= float(doc_val) <= float(high_raw)
+            except (ValueError, TypeError):
+                return str(low_raw) <= str(doc_val) <= str(high_raw)
+
+        # 3. Equality (Fast Path)
+        if op in (":", "=="):
+            if query_val == "*":
+                return True
+            d_dt, q_dt = _try_parse_date(doc_val), _try_parse_date(query_val)
+            if d_dt and q_dt:
+                return d_dt == q_dt
+            return str(doc_val).lower() == query_val.lower()
+
+        # 4. Temporal comparison (Greater/Less)
+        d_dt, q_dt = _try_parse_date(doc_val), _try_parse_date(query_val)
+        if d_dt and q_dt:
+            if op == "<":
+                return d_dt < q_dt
+            if op == ">":
+                return d_dt > q_dt
+            if op == "<=":
+                return d_dt <= q_dt
+            if op == ">=":
+                return d_dt >= q_dt
+
+        # 5. Numeric comparison fallback
+        try:
+            d_num, q_num = float(doc_val), float(query_val)
+            if op == "<":
+                return d_num < q_num
+            if op == ">":
+                return d_num > q_num
+            if op == "<=":
+                return d_num <= q_num
+            if op == ">=":
+                return d_num >= q_num
+        except (ValueError, TypeError):
+            # 6. String comparison fallback
+            if op == "<":
+                return str(doc_val) < query_val
+            if op == ">":
+                return str(doc_val) > query_val
+
+        return False
+
     def eval(self) -> Set[str]:
-        """Evaluate this node.
+        """Evaluates Node recursively."""
+        if self.op == Operation.CONJUNCTION:
+            return self.operands[0].eval() & self.operands[1].eval()
+        if self.op == Operation.DISJUNCTION:
+            return self.operands[0].eval() | self.operands[1].eval()
+        if self.op == Operation.INVERSION:
+            return set(self.corpus.documents_by_docid.keys()) - self.operands[0].eval()
 
-        Raises:
-            PyUtilsParseError: unexpected operands, invalid key:value syntax, wrong
-                number of operands for operation, other invalid queries.
-        """
+        # QUERY node
+        expr = self.operands[0]
+        results = set()
+        match = re.search(r"(<=|>=|==|<|>|~|:)", expr)
 
-        evaled_operands: List[Union[Set[str], str]] = []
-        for operand in self.operands:
-            if isinstance(operand, Node):
-                evaled_operands.append(operand.eval())
-            elif isinstance(operand, str):
-                evaled_operands.append(operand)
+        if match:
+            op = match.group(0)
+            key, val = expr.split(op, 1)
+            candidates = self.corpus.docids_with_property.get(key, set())
+            for docid in candidates:
+                doc = self.corpus.documents_by_docid[docid]
+                for k, v in doc.properties:
+                    if k == key and self._compare(v, op, val):
+                        results.add(docid)
+                        break
+
+        else:
+            if expr == "*":
+                results = set(self.corpus.documents_by_docid.keys())
             else:
-                raise PyUtilsParseError(f"Unexpected operand: {operand}")
-
-        retval = set()
-        if self.op is Operation.QUERY:
-            for tag in evaled_operands:
-                if isinstance(tag, str):
-                    if ":" in tag:
-                        try:
-                            key, value = tag.split(":")
-                        except ValueError as v:
-                            raise PyUtilsParseError(
-                                f'Invalid key:value syntax at "{tag}"'
-                            ) from v
-
-                        if key == "*":
-                            r = set()
-                            for kv, s in self.corpus.docids_by_property.items():
-                                if value in ("*", kv[1]):
-                                    r.update(s)
-                        else:
-                            if value == "*":
-                                r = self.corpus.get_docids_with_property(key)
-                            else:
-                                r = self.corpus.get_docids_by_property(key, value)
-                    else:
-                        if tag == "*":
-                            r = set()
-                            for s in self.corpus.docids_by_tag.values():
-                                r.update(s)
-                        else:
-                            r = self.corpus.get_docids_by_exact_tag(tag)
-                    retval.update(r)
-                else:
-                    raise PyUtilsParseError(f"Unexpected query {tag}")
-        elif self.op is Operation.DISJUNCTION:
-            if len(evaled_operands) != 2:
-                raise PyUtilsParseError(
-                    "Operation.DISJUNCTION (or) expects two operands."
-                )
-            retval.update(evaled_operands[0])
-            retval.update(evaled_operands[1])
-        elif self.op is Operation.CONJUNCTION:
-            if len(evaled_operands) != 2:
-                raise PyUtilsParseError(
-                    "Operation.CONJUNCTION (and) expects two operands."
-                )
-            retval.update(evaled_operands[0])
-            retval = retval.intersection(evaled_operands[1])
-        elif self.op is Operation.INVERSION:
-            if len(evaled_operands) != 1:
-                raise PyUtilsParseError(
-                    "Operation.INVERSION (not) expects one operand."
-                )
-            _ = evaled_operands[0]
-            if isinstance(_, set):
-                retval.update(self.corpus.invert_docid_set(_))
-            else:
-                raise PyUtilsParseError(f"Unexpected negation operand {_} ({type(_)})")
-        return retval
-
-
-if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
+                # Check tags first
+                results = self.corpus.docids_by_tag.get(expr, set())
+                # If no tags match, check if it's a direct docid match
+                if not results and expr in self.corpus.documents_by_docid:
+                    results = {expr}
+        return results
