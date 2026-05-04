@@ -217,9 +217,7 @@ def bar_graph_string(
 
 
 def sparkline(
-        numbers: List[float],
-        *,
-        width: Optional[int] = None
+    numbers: List[float], *, width: Optional[int] = None
 ) -> Tuple[float, float, str]:
     """
     Makes a "sparkline" little inline histogram graph.  Auto scales.
@@ -265,11 +263,13 @@ def sparkline(
         sampled_numbers = numbers[::step]
         sampled_numbers = sampled_numbers[:width]
         sline = "".join(
-            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in sampled_numbers
+            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])]
+            for n in sampled_numbers
         )
     else:
         sline = "".join(
-            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])] for n in numbers
+            _bar[min([barcount - 1, int((n - min_num) / span * barcount)])]
+            for n in numbers
         )
     return min_num, max_num, sline
 
@@ -527,7 +527,7 @@ class Indenter(contextlib.AbstractContextManager):
             pad_char: the character used to indent
             pad_count: the number of pad_chars to use to indent
         """
-        self.level = -1
+        self.level = 0
         if pad_prefix is not None:
             self.pad_prefix = pad_prefix
         else:
