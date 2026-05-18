@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-
 # © Copyright 2021-2023, Scott Gasch
-
 """Helper methods concerned with executing subprocesses."""
 
 import atexit
@@ -11,9 +9,10 @@ import selectors
 import shlex
 import subprocess
 import sys
+import threading
 from typing import List, Optional
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def cmd_showing_output(
@@ -21,43 +20,30 @@ def cmd_showing_output(
     *,
     timeout_seconds: Optional[float] = None,
 ) -> int:
-    """Kick off a child process.  Capture and emit all output that it
-    produces on stdout and stderr in a raw, character by character,
-    manner so that we don't have to wait on newlines.  This was done
-    to capture, for example, the output of a subprocess that creates
-    dots to show incremental progress on a task and render it
-    correctly.
+    """Kick off a child process, streaming its stdout/stderr character-by-character
+    to our own stdout/stderr in real time.  Useful for subprocesses that emit
+    incremental progress (dots, spinners, etc.) where waiting on newlines would
+    produce a bad user experience.
 
     Args:
-        command: the command to execute
-        timeout_seconds: terminate the subprocess if it takes longer
-            than N seconds; None means to wait as long as it takes.
+        command: the shell command to execute
+        timeout_seconds: kill the subprocess and raise TimeoutExpired if it
+            runs longer than this; None means wait indefinitely.
 
     Returns:
-        the exit status of the subprocess once the subprocess has
-        exited.  Raises `TimeoutExpired` after killing the subprocess
-        if the timeout expires.
+        The exit status of the subprocess.
 
     Raises:
-        TimeoutExpired: if timeout expires before child terminates
-
-    Side effects:
-        prints all output of the child process (stdout or stderr)
+        TimeoutExpired: if the timeout expires before the child terminates.
 
     .. warning::
-        This function invokes a subshell, beware of shell-injection
-        attacks.  Your code should sanitize the command using
-        :meth:`shlex.quote` on user-provided data before invoking
-        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
-
+        Invokes a subshell — sanitize user-provided data with :func:`shlex.quote`
+        before passing it in.  See:
+        https://docs.python.org/3/library/subprocess.html#security-considerations
     """
+    line_enders = {b"\n", b"\r"}
+    timed_out = threading.Event()
 
-    def timer_expired(p):
-        p.kill()
-        raise subprocess.TimeoutExpired(command, timeout_seconds)
-
-    line_enders = set([b"\n", b"\r"])
-    sel = selectors.DefaultSelector()
     with subprocess.Popen(
         command,
         shell=True,
@@ -66,26 +52,27 @@ def cmd_showing_output(
         stderr=subprocess.PIPE,
         universal_newlines=False,
     ) as p:
-        timer = None
-        if timeout_seconds:
-            import threading
 
-            timer = threading.Timer(timeout_seconds, timer_expired(p))
+        def _on_timeout() -> None:
+            timed_out.set()
+            p.kill()
+
+        timer = None
+        if timeout_seconds is not None:
+            timer = threading.Timer(timeout_seconds, _on_timeout)
             timer.start()
+
         try:
-            sel.register(p.stdout, selectors.EVENT_READ)  # type: ignore
-            sel.register(p.stderr, selectors.EVENT_READ)  # type: ignore
-            done = False
-            while not done:
+            sel = selectors.DefaultSelector()
+            sel.register(p.stdout, selectors.EVENT_READ)  # type: ignore[arg-type]
+            sel.register(p.stderr, selectors.EVENT_READ)  # type: ignore[arg-type]
+
+            while sel.get_map():
                 for key, _ in sel.select():
-                    char = key.fileobj.read(1)  # type: ignore
+                    char = key.fileobj.read(1)  # type: ignore[union-attr]
                     if not char:
                         sel.unregister(key.fileobj)
-                        if not sel.get_map():
-                            sys.stdout.flush()
-                            sys.stderr.flush()
-                            sel.close()
-                            done = True
+                        continue
                     if key.fileobj is p.stdout:
                         os.write(sys.stdout.fileno(), char)
                         if char in line_enders:
@@ -94,175 +81,206 @@ def cmd_showing_output(
                         os.write(sys.stderr.fileno(), char)
                         if char in line_enders:
                             sys.stderr.flush()
+
+            sys.stdout.flush()
+            sys.stderr.flush()
+            sel.close()
             p.wait()
         finally:
-            if timer:
+            if timer is not None:
                 timer.cancel()
-        return p.returncode
+
+    if timed_out.is_set():
+        assert timeout_seconds
+        raise subprocess.TimeoutExpired(command, timeout_seconds)
+    return p.returncode
 
 
 def cmd_exitcode(command: str, timeout_seconds: Optional[float] = None) -> int:
-    """Run a command silently in the background and return its exit
-    code once it has finished.
+    """Run a command silently and return its exit code.
+
+    Unlike :func:`cmd`, a non-zero exit does NOT raise — the caller is expected
+    to inspect the return value.  Use :func:`run_silently` if you want an
+    exception on failure.
 
     Args:
-        command: the command to run
-        timeout_seconds: optional the max number of seconds to allow
-            the subprocess to execute or None to indicate no timeout
+        command: the shell command to run
+        timeout_seconds: max seconds to wait; None means no limit.
 
     Returns:
-        the exit status of the subprocess once the subprocess has
-        exited
+        The exit status of the subprocess.
 
     Raises:
-        TimeoutExpired: if timeout_seconds is provided and the child process
-            executes longer than the limit.
+        TimeoutExpired: if the child runs longer than timeout_seconds.
 
     >>> cmd_exitcode('/bin/echo foo', 10.0)
     0
-
-    >>> cmd_exitcode('/bin/sleep 2', 0.01)
+    >>> cmd_exitcode('/bin/false')
+    127
+    >>> cmd_exitcode('/bin/sleep 2', 0.01)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
-    subprocess.TimeoutExpired: Command '['/bin/bash', '-c', '/bin/sleep 2']' timed out after 0.01 seconds
-
+    subprocess.TimeoutExpired: Command '/bin/sleep 2' timed out...
     """
-    return subprocess.check_call(["/bin/bash", "-c", command], timeout=timeout_seconds)
+    result = subprocess.run(
+        command,
+        shell=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        timeout=timeout_seconds,
+    )
+    return result.returncode
 
 
-def cmd(command: str, timeout_seconds: Optional[float] = None) -> str:
-    """Run a command and capture its output to stdout and stderr into a
-    string buffer.  Return that string as this function's output.
+def cmd(
+    command: str,
+    timeout_seconds: Optional[float] = None,
+    *,
+    include_stderr: bool = False,
+) -> str:
+    """Run a command and return its stdout as a string.
 
     Args:
-        command: the command to run
-        timeout_seconds: the max number of seconds to allow the subprocess
-            to execute or None to indicate no timeout
+        command: the shell command to run
+        timeout_seconds: max seconds to wait; None means no limit.
+        include_stderr: if True, merge stderr into the returned string;
+            if False (default), stderr is logged at WARNING level on failure
+            and discarded on success.
 
     Returns:
-        The captured output of the subprocess' stdout as a string buffer
+        The stdout of the subprocess as a decoded string.
 
     Raises:
-        CalledProcessError: the child process didn't exit cleanly
-        TimeoutExpired: the child process ran too long
+        CalledProcessError: if the subprocess exits non-zero.
+        TimeoutExpired: if the child runs longer than timeout_seconds.
 
     .. warning::
-        This function invokes a subshell, beware of shell-injection
-        attacks.  Your code should sanitize the command using
-        :meth:`shlex.quote` on user-provided data before invoking
-        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
+        Invokes a subshell — sanitize user-provided data with :func:`shlex.quote`.
 
-    >>> cmd('/bin/echo foo')[:-1]
+    >>> cmd('/bin/echo foo').strip()
     'foo'
-
     >>> cmd('/bin/sleep 2', 0.01)
     Traceback (most recent call last):
     ...
     subprocess.TimeoutExpired: Command '/bin/sleep 2' timed out after 0.01 seconds
     """
-    ret = subprocess.run(
-        command,
-        shell=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        check=True,
-        timeout=timeout_seconds,
-    ).stdout
-    return ret.decode("utf-8")
+    stderr_dest = subprocess.STDOUT if include_stderr else subprocess.PIPE
+    try:
+        result = subprocess.run(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=stderr_dest,
+            check=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.CalledProcessError as e:
+        if not include_stderr and e.stderr:
+            logger.warning(
+                "cmd %r stderr: %s", command, e.stderr.decode("utf-8", errors="replace")
+            )
+        raise
+    return result.stdout.decode("utf-8")
 
 
 def run_silently(command: str, timeout_seconds: Optional[float] = None) -> None:
-    """Run a command silently.
+    """Run a command, suppressing all output.  Raise on non-zero exit.
 
     Args:
-        command: the command to run.
-        timeout_seconds: the optional max number of seconds to allow
-            the subprocess to execute or None (default) to indicate no
-            time limit.
-
-    Returns:
-        No return value; error conditions (including non-zero child process
-        exits) produce exceptions.
+        command: the shell command to run
+        timeout_seconds: max seconds to wait; None means no limit.
 
     Raises:
-        CalledProcessError: if the child process fails (i.e. exit != 0)
-        TimeoutExpired: if the child process executes too long.
+        CalledProcessError: if the subprocess exits non-zero.
+        TimeoutExpired: if the child runs longer than timeout_seconds.
 
     .. warning::
-        This function invokes a subshell, beware of shell-injection
-        attacks.  Your code should sanitize the command using
-        :meth:`shlex.quote` on user-provided data before invoking
-        this.  See: https://docs.python.org/3/library/subprocess.html#security-considerations
+        Invokes a subshell — sanitize user-provided data with :func:`shlex.quote`.
 
     >>> run_silently("/usr/bin/true")
-
     >>> run_silently("/usr/bin/false")
     Traceback (most recent call last):
     ...
     subprocess.CalledProcessError: Command '/usr/bin/false' returned non-zero exit status 1.
-
     """
     subprocess.run(
         command,
         shell=True,
-        stderr=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
-        capture_output=False,
+        stderr=subprocess.DEVNULL,
         check=True,
         timeout=timeout_seconds,
     )
 
 
 def cmd_in_background(command: str, *, silent: bool = False) -> subprocess.Popen:
-    """Spawns a child process in the background and registers an exit
-    handler to make sure we kill it if the parent process (us) is
-    terminated.
+    """Spawn a child process in the background.
+
+    Registers an atexit handler to terminate the child if the parent exits,
+    so background processes don't outlive their parent.
 
     Args:
         command: the command to run
-        silent: do not allow any output from the child process to be displayed
-            in the parent process' window
+        silent: if True, suppress all child output (stdin/stdout/stderr to DEVNULL)
 
     Returns:
-        the :class:`Popen` object that can be used to communicate
-            with the background process.
+        The :class:`subprocess.Popen` object for the background process.
     """
     args = shlex.split(command)
-    if silent:
-        subproc = subprocess.Popen(
-            args,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-    else:
-        subproc = subprocess.Popen(args, stdin=subprocess.DEVNULL)
+    devnull = subprocess.DEVNULL if silent else None
+    subproc = subprocess.Popen(
+        args,
+        stdin=subprocess.DEVNULL,
+        stdout=devnull,
+        stderr=devnull,
+    )
+    logger.info("Spawned background process pid=%d: %s", subproc.pid, command)
 
-    def kill_subproc() -> None:
+    def _kill_on_exit() -> None:
+        if subproc.poll() is not None:
+            return
         try:
-            if subproc.poll() is None:
-                logger.info("At exit handler: killing %s (%s)", subproc, command)
-                subproc.terminate()
-                subproc.wait(timeout=10.0)
+            logger.info(
+                "atexit: terminating background pid=%d (%s)", subproc.pid, command
+            )
+            subproc.terminate()
+            subproc.wait(timeout=10.0)
         except BaseException:
             logger.exception(
-                "Failed to terminate background process %s; giving up.", subproc
+                "Failed to terminate background pid=%d; giving up.", subproc.pid
             )
 
-    atexit.register(kill_subproc)
+    atexit.register(_kill_on_exit)
     return subproc
 
 
-def cmd_list(command: List[str]) -> str:
-    """Run a command with args encapsulated in a list and return the
-    output text as a string.
+def cmd_list(command: List[str], timeout_seconds: Optional[float] = None) -> str:
+    """Run a command supplied as a pre-tokenized list (no shell interpolation).
+
+    Prefer this over :func:`cmd` when constructing commands programmatically
+    from parts, since it avoids subshell injection entirely.
+
+    Args:
+        command: the command and arguments as a list, e.g. ['ls', '-la', '/tmp']
+        timeout_seconds: max seconds to wait; None means no limit.
+
+    Returns:
+        The stdout of the subprocess as a decoded string.
 
     Raises:
-        CalledProcessError: the child process didn't exit cleanly
-        TimeoutExpired: the child process ran too long
+        CalledProcessError: if the subprocess exits non-zero.
+        TimeoutExpired: if the child runs longer than timeout_seconds.
+
+    >>> cmd_list(['/bin/echo', 'foo']).strip()
+    'foo'
     """
-    ret = subprocess.run(command, capture_output=True, check=True).stdout
-    return ret.decode("utf-8")
+    result = subprocess.run(
+        command,
+        capture_output=True,
+        check=True,
+        timeout=timeout_seconds,
+    )
+    return result.stdout.decode("utf-8")
 
 
 if __name__ == "__main__":

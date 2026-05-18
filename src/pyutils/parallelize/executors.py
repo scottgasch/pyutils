@@ -56,6 +56,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
 import cloudpickle  # type: ignore
@@ -115,11 +116,12 @@ parser.add_argument(
     type=str,
     metavar='PATH_TO_REMOTE_WORKER_PY',
     help='Path to remote_worker.py on remote machines',
-    default=f'source py311-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
+    default=f'mkdir -p /tmp/pyutils_parallelize; . {os.environ["HOME"]}/python-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
 )
 
-SSH = '/usr/bin/ssh -oForwardX11=no'
-SCP = '/usr/bin/scp -C'
+SSH = '/usr/bin/ssh -oForwardX11=no -S none -o ConnectTimeout=2 -o BatchMode=yes '
+SCP = '/usr/bin/scp -C '
+Path("/tmp/pyutils_parallelize").mkdir(parents=True, exist_ok=True)
 
 
 def _make_cloud_pickle(fun, *args, **kwargs):
@@ -1203,6 +1205,9 @@ class RemoteExecutor(BaseExecutor):
         logger.debug(
             '%s: Executing %s in the background to kick off work...', bundle, cmd
         )
+
+        # import glob
+        # logger.debug('Code files present: %s', glob.glob('/tmp/pyutils_parallelize/*.code.bin'))
         p = cmd_in_background(cmd, silent=True)
         bundle.pid = p.pid
         logger.debug(
@@ -1291,6 +1296,12 @@ class RemoteExecutor(BaseExecutor):
     def _process_work_result(self, bundle: BundleDetails) -> Any:
         """A bundle seems to be completed.  Check on the results."""
 
+        logger.debug(
+            '%s: _process_work_result is_original=%s was_cancelled=%s',
+            bundle,
+            bundle.src_bundle is None,
+            bundle.was_cancelled,
+        )
         with self.status.lock:
             is_original = bundle.src_bundle is None
             was_cancelled = bundle.was_cancelled
@@ -1403,8 +1414,8 @@ class RemoteExecutor(BaseExecutor):
         """
 
         uuid = string_utils.generate_uuid(omit_dashes=True)
-        code_file = f'/tmp/{uuid}.code.bin'
-        result_file = f'/tmp/{uuid}.result.bin'
+        code_file = f'/tmp/pyutils_parallelize/{uuid}.code.bin'
+        result_file = f'/tmp/pyutils_parallelize/{uuid}.result.bin'
 
         logger.debug('Writing pickled code to %s', code_file)
         with open(code_file, 'wb') as wb:
