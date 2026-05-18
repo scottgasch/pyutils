@@ -115,8 +115,8 @@ def cmd_exitcode(command: str, timeout_seconds: Optional[float] = None) -> int:
 
     >>> cmd_exitcode('/bin/echo foo', 10.0)
     0
-    >>> cmd_exitcode('/bin/false')
-    127
+    >>> cmd_exitcode('false')
+    1
     >>> cmd_exitcode('/bin/sleep 2', 0.01)  # doctest: +ELLIPSIS
     Traceback (most recent call last):
     ...
