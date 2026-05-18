@@ -12,7 +12,7 @@ jobs:
     name: run-tests
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: install ANTLR4
         run: |
           sudo apt update
@@ -20,7 +20,7 @@ jobs:
       - name: install dictionary
         run: sudo apt install wamerican
       - name: install python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: install deps
@@ -40,6 +40,7 @@ jobs:
       - name: setup unittest performance db
         run: |
           mkdir -p /home/runner/.config/scott
+          midir -p /tmp/pyutils_parallelize
           touch /home/runner/.config/scott/.python_unittest_performance_db
       - name: process dateparse_utils grammar
         run: |
