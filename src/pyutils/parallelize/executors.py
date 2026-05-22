@@ -116,7 +116,7 @@ parser.add_argument(
     type=str,
     metavar='PATH_TO_REMOTE_WORKER_PY',
     help='Path to remote_worker.py on remote machines',
-    default=f'mkdir -p /tmp/pyutils_parallelize; . {os.environ["HOME"]}/python-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
+    default=f'. {os.environ["HOME"]}/python-venv/bin/activate && {os.environ["HOME"]}/pyutils/src/pyutils/remote_worker.py',
 )
 
 SSH = '/usr/bin/ssh -oForwardX11=no -S none -o ConnectTimeout=2 -o BatchMode=yes '
@@ -1687,7 +1687,11 @@ class DefaultExecutors(object):
             for record in all_machines:
                 if self._ping(record.machine):
                     logger.info('%s is alive / responding to pings', record.machine)
-                    pool.append(record)
+                    x = cmd_exitcode(
+                        f'{SSH} {record.username}@{record.machine} -C "mkdir -p /tmp/pyutils_parallelize"'
+                    )
+                    if x == 0:
+                        pool.append(record)
 
             # The controller machine has a lot to do; go easy on it.
             for record in pool:
