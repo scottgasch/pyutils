@@ -5,8 +5,7 @@
 """This module contains helper functions for dealing with Python dictionaries."""
 
 from itertools import islice
-from typing import (Any, Callable, Dict, Hashable, Iterator, List, Tuple,
-                    TypeVar)
+from typing import Any, Callable, Dict, Hashable, Iterator, List, Tuple, TypeVar
 
 from pyutils import dataclass_utils
 from pyutils.typez.type_hints import Comparable
@@ -200,7 +199,7 @@ def item_with_max_value(d: AnyDict) -> Tuple[AnyHashable, Any]:
     >>> item_with_max_value({})
     Traceback (most recent call last):
     ...
-    ValueError: max() arg is an empty sequence
+    ValueError: max() iterable argument is empty
 
     """
     return max(d.items(), key=lambda _: _[1])

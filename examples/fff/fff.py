@@ -21,14 +21,23 @@ from typing import List, Tuple
 
 from pyutils import ansi
 
-curly = re.compile(r'\{[^\}]+\}')
+curly = re.compile(r"\{[^\}]+\}")
+
+
+def _prefix(token_text: str) -> str:
+    """Return the lowercase prefix of a string token (chars before the opening quote)."""
+    for i, ch in enumerate(token_text):
+        if ch in ('"', "'"):
+            return token_text[:i].lower()
+    return ""
 
 
 def looks_suspicious(q: str, previous_tokens: List[Tuple[int, str]]) -> bool:
     for pair in previous_tokens:
-        if ':' in pair[1]:
+        if ":" in pair[1]:
             return False
-    return q[0] != 'f' and curly.search(q) is not None
+    p = _prefix(q)
+    return "f" not in p and curly.search(q) is not None
 
 
 for filename in sys.argv[1:]:
@@ -39,19 +48,15 @@ for filename in sys.argv[1:]:
     with tokenize.open(filename) as f:
         previous_tokens = []
         for token in tokenize.generate_tokens(f.readline):
-            (ttype, text, (start_row, _), (end_row, _), _) = token
+            ttype, text, (start_row, _), (end_row, _), _ = token
             if ttype == STRING:
-                if (
-                    'r"' not in text
-                    and "r'" not in text
-                    and looks_suspicious(text, previous_tokens)
-                ):
+                if "r" not in _prefix(text) and looks_suspicious(text, previous_tokens):
                     print(
                         f"{ansi.fg('green')}{filename}:{start_row}-{end_row}>{ansi.reset()}"
                     )
-                    for (n, line) in enumerate(text.split('\n')):
+                    for n, line in enumerate(text.split("\n")):
                         print(
-                            f'{ansi.fg("dark gray")}{start_row+n}:{ansi.reset()} {line}'
+                            f"{ansi.fg('dark gray')}{start_row + n}:{ansi.reset()} {line}"
                         )
             #                        print('Previous context:')
             #                        for pair in previous_tokens:
